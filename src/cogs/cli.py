@@ -28,22 +28,12 @@ def init(args):
 
     # Init sheet.tsv and field.tsv
     # If these already exist, they will not be overwritten (unless they are empty)
-    create = False
-    if not os.path.exists(".cogs/sheet.tsv"):
-        create = True
-    elif os.stat(".cogs/sheet.tsv").st_size == 0:
-        create = True
-    if create:
+    if not os.path.exists(".cogs/sheet.tsv") or os.stat(".cogs/sheet.tsv").st_size == 0:
         with open(".cogs/sheet.tsv", "w") as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerow(["Sheet", "Label", "File Path", "Description"])
 
-    create = False
-    if not os.path.exists(".cogs/field.tsv"):
-        create = True
-    elif os.stat(".cogs/field.tsv").st_size == 0:
-        create = True
-    if create:
+    if not os.path.exists(".cogs/field.tsv") or os.stat(".cogs/field.tsv").st_size == 0:
         with open(".cogs/field.tsv", "w") as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerow(["Field", "Label", "Datatype", "Description"])
