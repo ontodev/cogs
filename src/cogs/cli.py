@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import csv
 import os
 import pkg_resources
 import sys
@@ -20,14 +21,33 @@ def init(args):
     # Store COGS configuration
     # If this already exists, it *will* be overwritten
     with open(".cogs/config.tsv", "w") as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         v = pkg_resources.require("COGS")[0].version
-        f.write("COGS\thttps://github.com/ontodev/cogs\n")
-        f.write(f"COGS Version\t{v}\n")
+        writer.writerow(["COGS", "https://github.com/ontodev/cogs"])
+        writer.writerow(["COGS Version", v])
 
     # Init sheet.tsv and field.tsv
-    # If these already exist, they will not be overwritten
-    open(".cogs/sheet.tsv", "a").close()
-    open(".cogs/field.tsv", "a").close()
+    # If these already exist, they will not be overwritten (unless they are empty)
+    create = False
+    if not os.path.exists(".cogs/sheet.tsv"):
+        create = True
+    elif os.stat(".cogs/sheet.tsv").st_size == 0:
+        create = True
+    if create:
+        with open(".cogs/sheet.tsv", "w") as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerow(["Sheet", "Label", "File Path", "Description"])
+
+    create = False
+    if not os.path.exists(".cogs/field.tsv"):
+        create = True
+    elif os.stat(".cogs/field.tsv").st_size == 0:
+        create = True
+    if create:
+        with open(".cogs/field.tsv", "w") as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerow(["Field", "Label", "Datatype", "Description"])
+            writer.writerows(default_fields)
     sys.exit(0)
 
 
@@ -50,6 +70,21 @@ def main():
 
     args = parser.parse_args()
     args.func(args)
+
+
+default_fields = [
+    ["sheet", "Sheet", "cogs:sql_id", "The identifier for this sheet"],
+    ["label", "Label", "cogs:label", "The label for this row"],
+    [
+        "file_path",
+        "File Path",
+        "cogs:file_path",
+        "The relative path of the TSV file for this sheet",
+    ],
+    ["description", "Description", "cogs:text", "A description of this row"],
+    ["field", "Field", "cogs:sql_id", "The identifier for this field"],
+    ["datatype", "Datatype", "cogs:curie", "The datatype for this row"],
+]
 
 
 if __name__ == "__main__":
