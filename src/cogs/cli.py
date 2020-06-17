@@ -8,17 +8,17 @@ import sys
 
 from argparse import ArgumentParser
 
-reqs = ["credentials.json", "user.tsv", "sheet.tsv", "table.tsv", "config.tsv"]
-
 
 def validate():
     """Validate that there is a valid COGS project in this directory."""
     if not os.path.exists(".cogs/") or not os.path.isdir(".cogs/"):
-        print('ERROR: A COGS project has not been initialized!')
+        print("ERROR: A COGS project has not been initialized!")
         return False
     for r in reqs:
         if not os.path.exists(f".cogs/{r}") or os.stat(f".cogs/{r}").st_size == 0:
-            print(f'ERROR: COGS directory is missing {r} - please reinitialize and try again.')
+            print(
+                f"ERROR: COGS directory is missing {r} - please reinitialize and try again."
+            )
             return False
     return True
 
@@ -89,7 +89,9 @@ def init(args):
     if not os.path.exists(".cogs/table.tsv") or os.stat(".cogs/table.tsv").st_size == 0:
         with open(".cogs/table.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
-            writer.writerow(["Table ID", "Table Title", "Sheet ID", "Path", "Description"])
+            writer.writerow(
+                ["Table ID", "Table Title", "Sheet ID", "Path", "Description"]
+            )
 
     if not os.path.exists(".cogs/field.tsv") or os.stat(".cogs/field.tsv").st_size == 0:
         with open(".cogs/field.tsv", "w") as f:
@@ -146,7 +148,9 @@ def main():
 
     sp = subparsers.add_parser("create")
     sp.add_argument("-t", "--title", required=True, help="Title of the new spreadsheet")
-    sp.add_argument("-d", "--description", help="Description of the contents of this sheet")
+    sp.add_argument(
+        "-d", "--description", help="Description of the contents of this sheet"
+    )
     sp.set_defaults(func=create)
 
     args = parser.parse_args()
@@ -166,6 +170,8 @@ default_fields = [
     ["field", "Field", "cogs:sql_id", "The identifier for this field"],
     ["datatype", "Datatype", "cogs:curie", "The datatype for this row"],
 ]
+
+reqs = ["credentials.json", "user.tsv", "sheet.tsv", "table.tsv", "config.tsv"]
 
 
 if __name__ == "__main__":
