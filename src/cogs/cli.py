@@ -26,16 +26,14 @@ def is_cogs_project():
         return False
     for r in reqs:
         if not os.path.exists(f".cogs/{r}") or os.stat(f".cogs/{r}").st_size == 0:
-            print(
-                f"ERROR: COGS directory is missing {r} - please reinitialize and try again."
-            )
+            print(f"ERROR: COGS directory is missing {r}")
             return False
     return True
 
 
 def init(args):
     """Init a new .cogs configuration directory in the current working directory. If one already
-    exists, reinit it by rewriting config.tsv and ensuring that sheet.tsv and field.tsv exist."""
+    exists, display an error message."""
     cwd = os.getcwd()
     if os.path.exists(".cogs"):
         print(f"ERROR: COGS project already exists in {cwd}/.cogs/")
