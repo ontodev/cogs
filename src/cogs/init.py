@@ -105,7 +105,7 @@ def get_users(args):
     return users
 
 
-def write_data(args, sh):
+def write_data(args, sheet):
     """Create COGS data files: config.tsv, sheet.tsv, and field.tsv."""
     # Store COGS configuration
     with open(".cogs/config.tsv", "w") as f:
@@ -117,7 +117,7 @@ def write_data(args, sh):
         writer.writerow({"Key": "COGS Version", "Value": v})
         writer.writerow({"Key": "Credentials", "Value": args.credentials})
         writer.writerow({"Key": "Title", "Value": args.title})
-        writer.writerow({"Key": "ID", "Value": sh.id})
+        writer.writerow({"Key": "ID", "Value": sheet.id})
 
     # sheet.tsv contains table (tab) details from the Google Sheet
     with open(".cogs/sheet.tsv", "w") as f:
