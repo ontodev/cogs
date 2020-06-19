@@ -174,7 +174,6 @@ def init(args):
         try:
             sh.share(email, perm_type="user", role=role)
         except gspread.exceptions.APIError as e:
-            # TODO - if sharing fails, do we want to delete the Sheet and the COGS project?
             print(f"ERROR: Unable to share '{args.title}' with {email} as {role}")
             print(e.response.text)
 
