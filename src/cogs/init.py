@@ -162,7 +162,7 @@ def init(args):
 
     # Create the new Sheet
     try:
-        sh = gc.create(args.title)
+        sheet = gc.create(args.title)
     except gspread.exceptions.APIError as e:
         raise InitError(
             f"ERROR: Unable to create new Sheet '{args.title}'\n"
@@ -172,13 +172,13 @@ def init(args):
     # Share with each user
     for email, role in users.items():
         try:
-            sh.share(email, perm_type="user", role=role)
+            sheet.share(email, perm_type="user", role=role)
         except gspread.exceptions.APIError as e:
             print(f"ERROR: Unable to share '{args.title}' with {email} as {role}")
             print(e.response.text)
 
     # Write data to COGS directory
-    write_data(args, sh)
+    write_data(args, sheet)
 
 
 def run(args):
