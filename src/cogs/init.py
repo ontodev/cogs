@@ -117,7 +117,7 @@ def write_data(args, sheet):
         writer.writerow({"Key": "COGS Version", "Value": v})
         writer.writerow({"Key": "Credentials", "Value": args.credentials})
         writer.writerow({"Key": "Title", "Value": args.title})
-        writer.writerow({"Key": "ID", "Value": sheet.id})
+        writer.writerow({"Key": "Google Sheet ID", "Value": sheet.id})
 
     # sheet.tsv contains table (tab) details from the Google Sheet
     with open(".cogs/sheet.tsv", "w") as f:
