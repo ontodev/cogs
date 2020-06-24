@@ -32,9 +32,9 @@ cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
 Options:
 - `-c`/`--credentials`: **required**, path to Google API credentials](https://gspread.readthedocs.io/en/latest/oauth2.html#enable-api-access-for-a-project) in JSON format
 - `-t`/`--title`: **required**, title of the project which will be used as the title of the Google Sheet
-- `-u`/`--user`: email of the user to share the sheet with (if a `--role` is not specified, this user will be the owner of the Sheet)
-- `-r`/`--role`: role of the user specified by `--user`: `owner`, `writer`, `reader` (default: `owner`)
-- `-U`/`--users`: path to TSV containing emails and roles for multiple users (header optional; only one `owner` should be specified)
+- `-u`/`--user`: email of the user to share the sheet with (if a `--role` is not specified, this user will be a writer)
+- `-r`/`--role`: role of the user specified by `--user`: `writer` or `reader`
+- `-U`/`--users`: path to TSV containing emails and roles for multiple users (header optional)
 
 Three files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the Sheet details 

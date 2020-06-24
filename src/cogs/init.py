@@ -50,7 +50,6 @@ default_fields = [
 def get_users(args):
     """Return a dict of user emails to their roles."""
     users = {}
-    has_owner = False
 
     # Single user specified
     if args.user:
@@ -62,8 +61,6 @@ def get_users(args):
         if not is_valid_role(args.role):
             raise InitError(f"ERROR: '{args.role}' is not a valid role")
         users[args.user] = args.role
-        if args.role == "owner":
-            has_owner = True
 
     # Multiple users specified
     if args.users:
@@ -91,14 +88,6 @@ def get_users(args):
                     raise InitError(
                         f"ERROR: '{role}' is not a valid role ({args.users}, line {i})"
                     )
-
-                if role == "owner":
-                    if not has_owner:
-                        has_owner = True
-                    else:
-                        raise InitError(
-                            "ERROR: There may only be one user given the 'owner' role"
-                        )
 
                 users[email] = role
                 i += 1

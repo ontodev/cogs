@@ -57,4 +57,4 @@ def is_email(email):
 
 def is_valid_role(role):
     """Check if a string is a valid role for use with gspread."""
-    return role in ["owner", "writer", "reader"]
+    return role in ["writer", "reader"]
