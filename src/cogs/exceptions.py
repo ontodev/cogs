@@ -4,3 +4,7 @@ class CogsError(Exception):
 
 class InitError(CogsError):
     """Used to indicate an error occurred during the init step."""
+
+
+class DeleteError(CogsError):
+    """Used to indicate an error occurred during the delete step."""

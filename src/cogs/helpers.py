@@ -4,7 +4,9 @@ import gspread
 import os
 import re
 
-required_files = ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]
+from cogs.exceptions import CogsError
+
+required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
 
 def get_client(credentials):
@@ -17,15 +19,15 @@ def get_client(credentials):
         print(e.response.text)
     except google.auth.exceptions.RefreshError as e:
         if "invalid_grant" in str(e):
-            print(
+            raise CogsError(
                 "ERROR: Unable to create a Client; "
                 f"account for client_email in '{credentials}' cannot be found"
             )
         else:
-            print(
+            raise CogsError(
                 f"ERROR: Unable to create a Client; cannot refresh credentials in '{credentials}'"
+                f"\nCAUSE: {str(e)}"
             )
-            print("CAUSE: " + str(e))
 
 
 def get_config():
@@ -57,4 +59,4 @@ def is_email(email):
 
 def is_valid_role(role):
     """Check if a string is a valid role for use with gspread."""
-    return role in ["owner", "writer", "reader"]
+    return role in ["writer", "reader"]

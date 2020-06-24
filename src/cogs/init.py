@@ -4,7 +4,7 @@ import os
 import pkg_resources
 import sys
 
-from cogs.exceptions import InitError
+from cogs.exceptions import CogsError, InitError
 from cogs.helpers import get_client, is_email, is_valid_role
 
 default_fields = [
@@ -50,7 +50,6 @@ default_fields = [
 def get_users(args):
     """Return a dict of user emails to their roles."""
     users = {}
-    has_owner = False
 
     # Single user specified
     if args.user:
@@ -62,8 +61,6 @@ def get_users(args):
         if not is_valid_role(args.role):
             raise InitError(f"ERROR: '{args.role}' is not a valid role")
         users[args.user] = args.role
-        if args.role == "owner":
-            has_owner = True
 
     # Multiple users specified
     if args.users:
@@ -91,14 +88,6 @@ def get_users(args):
                     raise InitError(
                         f"ERROR: '{role}' is not a valid role ({args.users}, line {i})"
                     )
-
-                if role == "owner":
-                    if not has_owner:
-                        has_owner = True
-                    else:
-                        raise InitError(
-                            "ERROR: There may only be one user given the 'owner' role"
-                        )
 
                 users[email] = role
                 i += 1
@@ -157,8 +146,6 @@ def init(args):
 
     # Create a Client to access API
     gc = get_client(args.credentials)
-    if not gc:
-        raise InitError
 
     # Create the new Sheet
     try:
@@ -185,7 +172,7 @@ def run(args):
     """Wrapper for init function."""
     try:
         init(args)
-    except InitError as e:
+    except CogsError as e:
         print(str(e))
         if os.path.exists(".cogs"):
             os.rmdir(".cogs")

@@ -4,6 +4,7 @@ import pkg_resources
 import sys
 
 import cogs.init as init
+import cogs.delete as delete
 
 from argparse import ArgumentParser
 
@@ -29,10 +30,13 @@ def main():
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share all sheets with")
     sp.add_argument(
-        "-r", "--role", default="owner", help="Role for specified user (default: owner)"
+        "-r", "--role", default="writer", help="Role for specified user (default: owner)"
     )
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=init.run)
+
+    sp = subparsers.add_parser("delete")
+    sp.set_defaults(func=delete.run)
 
     args = parser.parse_args()
     args.func(args)
