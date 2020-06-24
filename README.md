@@ -11,6 +11,7 @@ Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
+- [`cogs share`](#share) shares the Google Sheet with specified users
 - `cogs add foo.tsv` starts tracking the `foo.tsv` table
 - `cogs push` pushes local tables to the Google Sheet
 - `cogs fetch` fetches the data from the Goolgle Sheet and stores it in `.cogs/`
@@ -50,3 +51,17 @@ cogs delete
 ```
 
 This task will fail if a COGS project has not been initialized in the working directory.
+
+### `share`
+
+Running `share` shares the Google Sheet with the specified user(s).
+```
+cogs share -r [reader-email] -w [writer-email]
+```
+
+There are three options:
+- `-r`/`--reader`: email of the user to give read access to
+- `-w`/`--writer`: email of the user to give write access to
+- `-o`/`--owner`: email of the user to transfer ownership to
+
+We **do not recommend** transferring ownership of the COGS project Sheet, as this will prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project Sheet.
