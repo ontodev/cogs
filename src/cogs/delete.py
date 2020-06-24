@@ -4,25 +4,14 @@ import shutil
 import sys
 
 from cogs.exceptions import CogsError, DeleteError
-from cogs.helpers import get_client, get_config, is_cogs_project
+from cogs.helpers import get_client, get_config, validate_cogs_project
 
 
 def delete():
     """Read COGS configuration and delete the Sheet corresponding to the Google Sheet ID. Remove
     .cogs directory."""
-    if not is_cogs_project():
-        raise DeleteError
-
-    # Get and validate the config
+    validate_cogs_project()
     config = get_config()
-    if "Google Sheet ID" not in config:
-        raise DeleteError(
-            "ERROR: COGS configuration does not contain 'Google Sheet ID'"
-        )
-    if "Title" not in config:
-        raise DeleteError("ERROR: COGS configuration does not contain 'Title'")
-    if "Credentials" not in config:
-        raise DeleteError("ERROR: COGS configuration does not contain 'Credentials'")
 
     resp = input(
         "WARNING: This task will permanently destroy the Google Sheet and all COGS data.\n"

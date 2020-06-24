@@ -8,6 +8,8 @@ from cogs.exceptions import CogsError
 
 required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
+required_keys = ["Google Sheet ID", "Title", "Credentials"]
+
 
 def get_client(credentials):
     try:
@@ -37,19 +39,10 @@ def get_config():
         reader = csv.reader(f, delimiter="\t", lineterminator="\n")
         for row in reader:
             config[row[0]] = row[1]
+    for r in required_keys:
+        if r not in config:
+            raise CogsError(f"ERROR: COGS configuration does not contain key '{r}'")
     return config
-
-
-def is_cogs_project():
-    """Validate that there is a valid COGS project in this directory."""
-    if not os.path.exists(".cogs/") or not os.path.isdir(".cogs/"):
-        print("ERROR: A COGS project has not been initialized!")
-        return False
-    for r in required_files:
-        if not os.path.exists(f".cogs/{r}") or os.stat(f".cogs/{r}").st_size == 0:
-            print(f"ERROR: COGS directory is missing {r}")
-            return False
-    return True
 
 
 def is_email(email):
@@ -60,3 +53,12 @@ def is_email(email):
 def is_valid_role(role):
     """Check if a string is a valid role for use with gspread."""
     return role in ["writer", "reader"]
+
+
+def validate_cogs_project():
+    """Validate that there is a valid COGS project in this directory. If not, raise an error."""
+    if not os.path.exists(".cogs/") or not os.path.isdir(".cogs/"):
+        raise CogsError("ERROR: A COGS project has not been initialized!")
+    for r in required_files:
+        if not os.path.exists(f".cogs/{r}") or os.stat(f".cogs/{r}").st_size == 0:
+            raise CogsError(f"ERROR: COGS directory is missing {r}")

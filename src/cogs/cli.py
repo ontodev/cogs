@@ -5,6 +5,7 @@ import sys
 
 import cogs.init as init
 import cogs.delete as delete
+import cogs.share as share
 
 from argparse import ArgumentParser
 
@@ -37,6 +38,12 @@ def main():
 
     sp = subparsers.add_parser("delete")
     sp.set_defaults(func=delete.run)
+
+    sp = subparsers.add_parser("share")
+    sp.add_argument("-o", "--owner", help="Email of user to transfer ownership of Sheet to")
+    sp.add_argument("-w", "--writer", help="Email of user to grant write access to")
+    sp.add_argument("-r", "--reader", help="Email of user to grant read access to")
+    sp.set_defaults(func=share.run)
 
     args = parser.parse_args()
     args.func(args)
