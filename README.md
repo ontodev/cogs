@@ -10,14 +10,14 @@ COGS takes a set of TSV files on your local file system and allows you to edit t
 Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
-- `cogs init` creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
+- [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
 - `cogs add foo.tsv` starts tracking the `foo.tsv` table
 - `cogs push` pushes local tables to the Google Sheet
 - `cogs fetch` fetches the data from the Goolgle Sheet and stores it in `.cogs/`
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
 - `cogs diff` shows detailed differences between local files and the Google Sheet
 - `cogs pull` overwrites local files with the data from the Google Sheet, if they have changed
-- `cogs delete` destroys the Google Sheet and configuration data, but leaves local files alone
+- [`cogs delete`](#delete) destroys the Google Sheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
 
@@ -40,3 +40,13 @@ Three files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the Sheet details 
 - `field.tsv`: Field names used in tables (contains default COGS fields)
 - `sheet.tsv`: Table names in Sheet and details (empty) - the tables correspond to tabs in the Sheet
+
+### `delete`
+
+Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the Google Sheet ID. This Google Sheet is deleted, and the `.cogs` directory containing all project data is also removed. Any TSVs specified as tables in the Sheet are left untouched.
+
+```
+cogs delete
+```
+
+This task will fail if a COGS project has not been initialized in the working directory.
