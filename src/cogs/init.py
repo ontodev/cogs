@@ -4,7 +4,7 @@ import os
 import pkg_resources
 import sys
 
-from cogs.exceptions import InitError
+from cogs.exceptions import CogsError, InitError
 from cogs.helpers import get_client, is_email, is_valid_role
 
 default_fields = [
@@ -146,8 +146,6 @@ def init(args):
 
     # Create a Client to access API
     gc = get_client(args.credentials)
-    if not gc:
-        raise InitError
 
     # Create the new Sheet
     try:
@@ -174,7 +172,7 @@ def run(args):
     """Wrapper for init function."""
     try:
         init(args)
-    except InitError as e:
+    except CogsError as e:
         print(str(e))
         if os.path.exists(".cogs"):
             os.rmdir(".cogs")

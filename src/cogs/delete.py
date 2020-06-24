@@ -3,7 +3,7 @@ import os
 import shutil
 import sys
 
-from cogs.exceptions import DeleteError
+from cogs.exceptions import CogsError, DeleteError
 from cogs.helpers import get_client, get_config, is_cogs_project
 
 
@@ -34,8 +34,6 @@ def delete():
 
     # Get a client to perform Sheet actions
     gc = get_client(config["Credentials"])
-    if not gc:
-        raise DeleteError
 
     # Delete the Sheet
     title = config["Title"]
@@ -57,6 +55,6 @@ def run(args):
     """Wrapper for delete function."""
     try:
         delete()
-    except DeleteError as e:
+    except CogsError as e:
         print(str(e))
         sys.exit(1)
