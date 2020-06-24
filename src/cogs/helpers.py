@@ -4,7 +4,7 @@ import gspread
 import os
 import re
 
-required_files = ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]
+required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
 
 def get_client(credentials):

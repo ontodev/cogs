@@ -24,6 +24,14 @@ def delete():
     if "Credentials" not in config:
         raise DeleteError("ERROR: COGS configuration does not contain 'Credentials'")
 
+    resp = input(
+        "WARNING: This task will permanently destroy the Google Sheet and all COGS data.\n"
+        "         Do you wish to proceed? [y/n]\n"
+    )
+    if resp.lower().strip() != "y":
+        print("'delete' operation stopped")
+        sys.exit(0)
+
     # Get a client to perform Sheet actions
     gc = get_client(config["Credentials"])
     if not gc:
