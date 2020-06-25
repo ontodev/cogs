@@ -84,6 +84,6 @@ cogs add [path] -d "[description]"
 
 The `-d`/`--description` is optional.
 
-The table title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a table with this title already exists in the project, the task will fail.
+The table title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a table with this title already exists in the project, the task will fail. The table name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
 
 This does not add the table to the Google Sheet - use `cogs push` to push all tracked local tables to the project Sheet.

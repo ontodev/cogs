@@ -1,5 +1,6 @@
 import csv
 import ntpath
+import re
 import sys
 
 from cogs.exceptions import CogsError, AddError
@@ -28,6 +29,8 @@ def add(args):
 
     # Create the sheet title from file basename
     title = ntpath.basename(args.path).split(".")[0]
+    if title in ["user", "config", "sheet", "field"]:
+        raise AddError(f"ERROR: table cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table
     current_tables = get_tables()
@@ -43,10 +46,10 @@ def add(args):
     fields = get_fields()
     update_fields = False
     for h in headers:
-        field = h.strip().lower().replace(" ", "_")
+        field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
         if field not in fields:
             update_fields = True
-            fields[field] = {"Label": h, "Datatype": "", "Description": ""}
+            fields[field] = {"Label": h, "Datatype": "cogs:text", "Description": ""}
 
     # Update field.tsv if we need to
     if update_fields:
