@@ -45,6 +45,30 @@ def get_config():
     return config
 
 
+def get_fields():
+    """Get the current fields in this project from field.tsv."""
+    fields = {}
+    with open(".cogs/field.tsv", "r") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            field = row["Field"]
+            del row["Field"]
+            fields[field] = row
+    return fields
+
+
+def get_tables():
+    """Get the current tables in this project from sheet.tsv."""
+    tables = {}
+    with open(".cogs/sheet.tsv", "r") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            title = row["Title"]
+            del row["Title"]
+            tables[title] = row
+    return tables
+
+
 def is_email(email):
     """Check if a string matches a general email pattern (user@domain.tld)"""
     return re.match(r"^[-.\w]+@[-\w]+\.[-\w]+$", email)
