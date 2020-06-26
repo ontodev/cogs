@@ -98,7 +98,7 @@ This does not add the table to the Google Sheet as a Worksheet - use `cogs push`
 
 ### `push`
 
-Running `push` will sync the Google Sheet with your local changes. This includes creating new Worksheets for any added tables (`cogs add`) and deleting Worksheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the Worksheets.
+Running `push` will sync the Google Sheet with your local changes. This includes creating new Worksheets for any added tables (`cogs add`) and deleting Worksheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the corresponding Worksheets.
 
 ```
 cogs push
