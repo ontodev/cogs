@@ -32,6 +32,14 @@ def get_client(credentials):
             )
 
 
+def get_colstr(n):
+    string = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        string = chr(65 + remainder) + string
+    return string
+
+
 def get_config():
     """Get the configuration for this project as a dict."""
     config = {}
@@ -57,16 +65,16 @@ def get_fields():
     return fields
 
 
-def get_tables():
-    """Get the current tables in this project from sheet.tsv."""
-    tables = {}
+def get_worksheets():
+    """Get the current local worksheets in this project from sheet.tsv."""
+    worksheets = {}
     with open(".cogs/sheet.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             title = row["Title"]
             del row["Title"]
-            tables[title] = row
-    return tables
+            worksheets[title] = row
+    return worksheets
 
 
 def is_email(email):

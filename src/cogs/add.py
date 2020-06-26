@@ -4,7 +4,7 @@ import re
 import sys
 
 from cogs.exceptions import CogsError, AddError
-from cogs.helpers import get_fields, get_tables, validate_cogs_project
+from cogs.helpers import get_fields, get_worksheets, validate_cogs_project
 
 
 def add(args):
@@ -33,9 +33,9 @@ def add(args):
         raise AddError(f"ERROR: table cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table
-    current_tables = get_tables()
-    if title in current_tables:
-        raise AddError(f"ERROR: '{title}' table already exists in this project")
+    current_ws = get_worksheets()
+    if title in current_ws:
+        raise AddError(f"ERROR: '{title}' worksheet already exists in this project")
 
     # Maybe get a description
     description = ""

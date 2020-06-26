@@ -12,8 +12,9 @@ we try to follow the familiar `git` interface and workflow:
 
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
 - [`cogs share`](#share) shares the Google Sheet with specified users
-- [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table
-- `cogs push` pushes local tables to the Google Sheet
+- [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a worksheet
+- [`cogs rm foo.tsv`] stops tracking the `foo.tsv` table as a worksheet
+- [`cogs push`](#push) pushes changes to local worksheets to the Google Sheet
 - `cogs fetch` fetches the data from the Goolgle Sheet and stores it in `.cogs/`
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
 - `cogs diff` shows detailed differences between local files and the Google Sheet
@@ -21,6 +22,11 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs delete`](#delete) destroys the Google Sheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
+
+## Definitions
+
+- **Sheet**: the remote Google spreadsheet - each COGS project corresponds to one Sheet
+- **Worksheet**: a tab in the Sheet - each Worksheet corresponds to one local TSV or CSV table
 
 ---
 
@@ -41,8 +47,8 @@ Options:
 
 Three files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the Sheet details 
-- `field.tsv`: Field names used in tables (contains default COGS fields)
-- `sheet.tsv`: Table names in Sheet and details (empty) - the tables correspond to tabs in the Sheet
+- `field.tsv`: Field names used in worksheets (contains default COGS fields)
+- `sheet.tsv`: Table names in Sheet and details (empty) - the worksheets correspond to tabs in the Sheet
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
 
@@ -50,7 +56,7 @@ All other tasks will fail if a COGS project has not been initialized in the work
 
 ### `delete`
 
-Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the Google Sheet ID. This Google Sheet is deleted, and the `.cogs` directory containing all project data is also removed. Any TSVs specified as tables in the Sheet are left untouched.
+Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the Google Sheet ID. This Google Sheet is deleted, and the `.cogs` directory containing all project data is also removed. Any TSVs specified as worksheets in the Sheet are left untouched.
 
 ```
 cogs delete
@@ -86,4 +92,14 @@ The `-d`/`--description` is optional.
 
 The table title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a table with this title already exists in the project, the task will fail. The table name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
 
-This does not add the table to the Google Sheet - use `cogs push` to push all tracked local tables to the project Sheet.
+This does not add the table to the Google Sheet as a Worksheet - use `cogs push` to push all tracked local tables to the project Sheet.
+
+---
+
+### `push`
+
+Running `push` will sync the Google Sheet with your local changes. This includes creating new Worksheets for any added tables (`cogs add`) and deleting Worksheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the Worksheets.
+
+```
+cogs push
+```

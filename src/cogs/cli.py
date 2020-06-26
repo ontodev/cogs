@@ -7,6 +7,7 @@ import cogs.init as init
 import cogs.delete as delete
 import cogs.share as share
 import cogs.add as add
+import cogs.push as push
 
 from argparse import ArgumentParser
 
@@ -57,8 +58,12 @@ def main():
     # ------------------------------- add -------------------------------
     sp = subparsers.add_parser("add")
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
-    sp.add_argument("-d", "--description", help="Description of table to add to Sheet")
+    sp.add_argument("-d", "--description", help="Description of worksheet to add to Sheet")
     sp.set_defaults(func=add.run)
+
+    # ------------------------------- push -------------------------------
+    sp = subparsers.add_parser("push")
+    sp.set_defaults(func=push.run)
 
     args = parser.parse_args()
     args.func(args)
