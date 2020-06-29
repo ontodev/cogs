@@ -13,7 +13,7 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
 - [`cogs share`](#share) shares the Google Sheet with specified users
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a Worksheet
-- [`cogs rm foo.tsv`] stops tracking the `foo.tsv` table as a Worksheet
+- `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a Worksheet
 - [`cogs push`](#push) pushes changes to local Worksheets to the Google Sheet
 - `cogs fetch` fetches the data from the Goolgle Sheet and stores it in `.cogs/`
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
