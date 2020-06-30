@@ -120,6 +120,9 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# VSCode project settings
+.vscode
+
 # mkdocs documentation
 /site
 
@@ -130,3 +133,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# When testing in source, exclude .cogs
+.cogs
