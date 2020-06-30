@@ -8,6 +8,7 @@ import cogs.delete as delete
 import cogs.share as share
 import cogs.add as add
 import cogs.push as push
+import cogs.open as open
 
 from argparse import ArgumentParser
 
@@ -72,6 +73,10 @@ def main():
     # ------------------------------- push -------------------------------
     sp = subparsers.add_parser("push")
     sp.set_defaults(func=push.run)
+
+    # ------------------------------- open -------------------------------
+    sp = subparsers.add_parser("open")
+    sp.set_defaults(func=open.run)
 
     args = parser.parse_args()
     args.func(args)
