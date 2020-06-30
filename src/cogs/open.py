@@ -10,7 +10,7 @@ def openSheet(args):
     validate_cogs_project()
 
     config = get_config()
-    gc = get_client(config["Credentials"])
+
     spreadsheet_id = config["Spreadsheet ID"]
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}")
 
