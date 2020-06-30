@@ -2,6 +2,7 @@ import csv
 import google.auth.exceptions
 import gspread
 import os
+import pkg_resources
 import re
 
 from cogs.exceptions import CogsError
@@ -9,6 +10,14 @@ from cogs.exceptions import CogsError
 required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title", "Credentials"]
+
+
+def get_version():
+    try:
+        version = pkg_resources.require("COGS")[0].version
+    except pkg_resources.DistributionNotFound:
+        version = "developer-version"
+    return version
 
 
 def get_client(credentials):

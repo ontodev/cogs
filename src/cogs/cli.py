@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import pkg_resources
 import sys
 
+import cogs.helpers as helpers
 import cogs.init as init
 import cogs.delete as delete
 import cogs.share as share
@@ -12,17 +12,9 @@ import cogs.push as push
 from argparse import ArgumentParser
 
 
-def get_version():
-    try:
-        version = pkg_resources.require("COGS")[0].version
-    except pkg_resources.DistributionNotFound:
-        version = "developer-version"
-    return version
-
-
 def version(args):
     """Print COGS version information."""
-    v = get_version()
+    v = helpers.get_version()
     print(f"COGS version {v}")
     sys.exit(0)
 
@@ -42,10 +34,7 @@ def main():
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")
     sp.add_argument(
-        "-r",
-        "--role",
-        default="writer",
-        help="Role for specified user (default: owner)",
+        "-r", "--role", default="writer", help="Role for specified user (default: owner)",
     )
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=init.run)
@@ -56,9 +45,7 @@ def main():
 
     # ------------------------------- share -------------------------------
     sp = subparsers.add_parser("share")
-    sp.add_argument(
-        "-o", "--owner", help="Email of user to transfer ownership of spreadsheet to"
-    )
+    sp.add_argument("-o", "--owner", help="Email of user to transfer ownership of spreadsheet to")
     sp.add_argument("-w", "--writer", help="Email of user to grant write access to")
     sp.add_argument("-r", "--reader", help="Email of user to grant read access to")
     sp.set_defaults(func=share.run)

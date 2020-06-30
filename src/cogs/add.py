@@ -22,9 +22,7 @@ def add(args):
         try:
             reader = csv.DictReader(f, delimiter=delimiter)
         except csv.Error as e:
-            raise AddError(
-                f"ERROR: unable to read {args.path} as {fmt}\nCAUSE:{str(e)}"
-            )
+            raise AddError(f"ERROR: unable to read {args.path} as {fmt}\nCAUSE:{str(e)}")
         headers = reader.fieldnames
 
     # Create the sheet title from file basename
@@ -74,9 +72,7 @@ def add(args):
             fieldnames=["ID", "Title", "Path", "Description"],
         )
         # ID gets filled in when we add it to the Sheet
-        writer.writerow(
-            {"ID": "", "Title": title, "Path": args.path, "Description": description}
-        )
+        writer.writerow({"ID": "", "Title": title, "Path": args.path, "Description": description})
 
 
 def run(args):
