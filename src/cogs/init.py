@@ -106,9 +106,9 @@ def write_data(args, sheet):
         writer.writerow({"Key": "COGS Version", "Value": v})
         writer.writerow({"Key": "Credentials", "Value": args.credentials})
         writer.writerow({"Key": "Title", "Value": args.title})
-        writer.writerow({"Key": "Google Sheet ID", "Value": sheet.id})
+        writer.writerow({"Key": "Spreadsheet ID", "Value": sheet.id})
 
-    # sheet.tsv contains table (tab) details from the Google Sheet
+    # sheet.tsv contains sheet (table/tab) details from the spreadsheet
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
@@ -149,23 +149,23 @@ def init(args):
 
     # Create the new Sheet
     try:
-        sheet = gc.create(args.title)
+        spreadsheet = gc.create(args.title)
     except gspread.exceptions.APIError as e:
         raise InitError(
-            f"ERROR: Unable to create new Sheet '{args.title}'\n"
+            f"ERROR: Unable to create new spreadsheet '{args.title}'\n"
             f"CAUSE: {e.response.text}"
         )
 
     # Share with each user
     for email, role in users.items():
         try:
-            sheet.share(email, perm_type="user", role=role)
+            spreadsheet.share(email, perm_type="user", role=role)
         except gspread.exceptions.APIError as e:
             print(f"ERROR: Unable to share '{args.title}' with {email} as {role}")
             print(e.response.text)
 
     # Write data to COGS directory
-    write_data(args, sheet)
+    write_data(args, spreadsheet)
 
 
 def run(args):

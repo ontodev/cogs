@@ -8,7 +8,7 @@ from cogs.exceptions import CogsError
 
 required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
-required_keys = ["Google Sheet ID", "Title", "Credentials"]
+required_keys = ["Spreadsheet ID", "Title", "Credentials"]
 
 
 def get_client(credentials):
@@ -30,6 +30,14 @@ def get_client(credentials):
                 f"ERROR: Unable to create a Client; cannot refresh credentials in '{credentials}'"
                 f"\nCAUSE: {str(e)}"
             )
+
+
+def get_colstr(n):
+    string = ""
+    while n > 0:
+        n, remainder = divmod(n - 1, 26)
+        string = chr(65 + remainder) + string
+    return string
 
 
 def get_config():
@@ -57,16 +65,16 @@ def get_fields():
     return fields
 
 
-def get_tables():
-    """Get the current tables in this project from sheet.tsv."""
-    tables = {}
+def get_sheets():
+    """Get the current local sheets in this project from sheet.tsv."""
+    sheets = {}
     with open(".cogs/sheet.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             title = row["Title"]
             del row["Title"]
-            tables[title] = row
-    return tables
+            sheets[title] = row
+    return sheets
 
 
 def is_email(email):
