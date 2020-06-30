@@ -11,6 +11,7 @@ Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a spreadsheet for the project
+- [`cogs open`](#open) displays the URL of the spreadsheet
 - [`cogs share`](#share) shares the spreadsheet with specified users
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
 - `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a sheet
@@ -63,6 +64,12 @@ Three files are created in the `.cogs/` directory when running `init`:
 - `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
+
+---
+
+### `open`
+
+Running `open` displays the URL of the spreadsheet.
 
 ---
 
