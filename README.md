@@ -30,6 +30,19 @@ There is no step corresponding to `git commit`.
 
 ---
 
+### Getting started development
+
+To be able to use the local code without having to install it (this makes the development easier): 
+
+On Linux:
+```
+$ virtualenv venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+$ export PYTHONPATH=$PYTHONPATH:$PWD/src
+$ python src/cogs/cli.py
+```
+
 ### `init`
 
 Running `init` creates a `.cogs` directory containing configuration data. This also creates a new Google Sheets spreadsheet and stores the ID. Optionally, this new sheet may be shared with users.
