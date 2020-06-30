@@ -8,13 +8,13 @@ from cogs.helpers import get_client, get_config, validate_cogs_project
 
 
 def delete():
-    """Read COGS configuration and delete the Sheet corresponding to the Google Sheet ID. Remove
-    .cogs directory."""
+    """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
+    Remove .cogs directory."""
     validate_cogs_project()
     config = get_config()
 
     resp = input(
-        "WARNING: This task will permanently destroy the Google Sheet and all COGS data.\n"
+        "WARNING: This task will permanently destroy the spreadsheet and all COGS data.\n"
         "         Do you wish to proceed? [y/n]\n"
     )
     if resp.lower().strip() != "y":
@@ -29,10 +29,10 @@ def delete():
     cwd = os.getcwd()
     print(f"Removing COGS project '{title}' from {cwd}")
     try:
-        gc.del_spreadsheet(config["Google Sheet ID"])
+        gc.del_spreadsheet(config["Spreadsheet ID"])
     except gspread.exceptions.APIError as e:
         raise DeleteError(
-            f"ERROR: Unable to delete Sheet '{title}'\n" f"CAUSE: {e.response.text}"
+            f"ERROR: Unable to delete spreadsheet '{title}'\n" f"CAUSE: {e.response.text}"
         )
 
     # Remove the COGS data

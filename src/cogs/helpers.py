@@ -8,7 +8,7 @@ from cogs.exceptions import CogsError
 
 required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
-required_keys = ["Google Sheet ID", "Title", "Credentials"]
+required_keys = ["Spreadsheet ID", "Title", "Credentials"]
 
 
 def get_client(credentials):
@@ -65,16 +65,16 @@ def get_fields():
     return fields
 
 
-def get_worksheets():
-    """Get the current local worksheets in this project from sheet.tsv."""
-    worksheets = {}
+def get_sheets():
+    """Get the current local sheets in this project from sheet.tsv."""
+    sheets = {}
     with open(".cogs/sheet.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             title = row["Title"]
             del row["Title"]
-            worksheets[title] = row
-    return worksheets
+            sheets[title] = row
+    return sheets
 
 
 def is_email(email):
