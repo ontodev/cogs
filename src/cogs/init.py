@@ -6,6 +6,8 @@ import sys
 
 from cogs.exceptions import CogsError, InitError
 from cogs.helpers import get_client, is_email, is_valid_role
+from cogs.cli import get_version
+
 
 default_fields = [
     {
@@ -93,7 +95,6 @@ def get_users(args):
                 i += 1
     return users
 
-
 def write_data(args, sheet):
     """Create COGS data files: config.tsv, sheet.tsv, and field.tsv."""
     # Store COGS configuration
@@ -101,7 +102,7 @@ def write_data(args, sheet):
         writer = csv.DictWriter(
             f, delimiter="\t", lineterminator="\n", fieldnames=["Key", "Value"]
         )
-        v = pkg_resources.require("COGS")[0].version
+        v = get_version()
         writer.writerow({"Key": "COGS", "Value": "https://github.com/ontodev/cogs"})
         writer.writerow({"Key": "COGS Version", "Value": v})
         writer.writerow({"Key": "Credentials", "Value": args.credentials})

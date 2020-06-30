@@ -12,9 +12,17 @@ import cogs.push as push
 from argparse import ArgumentParser
 
 
+def get_version():
+    try:
+        version = pkg_resources.require("COGS")[0].version
+    except pkg_resources.DistributionNotFound:
+        version = "developer-version"
+    return version
+
+
 def version(args):
     """Print COGS version information."""
-    v = pkg_resources.require("COGS")[0].version
+    v = get_version()
     print(f"COGS version {v}")
     sys.exit(0)
 
