@@ -32,7 +32,7 @@ def main():
         "-c", "--credentials", required=True, help="Path to service account credentials"
     )
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
-    sp.add_argument("-u", "--user", help="Email (user) to share all sheets with")
+    sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")
     sp.add_argument(
         "-r",
         "--role",
@@ -49,7 +49,7 @@ def main():
     # ------------------------------- share -------------------------------
     sp = subparsers.add_parser("share")
     sp.add_argument(
-        "-o", "--owner", help="Email of user to transfer ownership of Sheet to"
+        "-o", "--owner", help="Email of user to transfer ownership of spreadsheet to"
     )
     sp.add_argument("-w", "--writer", help="Email of user to grant write access to")
     sp.add_argument("-r", "--reader", help="Email of user to grant read access to")
@@ -58,7 +58,7 @@ def main():
     # ------------------------------- add -------------------------------
     sp = subparsers.add_parser("add")
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
-    sp.add_argument("-d", "--description", help="Description of worksheet to add to Sheet")
+    sp.add_argument("-d", "--description", help="Description of sheet to add to spreadsheet")
     sp.set_defaults(func=add.run)
 
     # ------------------------------- push -------------------------------
