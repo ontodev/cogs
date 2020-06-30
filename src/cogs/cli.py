@@ -9,6 +9,7 @@ import cogs.share as share
 import cogs.add as add
 import cogs.push as push
 import cogs.open as open
+import cogs.rm as rm
 
 from argparse import ArgumentParser
 
@@ -64,6 +65,11 @@ def main():
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser("open")
     sp.set_defaults(func=open.run)
+
+    # -------------------------------- rm --------------------------------
+    sp = subparsers.add_parser("rm")
+    sp.add_argument("paths", help="Path to TSV or CSV to remove from COGS project", nargs='+')
+    sp.set_defaults(func=rm.run)
 
     args = parser.parse_args()
     args.func(args)
