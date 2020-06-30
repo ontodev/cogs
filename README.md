@@ -34,13 +34,12 @@ There is no step corresponding to `git commit`.
 
 To be able to use the local code without having to install it (this makes the development easier): 
 
-On Linux:
+On Linux or macOS:
 ```
-$ virtualenv venv
-$ source venv/bin/activate
+$ python -m venv .venv
+$ source .venv/bin/activate
 $ pip install -r requirements.txt
-$ export PYTHONPATH=$PYTHONPATH:$PWD/src
-$ python src/cogs/cli.py
+$ pip install -e .
 ```
 
 ### `init`
