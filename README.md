@@ -32,14 +32,14 @@ There is no step corresponding to `git commit`.
 
 ### Getting started development
 
-To be able to use the local code without having to install it (this makes the development easier): 
+Until we distribute COGS with Pypi, and for local development on Unix (Linux or macOS), we suggest these install instructions:
 
-On Linux or macOS:
 ```
-$ python -m venv .venv
+$ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip install -r requirements.txt
 $ pip install -e .
+$ cogs --help
 ```
 
 ### `init`
