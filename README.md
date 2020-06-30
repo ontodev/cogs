@@ -10,29 +10,29 @@ COGS takes a set of TSV files on your local file system and allows you to edit t
 Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
-- [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a Google Sheet for the project
-- [`cogs share`](#share) shares the Google Sheet with specified users
-- [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a Worksheet
-- `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a Worksheet
-- [`cogs push`](#push) pushes changes to local Worksheets to the Google Sheet
-- `cogs fetch` fetches the data from the Goolgle Sheet and stores it in `.cogs/`
+- [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a spreadsheet for the project
+- [`cogs share`](#share) shares the spreadsheet with specified users
+- [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
+- `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a sheet
+- [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
+- `cogs fetch` fetches the data from the spreadsheet and stores it in `.cogs/`
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
-- `cogs diff` shows detailed differences between local files and the Google Sheet
-- `cogs pull` overwrites local files with the data from the Google Sheet, if they have changed
-- [`cogs delete`](#delete) destroys the Google Sheet and configuration data, but leaves local files alone
+- `cogs diff` shows detailed differences between local files and the spreadsheet
+- `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
+- [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
 
 ## Definitions
 
-- **Sheet**: the remote Google spreadsheet - each COGS project corresponds to one Sheet
-- **Worksheet**: a tab in the Sheet - each Worksheet corresponds to one local TSV or CSV table
+- **Spreadsheet**: the remote Google Sheets spreadsheet - each COGS project corresponds to one spreadsheet
+- **Sheet**: a tab in the spreadsheet - each sheet corresponds to one local TSV or CSV table
 
 ---
 
 ### `init`
 
-Running `init` creates a `.cogs` directory containing configuration data. This also creates a new Google Sheet and stores the Sheet ID. Optionally, this new sheet may be shared with users.
+Running `init` creates a `.cogs` directory containing configuration data. This also creates a new Google Sheets spreadsheet and stores the ID. Optionally, this new sheet may be shared with users.
 
 ```
 cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
@@ -40,15 +40,15 @@ cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
 
 Options:
 - `-c`/`--credentials`: **required**, path to [Google API credentials](https://gspread.readthedocs.io/en/latest/oauth2.html#enable-api-access-for-a-project) in JSON format
-- `-t`/`--title`: **required**, title of the project which will be used as the title of the Google Sheet
+- `-t`/`--title`: **required**, title of the project which will be used as the title of the Google spreadsheet
 - `-u`/`--user`: email of the user to share the sheet with (if a `--role` is not specified, this user will be a writer)
 - `-r`/`--role`: role of the user specified by `--user`: `writer` or `reader`
 - `-U`/`--users`: path to TSV containing emails and roles for multiple users (header optional)
 
 Three files are created in the `.cogs/` directory when running `init`:
-- `config.tsv`: COGS configuration, including the Sheet details 
-- `field.tsv`: Field names used in Worksheets (contains default COGS fields)
-- `sheet.tsv`: Worksheet names in Sheet and details (empty) - the Worksheets correspond to local tables
+- `config.tsv`: COGS configuration, including the spreadsheet details 
+- `field.tsv`: Field names used in sheets (contains default COGS fields)
+- `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
 
@@ -56,7 +56,7 @@ All other tasks will fail if a COGS project has not been initialized in the work
 
 ### `delete`
 
-Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the Google Sheet ID. This Google Sheet is deleted, and the `.cogs` directory containing all project data is also removed. Any local TSV/CSV tables specified as Worksheets in the Sheet are left untouched.
+Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the spreadsheet ID. This spreadsheet is deleted in Google Sheets and the `.cogs` directory containing all project data is also removed. Any local TSV/CSV tables specified as sheets in the spreadsheet are left untouched.
 
 ```
 cogs delete
@@ -66,7 +66,7 @@ cogs delete
 
 ### `share`
 
-Running `share` shares the Google Sheet with the specified user(s).
+Running `share` shares the spreadsheet with the specified user(s).
 ```
 cogs share -r [reader-email] -w [writer-email]
 ```
@@ -76,7 +76,7 @@ There are three options:
 - `-w`/`--writer`: email of the user to give write access to
 - `-o`/`--owner`: email of the user to transfer ownership to
 
-We **do not recommend** transferring ownership of the COGS project Sheet, as this will prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project Sheet.
+We **do not recommend** transferring ownership of the COGS project spreadsheet, as this will prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
 
 ---
 
@@ -90,15 +90,15 @@ cogs add [path] -d "[description]"
 
 The `-d`/`--description` is optional.
 
-The Worksheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a Worksheet with this title already exists in the project, the task will fail. The Worksheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
+The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
 
-This does not add the table to the Google Sheet as a Worksheet - use `cogs push` to push all tracked local tables to the project Sheet.
+This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
 
 ---
 
 ### `push`
 
-Running `push` will sync the Google Sheet with your local changes. This includes creating new Worksheets for any added tables (`cogs add`) and deleting Worksheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the corresponding Worksheets.
+Running `push` will sync the spreadsheet with your local changes. This includes creating new sheets for any added tables (`cogs add`) and deleting sheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the corresponding sheets.
 
 ```
 cogs push
