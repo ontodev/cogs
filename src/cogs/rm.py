@@ -25,7 +25,7 @@ def rm(args):
 
     # Make sure we are not deleting the last sheet as Google spreadsheet would refuse to do so
     if len(sheets)-len(sheets_to_remove) == 0:
-        raise RmError(f"ERROR: It is not possible to delete all the sheets from a spreadsheet.")
+        raise RmError(f"ERROR: unable to remove {len(sheets_to_remove)} tracked sheet(s) - the spreadsheet must have at least one sheet.")
 
     # Update sheet.tsv 
     
