@@ -23,6 +23,10 @@ def rm(args):
 
     sheets_to_remove = {title:sheet for title,sheet in sheets.items() if sheet["Path"] in args.paths}
 
+    # Make sure we are not deleting the last sheet as Google spreadsheet would refuse to do so
+    if len(sheets)-len(sheets_to_remove) == 0:
+        raise RmError(f"ERROR: It is not possible to delete all the sheets from a spreadsheet.")
+
     # Update sheet.tsv 
     
     with open(".cogs/sheet.tsv", "w") as f:
