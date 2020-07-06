@@ -94,7 +94,7 @@ def fetch(args):
         details = {
             "ID": sid,
             "Title": sheet_title,
-            "Path": f".cogs/{sheet_title}.tsv",
+            "Path": f"{sheet_title}.tsv",
             "Description": "",
         }
         all_sheets.append(details)
