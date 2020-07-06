@@ -1,4 +1,5 @@
 import csv
+import logging
 import sys
 
 from cogs.exceptions import CogsError
@@ -7,15 +8,17 @@ from cogs.helpers import (
     get_colstr,
     get_config,
     get_sheets,
+    set_logging,
     validate_cogs_project,
 )
 
 
-def push():
+def push(args):
     """Push local tables to the spreadsheet as sheets. Only the sheets in sheet.tsv will be
     pushed. If a sheet in the Sheet does not exist in the local sheet.tsv, it will be removed
     from the Sheet. Any sheet in sheet.tsv that does not exist in the Sheet will be created.
     Any sheet in sheet.tsv that does exist will be updated."""
+    set_logging(args.verbose)
     validate_cogs_project()
     config = get_config()
     gc = get_client(config["Credentials"])
@@ -49,10 +52,20 @@ def push():
                     cols = row_len
                 rows.append(row)
 
+        # Set sheet size
+        if len(rows) < 500:
+            y_size = 500
+        else:
+            y_size = len(rows) + 10
+        if cols < 20:
+            x_size = 20
+        else:
+            x_size = cols + 1
+
         # Create or get the sheet
         if sheet_title not in remote_sheets:
-            print(f"Creating sheet '{sheet_title}'")
-            sheet = spreadsheet.add_worksheet(sheet_title, rows=len(rows), cols=cols)
+            logging.info(f"creating sheet '{sheet_title}'")
+            sheet = spreadsheet.add_worksheet(sheet_title, rows=y_size, cols=x_size)
         else:
             sheet = remote_sheets[sheet_title]
         details["Title"] = sheet.title
@@ -61,7 +74,9 @@ def push():
 
         # Add new values to ws from local
         spreadsheet.values_update(
-            f"{sheet_title}!A1", params={"valueInputOption": "RAW"}, body={"values": rows}
+            f"{sheet_title}!A1",
+            params={"valueInputOption": "RAW"},
+            body={"values": rows},
         )
 
         # Copy this table into COGS data
@@ -71,7 +86,7 @@ def push():
 
     for sheet_title, sheet in remote_sheets.items():
         if sheet_title not in local_sheets.keys():
-            print(f"Removing sheet '{sheet_title}'")
+            logging.info(f"removing sheet '{sheet_title}'")
             spreadsheet.del_worksheet(sheet)
 
     with open(".cogs/sheet.tsv", "w") as f:
@@ -88,7 +103,7 @@ def push():
 def run(args):
     """Wrapper for push function."""
     try:
-        push()
+        push(args)
     except CogsError as e:
-        print(str(e))
+        logging.critical(str(e))
         sys.exit(1)

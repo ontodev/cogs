@@ -12,3 +12,7 @@ class DeleteError(CogsError):
 
 class AddError(CogsError):
     """Used to indicate an error occurred during the add step."""
+
+
+class FetchError(CogsError):
+    """Used to indicate an error occurred during the fetch step."""

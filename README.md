@@ -16,13 +16,24 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
 - `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a sheet
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
-- `cogs fetch` fetches the data from the spreadsheet and stores it in `.cogs/`
+- [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
+- `cogs mv` updates the path to the local version of a spreadsheet
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
 - `cogs diff` shows detailed differences between local files and the spreadsheet
 - `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
+
+## Logging
+
+To print info-level logging messages (error and critical level messages are always printed), run any command with the `-v`/`--verbose` flag:
+
+```
+cogs [command & opts] -v
+```
+
+Otherwise, most commands succeed silently.
 
 ## Definitions
 
@@ -101,7 +112,7 @@ We **do not recommend** transferring ownership of the COGS project spreadsheet, 
 
 ### `add`
 
-Running `add` will begin tracking a local TSV or CSV table. The table details (path, name/title, and description) get added to `.cogs/sheet.tsv` and all headers are added to `.cogs/field.tsv`, if they do not already exist.
+Running `add` will begin tracking a local TSV or CSV table. The table details (path, name/title, and description) get added to `.cogs/sheet.tsv` and all headers are added to `.cogs/field.tsv`, if they do not already exist with the default datatype of `cogs:text` (text string).
 
 ```
 cogs add [path] -d "[description]"
@@ -122,3 +133,19 @@ Running `push` will sync the spreadsheet with your local changes. This includes 
 ```
 cogs push
 ```
+
+---
+
+### `fetch`
+
+Running `fetch` will sync the local `.cogs/` directory with all remote spreadsheet changes.
+
+```
+cogs fetch
+```
+
+This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/`, but will not overwrite the local versions specified by their path. As the sheets are downloaded, the fields are checked against existing fields in `.cogs/field.tsv` and any new fields are added with the default datatype of `cogs:text` (text string). Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
+
+If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in). This path can be updated with `cogs mv`.
+
+To sync the local version of sheets with the data in `.cogs/`, run `cogs pull`.

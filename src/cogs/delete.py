@@ -1,15 +1,17 @@
 import gspread
+import logging
 import os
 import shutil
 import sys
 
 from cogs.exceptions import CogsError, DeleteError
-from cogs.helpers import get_client, get_config, validate_cogs_project
+from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
 
 
-def delete():
+def delete(args):
     """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
     Remove .cogs directory."""
+    set_logging(args.verbose)
     validate_cogs_project()
     config = get_config()
 
@@ -18,7 +20,7 @@ def delete():
         "         Do you wish to proceed? [y/n]\n"
     )
     if resp.lower().strip() != "y":
-        print("'delete' operation stopped")
+        logging.info("'delete' operation stopped")
         sys.exit(0)
 
     # Get a client to perform Sheet actions
@@ -29,11 +31,13 @@ def delete():
     cwd = os.getcwd()
     print(f"Removing COGS project '{title}' from {cwd}")
     try:
-        gc.del_spreadsheet(config["Spreadsheet ID"])
+        ssid = config["Spreadsheet ID"]
+        gc.del_spreadsheet(ssid)
     except gspread.exceptions.APIError as e:
         raise DeleteError(
-            f"ERROR: Unable to delete spreadsheet '{title}'\n" f"CAUSE: {e.response.text}"
+            f"Unable to delete spreadsheet '{title}'\n" f"CAUSE: {e.response.text}"
         )
+    logging.info(f"successfully deleted Google Sheet '{title}' ({ssid})")
 
     # Remove the COGS data
     if os.path.exists(".cogs"):
@@ -43,7 +47,7 @@ def delete():
 def run(args):
     """Wrapper for delete function."""
     try:
-        delete()
+        delete(args)
     except CogsError as e:
-        print(str(e))
+        logging.critical(str(e))
         sys.exit(1)

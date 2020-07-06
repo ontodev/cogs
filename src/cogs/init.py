@@ -1,11 +1,11 @@
 import csv
 import gspread
+import logging
 import os
-import pkg_resources
 import sys
 
 from cogs.exceptions import CogsError, InitError
-from cogs.helpers import get_client, is_email, is_valid_role, get_version
+from cogs.helpers import get_client, is_email, is_valid_role, get_version, set_logging
 
 
 default_fields = [
@@ -56,17 +56,17 @@ def get_users(args):
     if args.user:
         # Validate the email
         if not is_email(args.user):
-            raise InitError(f"ERROR: {args.user} is not a valid email")
+            raise InitError(f"{args.user} is not a valid email")
 
         # Validate the role
         if not is_valid_role(args.role):
-            raise InitError(f"ERROR: '{args.role}' is not a valid role")
+            raise InitError(f"'{args.role}' is not a valid role")
         users[args.user] = args.role
 
     # Multiple users specified
     if args.users:
         if not os.path.exists(args.users):
-            raise InitError(f"ERROR: users file '{args.users}' does not exist")
+            raise InitError(f"users file '{args.users}' does not exist")
         with open(args.users, "r") as f:
             reader = csv.reader(f, delimiter="\t")
             i = 1
@@ -81,12 +81,14 @@ def get_users(args):
                     else:
                         # Any line past the first should always have an email in the first column
                         raise InitError(
-                            f"ERROR: {email} is not a valid email address ({args.users}, line {i})"
+                            f"{email} is not a valid email address ({args.users}, line {i})"
                         )
 
                 # Validate the role
                 if not is_valid_role(role):
-                    raise InitError(f"ERROR: '{role}' is not a valid role ({args.users}, line {i})")
+                    raise InitError(
+                        f"'{role}' is not a valid role ({args.users}, line {i})"
+                    )
 
                 users[email] = role
                 i += 1
@@ -97,7 +99,9 @@ def write_data(args, sheet):
     """Create COGS data files: config.tsv, sheet.tsv, and field.tsv."""
     # Store COGS configuration
     with open(".cogs/config.tsv", "w") as f:
-        writer = csv.DictWriter(f, delimiter="\t", lineterminator="\n", fieldnames=["Key", "Value"])
+        writer = csv.DictWriter(
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Key", "Value"]
+        )
         v = get_version()
         writer.writerow({"Key": "COGS", "Value": "https://github.com/ontodev/cogs"})
         writer.writerow({"Key": "COGS Version", "Value": v})
@@ -130,12 +134,14 @@ def write_data(args, sheet):
 def init(args):
     """Init a new .cogs configuration directory in the current working directory. If one already
         exists, display an error message."""
+    set_logging(args.verbose)
     cwd = os.getcwd()
     if os.path.exists(".cogs"):
-        print(f"ERROR: COGS project already exists in {cwd}/.cogs/")
+        # Do not raise CogsError, or else .cogs/ will be deleted
+        logging.critical(f"COGS project already exists in {cwd}/.cogs/")
         sys.exit(1)
 
-    print(f"Initializing COGS project '{args.title}' in {cwd}/.cogs/")
+    logging.info(f"initializing COGS project '{args.title}' in {cwd}/.cogs/")
     os.mkdir(".cogs")
 
     # Process supplied users
@@ -149,7 +155,8 @@ def init(args):
         spreadsheet = gc.create(args.title)
     except gspread.exceptions.APIError as e:
         raise InitError(
-            f"ERROR: Unable to create new spreadsheet '{args.title}'\n" f"CAUSE: {e.response.text}"
+            f"Unable to create new spreadsheet '{args.title}'\n"
+            f"CAUSE: {e.response.text}"
         )
 
     # Share with each user
@@ -157,8 +164,10 @@ def init(args):
         try:
             spreadsheet.share(email, perm_type="user", role=role)
         except gspread.exceptions.APIError as e:
-            print(f"ERROR: Unable to share '{args.title}' with {email} as {role}")
-            print(e.response.text)
+            logging.error(
+                f"Unable to share '{args.title}' with {email} as {role}\n"
+                + e.response.text
+            )
 
     # Write data to COGS directory
     write_data(args, spreadsheet)
@@ -169,7 +178,7 @@ def run(args):
     try:
         init(args)
     except CogsError as e:
-        print(str(e))
+        logging.critical(str(e))
         if os.path.exists(".cogs"):
             os.rmdir(".cogs")
         sys.exit(1)
