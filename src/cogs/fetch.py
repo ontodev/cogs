@@ -24,6 +24,7 @@ def get_remote_sheets(sheets):
                 f"cannot export remote sheet with the reserved name '{sheet.title}'"
             )
         remote_sheets[sheet.title] = sheet.id
+    return remote_sheets
 
 
 def fetch(args):
