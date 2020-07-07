@@ -14,7 +14,7 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs open`](#open) displays the URL of the spreadsheet
 - [`cogs share`](#share) shares the spreadsheet with specified users
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
-- `cogs rm foo.tsv` stops tracking the `foo.tsv` table as a sheet
+- [`cogs rm foo.tsv`](#rm) stops tracking the `foo.tsv` table as a sheet
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - `cogs fetch` fetches the data from the spreadsheet and stores it in `.cogs/`
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
@@ -112,6 +112,17 @@ The `-d`/`--description` is optional.
 The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
 
 This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
+
+---
+
+### `rm`
+
+Running `rm` will stop tracking one or multiple local TSV table. They get removed from `.cogs/sheet.tsv`, and the `.cogs/field.tsv` is updated to remove the fields that were unique to those file.
+```
+cogs rm [paths]
+```
+
+This does not delete the table(s) from the spreadsheet as sheet(s) - use `cogs push` to push all tracked local tables to the project spreadsheet.
 
 ---
 

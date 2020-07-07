@@ -12,3 +12,6 @@ class DeleteError(CogsError):
 
 class AddError(CogsError):
     """Used to indicate an error occurred during the add step."""
+
+class RmError(CogsError):
+    """Used to indicate an error occurred during the rm step."""
