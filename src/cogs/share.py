@@ -1,22 +1,23 @@
 import gspread
+import logging
 import sys
 
 from cogs.exceptions import CogsError
-from cogs.helpers import get_client, get_config, validate_cogs_project
+from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
 
 
 def share_spreadsheet(title, spreadsheet, user, role):
     """Share a sheet with a user (email) as role (reader, writer, owner)"""
-    print(f"Sharing spreadsheet '{title}' with {user} as '{role}'")
+    logging.info(f"Sharing spreadsheet '{title}' with {user} as '{role}'")
     try:
         spreadsheet.share(user, perm_type="user", role=role)
     except gspread.exceptions.APIError as e:
-        print(f"ERROR: Unable to share spreadsheet '{title}'")
-        print(e.response.text)
+        logging.error(f"Unable to share spreadsheet '{title}'\n" + e.response.text)
 
 
 def share(args):
     """Share the project spreadsheet with email addresses as reader, writer, or owner."""
+    set_logging(args.verbose)
     validate_cogs_project()
 
     config = get_config()
@@ -47,5 +48,5 @@ def run(args):
     try:
         share(args)
     except CogsError as e:
-        print(str(e))
+        logging.critical(str(e))
         sys.exit(1)

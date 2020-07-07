@@ -1,14 +1,16 @@
 import csv
+import logging
 import ntpath
 import re
 import sys
 
 from cogs.exceptions import CogsError, AddError
-from cogs.helpers import get_fields, get_sheets, validate_cogs_project
+from cogs.helpers import get_fields, get_sheets, set_logging, validate_cogs_project
 
 
 def add(args):
     """Add a table (TSV or CSV) to the COGS project. This updates sheet.tsv and field.tsv."""
+    set_logging(args.verbose)
     validate_cogs_project()
 
     # Open the provided file and make sure we can parse it as TSV or CSV
@@ -22,18 +24,18 @@ def add(args):
         try:
             reader = csv.DictReader(f, delimiter=delimiter)
         except csv.Error as e:
-            raise AddError(f"ERROR: unable to read {args.path} as {fmt}\nCAUSE:{str(e)}")
+            raise AddError(f"unable to read {args.path} as {fmt}\nCAUSE:{str(e)}")
         headers = reader.fieldnames
 
     # Create the sheet title from file basename
     title = ntpath.basename(args.path).split(".")[0]
     if title in ["user", "config", "sheet", "field"]:
-        raise AddError(f"ERROR: table cannot use reserved name '{title}'")
+        raise AddError(f"sheet cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table
     local_sheets = get_sheets()
     if title in local_sheets:
-        raise AddError(f"ERROR: '{title}' sheet already exists in this project")
+        raise AddError(f"'{title}' sheet already exists in this project")
 
     # Maybe get a description
     description = ""
@@ -72,7 +74,11 @@ def add(args):
             fieldnames=["ID", "Title", "Path", "Description"],
         )
         # ID gets filled in when we add it to the Sheet
-        writer.writerow({"ID": "", "Title": title, "Path": args.path, "Description": description})
+        writer.writerow(
+            {"ID": "", "Title": title, "Path": args.path, "Description": description}
+        )
+
+    logging.info(f"{title} successfully added to project")
 
 
 def run(args):
@@ -80,5 +86,5 @@ def run(args):
     try:
         add(args)
     except CogsError as e:
-        print(str(e))
+        logging.critical(str(e))
         sys.exit(1)
