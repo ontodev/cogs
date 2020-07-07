@@ -1,5 +1,6 @@
 import csv
 import logging
+import os
 import re
 import sys
 
@@ -45,6 +46,12 @@ def fetch(args):
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
 
+    # Get all cached sheet titles that are not COGS defaults
+    cached_sheet_titles = []
+    for f in os.listdir(".cogs"):
+        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]:
+            cached_sheet_titles.append(f.split(".")[0])
+
     # Export the sheets as TSV to .cogs/ (while checking the fieldnames)
     for sheet in sheets:
         logging.info(f"Downloading '{sheet.title}'")
@@ -54,11 +61,12 @@ def fetch(args):
             writer.writerows(lines)
 
             # Check for new fields in sheet header
-            for h in lines[0]:
-                field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
-                if field not in fields:
-                    update_fields = True
-                    fields[field] = {"Label": h, "Datatype": "cogs:text", "Description": ""}
+            if lines:
+                for h in lines[0]:
+                    field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
+                    if field not in fields:
+                        update_fields = True
+                        fields[field] = {"Label": h, "Datatype": "cogs:text", "Description": ""}
 
     # Update field.tsv if we need to
     if update_fields:

@@ -12,6 +12,7 @@ import cogs.open as open
 import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
+import cogs.status as status
 
 from argparse import ArgumentParser
 
@@ -83,6 +84,10 @@ def main():
     sp.add_argument("-w", "--writer", help="Email of user to grant write access to")
     sp.add_argument("-r", "--reader", help="Email of user to grant read access to")
     sp.set_defaults(func=share.run)
+
+    # -------------------------------- status --------------------------------
+    sp = subparsers.add_parser("status", parents=[global_parser])
+    sp.set_defaults(func=status.run)
 
     args = parser.parse_args()
     args.func(args)

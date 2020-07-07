@@ -151,7 +151,7 @@ def set_logging(verbose):
     if verbose:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     else:
-        logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
+        logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
 def validate_cogs_project():
