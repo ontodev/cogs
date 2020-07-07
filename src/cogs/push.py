@@ -1,5 +1,6 @@
 import csv
 import logging
+import os
 import sys
 
 from cogs.exceptions import CogsError
@@ -7,6 +8,7 @@ from cogs.helpers import (
     get_client,
     get_colstr,
     get_config,
+    get_diff,
     get_sheets,
     set_logging,
     validate_cogs_project,
@@ -24,7 +26,23 @@ def push(args):
     gc = get_client(config["Credentials"])
     spreadsheet = gc.open(config["Title"])
 
+    # Compare local sheets (paths) to remote sheets (in .cogs/)
     local_sheets = get_sheets()
+    has_diff = False
+    for sheet_title, details in local_sheets.items():
+        remote_sheet = f".cogs/{sheet_title}.tsv"
+        local_sheet = details["Path"]
+        if os.path.exists(remote_sheet) and os.path.exists(local_sheet):
+            sheet_diff = get_diff(local_sheet, remote_sheet)
+            if len(sheet_diff) > 1:
+                has_diff = True
+        else:
+            has_diff = True
+
+    # Do nothing if there is no diff
+    if not has_diff:
+        print("Remote sheets are up to date with local sheets (nothing to push).\n")
+        return
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws

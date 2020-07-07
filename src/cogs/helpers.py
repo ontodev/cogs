@@ -57,15 +57,8 @@ def get_diff(local, remote):
     return data_diff
 
 
-def get_version():
-    try:
-        version = pkg_resources.require("COGS")[0].version
-    except pkg_resources.DistributionNotFound:
-        version = "developer-version"
-    return version
-
-
 def get_client(credentials):
+    """Get the gspread Client to perform Google Sheets API actions."""
     try:
         gc = gspread.service_account(credentials)
         gc.login()
@@ -87,6 +80,7 @@ def get_client(credentials):
 
 
 def get_colstr(n):
+    """Transform an int (corresponding to a column) to a letter column for use in Google Sheets"""
     string = ""
     while n > 0:
         n, remainder = divmod(n - 1, 26)
@@ -133,6 +127,15 @@ def get_sheets():
     return sheets
 
 
+def get_version():
+    """Get the version of COGS."""
+    try:
+        version = pkg_resources.require("COGS")[0].version
+    except pkg_resources.DistributionNotFound:
+        version = "developer-version"
+    return version
+
+
 def is_email(email):
     """Check if a string matches a general email pattern (user@domain.tld)"""
     return re.match(r"^[-.\w]+@[-\w]+\.[-\w]+$", email)
@@ -144,6 +147,7 @@ def is_valid_role(role):
 
 
 def set_logging(verbose):
+    """Set logging for COGS based on -v/--verbose."""
     if verbose:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     else:
