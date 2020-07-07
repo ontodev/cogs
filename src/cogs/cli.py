@@ -2,14 +2,15 @@
 
 import sys
 
+import cogs.add as add
+import cogs.delete as delete
+import cogs.fetch as fetch
 import cogs.helpers as helpers
 import cogs.init as init
-import cogs.delete as delete
-import cogs.share as share
-import cogs.add as add
-import cogs.push as push
 import cogs.open as open
-import cogs.fetch as fetch
+import cogs.push as push
+import cogs.rm as rm
+import cogs.share as share
 
 from argparse import ArgumentParser
 
@@ -67,6 +68,11 @@ def main():
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser("open", parents=[global_parser])
     sp.set_defaults(func=open.run)
+
+    # -------------------------------- rm --------------------------------
+    sp = subparsers.add_parser("rm", parents=[global_parser])
+    sp.add_argument("paths", help="Path to TSV or CSV to remove from COGS project", nargs='+')
+    sp.set_defaults(func=rm.run)
 
     # ------------------------------- fetch -------------------------------
     sp = subparsers.add_parser("fetch", parents=[global_parser])
