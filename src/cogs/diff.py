@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 import tabulate
-import termcolor
 
 from cogs.exceptions import CogsError, DiffError
 from cogs.helpers import get_diff, get_sheets, set_logging, validate_cogs_project
