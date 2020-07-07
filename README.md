@@ -19,7 +19,7 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
 - `cogs mv` updates the path to the local version of a spreadsheet
 - `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
-- `cogs diff` shows detailed differences between local files and the spreadsheet
+- [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
 - `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 
@@ -149,3 +149,35 @@ This will download all sheets in the spreadsheet to that directory as `{sheet-ti
 If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in). This path can be updated with `cogs mv`.
 
 To sync the local version of sheets with the data in `.cogs/`, run `cogs pull`.
+
+---
+
+### `diff`
+
+Running `diff` will display all file changes between local and remote sheets after running `cogs fetch`.
+
+```
+cogs diff
+```
+
+By default, this will display all files with changes. If you wish to just see the changes for one or more paths, you can provide those paths:
+
+```
+cogs diff path1.tsv path2.tsv ...
+```
+
+`diff` opens a responsive scrolling window. To scroll down, press the down arrow. To scroll up, press the up arrow. For large files with many columns, you can also scroll to the right with the right arrow and back to the left with the left arrow. To exit the window, press `q`.
+
+The start of a diff for a sheet begins in bold with the file name (local and remote versions).
+
+The displayed text below has formatting for changes between the local and remote sheets:
+* Lines that have been _removed_ from the remote version of the sheet are in red text and begin with `---`.
+* Lines that have been _added_ to the local version of the sheet are in green text and begin with `+++`.
+* Lines that have been _changed_ between the remote and local versions are in blue text and begin with `->`.
+
+In cells with _changed_ values, the cell is formatted as so:
+```
+old text -> new text
+```
+
+If a sheet has been newly created or deleted, these changes will not appear in `diff`. Instead, use `cogs status`.

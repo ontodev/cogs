@@ -16,3 +16,7 @@ class AddError(CogsError):
 
 class FetchError(CogsError):
     """Used to indicate an error occurred during the fetch step."""
+
+
+class DiffError(CogsError):
+    """Used to indicate an error occurred during the diff step."""

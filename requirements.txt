@@ -1,5 +1,8 @@
 black
+daff
 flake8
 google
 gspread
 pytest
+tabulate
+termcolor

@@ -10,6 +10,7 @@ import cogs.add as add
 import cogs.push as push
 import cogs.open as open
 import cogs.fetch as fetch
+import cogs.diff as diff
 
 from argparse import ArgumentParser
 
@@ -71,6 +72,11 @@ def main():
     # ------------------------------- fetch -------------------------------
     sp = subparsers.add_parser("fetch", parents=[global_parser])
     sp.set_defaults(func=fetch.run)
+
+    # ------------------------------- diff -------------------------------
+    sp = subparsers.add_parser("diff", parents=[global_parser])
+    sp.set_defaults(func=diff.run)
+    sp.add_argument("paths", nargs="*", help="Paths to local sheets to diff")
 
     args = parser.parse_args()
     args.func(args)
