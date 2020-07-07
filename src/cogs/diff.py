@@ -49,9 +49,6 @@ def get_lines(sheets):
                         lines.append((t, curses.color_pair(3)))
                     else:
                         lines.append((t, None))
-
-        # TODO - handle created and deleted sheets based on add/rm
-        #      - and based on new sheets from fetch
     return lines
 
 
