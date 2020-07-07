@@ -10,6 +10,10 @@ class DeleteError(CogsError):
     """Used to indicate an error occurred during the delete step."""
 
 
+class DiffError(CogsError):
+    """Used to indicate an error occurred during the diff step."""
+
+
 class FetchError(CogsError):
     """Used to indicate an error occurred during the fetch step."""
 

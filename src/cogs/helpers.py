@@ -7,10 +7,54 @@ import pkg_resources
 import re
 
 from cogs.exceptions import CogsError
+from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 
 required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title", "Credentials"]
+
+
+def get_diff(local, remote):
+    """Return the diff between a local and remote sheet as a list of lines with formatting. The
+       remote table is the 'old' version and the local table is the 'new' version."""
+    local_data = []
+    with open(local, "r") as f:
+        # Local might be CSV or TSV
+        if local.endswith("csv"):
+            reader = csv.reader(f)
+        else:
+            reader = csv.reader(f, delimiter="\t")
+        header = next(reader)
+        local_data.append(header)
+        for row in reader:
+            if len(row) < len(header):
+                add = [''] * (len(header) - len(row))
+                row.extend(add)
+            local_data.append(row)
+
+    remote_data = []
+    with open(remote, "r") as f:
+        # Remote is always TSV
+        reader = csv.reader(f, delimiter="\t")
+        header = next(reader)
+        remote_data.append(header)
+        for row in reader:
+            if len(row) < len(header):
+                add = [''] * (len(header) - len(row))
+                row.extend(add)
+            remote_data.append(row)
+
+    local_table = PythonTableView(local_data)
+    remote_table = PythonTableView(remote_data)
+    align = Coopy.compareTables(remote_table, local_table).align()
+
+    data_diff = []
+    table_diff = PythonTableView(data_diff)
+    flags = CompareFlags()
+    highlighter = TableDiff(align, flags)
+    highlighter.hilite(table_diff)
+
+    return data_diff
 
 
 def get_version():
@@ -82,6 +126,8 @@ def get_sheets():
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             title = row["Title"]
+            if not title:
+                continue
             del row["Title"]
             sheets[title] = row
     return sheets
