@@ -18,7 +18,7 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
 - `cogs mv` updates the path to the local version of a spreadsheet
-- `cogs status` summarizes the differences between tracked files and their copies in `.cogs/`
+- [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
 - `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
@@ -203,3 +203,18 @@ There are three options:
 - `-o`/`--owner`: email of the user to transfer ownership to
 
 We **do not recommend** transferring ownership of the COGS project spreadsheet, as this will prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
+
+### `status`
+
+Running `status` shows the difference between local and remote copies of tracked sheets.
+
+```
+cogs status
+```
+
+There are five kinds of statuses (note that any changes to the remote spreadsheet will not be accounted for until you run `cogs fetch`)
+* **Changed**: the sheet exists both locally and remotely (cached in the `.cogs` directory), but there is a difference between the local and cached version (use `cogs diff [path]` to see details; depending on if you want the local or remote changes synced, use `cogs push` or `cogs pull`, respectively)
+* **Added locally**: the sheet exists locally and has been added to tracking, but is not yet pushed to the remote spreadsheet (use `cogs push` to sync)
+* **Added remotely**: the sheet exists remotely and has been added to tracking, but is not yet pulled to a local copy (use `cogs pull` to sync)
+* **Removed locally**: the sheet exists remotely but has been removed from tracking using `cogs rm` (use `cogs push` to sync)
+* **Removed remotely**: the sheet exists locally but has been removed from remote spreadsheet (use `cogs pull` to sync)

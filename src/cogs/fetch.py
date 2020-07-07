@@ -46,12 +46,6 @@ def fetch(args):
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
 
-    # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = []
-    for f in os.listdir(".cogs"):
-        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]:
-            cached_sheet_titles.append(f.split(".")[0])
-
     # Export the sheets as TSV to .cogs/ (while checking the fieldnames)
     for sheet in sheets:
         logging.info(f"Downloading '{sheet.title}'")
@@ -66,7 +60,11 @@ def fetch(args):
                     field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
                     if field not in fields:
                         update_fields = True
-                        fields[field] = {"Label": h, "Datatype": "cogs:text", "Description": ""}
+                        fields[field] = {
+                            "Label": h,
+                            "Datatype": "cogs:text",
+                            "Description": "",
+                        }
 
     # Update field.tsv if we need to
     if update_fields:
@@ -83,20 +81,41 @@ def fetch(args):
                 writer.writerow(items)
 
     # Update local sheets with new IDs
-    local_sheets = get_sheets()
+    tracked_sheets = get_sheets()
     all_sheets = []
-    for sheet_title, details in local_sheets.items():
+    for sheet_title, details in tracked_sheets.items():
         if sheet_title in remote_sheets:
             sid = remote_sheets[sheet_title]
             details["ID"] = sid
         details["Title"] = sheet_title
         all_sheets.append(details)
 
+    # Get all cached sheet titles that are not COGS defaults
+    cached_sheet_titles = []
+    for f in os.listdir(".cogs"):
+        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]:
+            cached_sheet_titles.append(f.split(".")[0])
+
+    # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
+    remote_titles = [x.title for x in sheets]
+    for sheet_title in cached_sheet_titles:
+        if sheet_title not in remote_titles:
+            # This sheet has a cached copy but does not exist in the remote version
+            # It has either been removed from remote or was newly added to cache
+            if (
+                sheet_title in tracked_sheets
+                and tracked_sheets[sheet_title]["ID"].strip != ""
+            ) or sheet_title not in tracked_sheets:
+                # The sheet is in tracked sheets and has an ID (not newly added)
+                # or the sheet is not in tracked sheets
+                logging.info(f"Removing '{sheet_title}'")
+                os.remove(f".cogs/{sheet_title}.tsv")
+
     # Get just the remote sheets that are not in local sheets
     new_sheets = {
         sheet_title: sid
         for sheet_title, sid in remote_sheets.items()
-        if sheet_title not in local_sheets
+        if sheet_title not in tracked_sheets
     }
     for sheet_title, sid in new_sheets.items():
         logging.info(f"new sheet '{sheet_title}' added to project")

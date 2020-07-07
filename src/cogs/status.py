@@ -14,13 +14,8 @@ from cogs.helpers import (
 )
 
 
-def get_changes(spreadsheet, tracked_sheets):
+def get_changes(tracked_sheets):
     """Get sets of changes between local and remote sheets."""
-    # Get all remote sheet titles
-    remote_sheet_titles = []
-    for sheet in spreadsheet.worksheets():
-        remote_sheet_titles.append(sheet.title)
-
     # Get all cached sheet titles that are not COGS defaults
     cached_sheet_titles = []
     for f in os.listdir(".cogs"):
@@ -50,13 +45,8 @@ def get_changes(spreadsheet, tracked_sheets):
     added_remote = []
     diffs = {}
 
-    all_sheets = set(local_sheet_titles + tracked_sheet_titles + remote_sheet_titles)
+    all_sheets = set(local_sheet_titles + tracked_sheet_titles)
     for sheet_title in all_sheets:
-        # Does the sheet exist in the remote spreadsheet?
-        remote = False
-        if sheet_title in remote_sheet_titles:
-            remote = True
-
         # Is the sheet cached in .cogs?
         cached = False
         if sheet_title in cached_sheet_titles:
@@ -77,16 +67,16 @@ def get_changes(spreadsheet, tracked_sheets):
         if sheet_title in pushed_local_sheet_titles:
             local_pushed = True
 
-        if tracked and local and local_pushed and not remote:
+        if tracked and local and local_pushed and not cached:
             # Removed remotely and not yet pulled
             removed_remote.append(sheet_title)
-        elif tracked and local and not local_pushed and not remote:
+        elif tracked and local and not local_pushed and not cached:
             # Added locally and not yet pushed
             added_local.append(sheet_title)
-        elif not tracked and not local and remote:
+        elif not tracked and not local and not cached:
             # Removed locally and not yet pushed
             removed_local.append(sheet_title)
-        elif tracked and not local and remote and cached:
+        elif tracked and not local and cached:
             # Added remotely and not yet pulled
             added_remote.append(sheet_title)
         else:
@@ -132,16 +122,9 @@ def status(args):
     set_logging(args.verbose)
     validate_cogs_project()
 
-    config = get_config()
-    gc = get_client(config["Credentials"])
-    title = config["Title"]
-    spreadsheet = gc.open(title)
-
     # Get the sets of changes
     tracked_sheets = get_sheets()
-    diffs, added_local, added_remote, removed_local, removed_remote = get_changes(
-        spreadsheet, tracked_sheets
-    )
+    diffs, added_local, added_remote, removed_local, removed_remote = get_changes(tracked_sheets)
 
     # Check to see if we have any changes
     all_changes = set(
