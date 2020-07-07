@@ -177,7 +177,7 @@ By default, this will display all files with changes. If you wish to just see th
 cogs diff path1.tsv path2.tsv ...
 ```
 
-`diff` opens a responsive scrolling window. To scroll down, press the down arrow. To scroll up, press the up arrow. For large files with many columns, you can also scroll to the right with the right arrow and back to the left with the left arrow. To exit the window, press `q`.
+`diff` opens a responsive scrolling window. To scroll down, press the down arrow. To scroll up, press the up arrow. For large files with many columns, you can also scroll to the right with the right arrow and back to the left with the left arrow.
 
 The start of a diff for a sheet begins in bold with the file name (local and remote versions).
 
@@ -192,3 +192,10 @@ old text -> new text
 ```
 
 If a sheet has been newly created or deleted, these changes will not appear in `diff`. Instead, use `cogs status`.
+
+To navigate the diff:
+* `q`: quit
+* `t`: go to top (first line)
+* `b`: go to bottom (last line)
+* `r`: go to rightmost characters (last column)
+* `l`: to to leftmost characters (first column)

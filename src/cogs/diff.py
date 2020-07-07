@@ -3,9 +3,18 @@ import logging
 import os
 import sys
 import tabulate
+import termcolor
 
 from cogs.exceptions import CogsError, DiffError
 from cogs.helpers import get_diff, get_sheets, set_logging, validate_cogs_project
+
+
+def close_screen(stdscr):
+    # Clean up window
+    stdscr.keypad(False)
+    curses.nocbreak()
+    curses.echo()
+    curses.endwin()
 
 
 def get_lines(sheets):
@@ -75,6 +84,7 @@ def diff(args):
     # Set screen/curses options
     curses.noecho()
     curses.cbreak()
+    curses.curs_set(0)
     stdscr.keypad(True)
     stdscr.scrollok(True)
 
@@ -87,6 +97,12 @@ def diff(args):
 
     # Get lines for the diff display
     lines = get_lines(sheets)
+    if not lines:
+        close_screen(stdscr)
+        print(
+            "Local sheets are up to date with remote sheets (nothing to push or pull).\n"
+        )
+        return
 
     try:
         stdscr.clear()
@@ -104,31 +120,77 @@ def diff(args):
 
         # Display lines
         while True:
-            # Add a message when we hit the EOF
-            if eof or rows > len(lines) - 2:
-                stdscr.addstr(
-                    rows, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD
-                )
+            stdscr.clear()
+            stdscr.refresh()
 
             # Get the lines to display based on current top line & size of window
             disp_lines = lines[y : y + rows]
 
             # Display these lines, only printing ot the size of the cols (x)
+            max_x = 0
             for i in range(0, len(disp_lines)):
-                text = disp_lines[i][0][x: cols + x]
+                text = disp_lines[i][0].rstrip()
+                if len(text) > max_x:
+                    max_x = len(text)
+                text = text[x : cols + x]
                 fmt = disp_lines[i][1]
                 if fmt:
                     stdscr.addstr(i, 0, text + "\n", fmt)
                 else:
                     stdscr.addstr(i, 0, text + "\n")
 
+            # Add a message when we hit the EOF
+            if eof or rows > len(lines) - 2:
+                stdscr.addstr(
+                    rows - 1, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD
+                )
+
+            # Display current position in diff
+            if max_x < cols + x:
+                disp_x_num = max_x
+            else:
+                disp_x_num = cols + x
+
+            if len(disp_lines) < rows + x:
+                disp_y_num = len(disp_lines)
+            else:
+                disp_y_num = rows + y
+            stdscr.addstr(
+                rows,
+                0,
+                f"L{y}-{disp_y_num} of {len(lines)}, C{x}-{disp_x_num} of {max_x} | "
+                f"q = quit, t = top, b = bottom, l = leftmost, r = rightmost",
+            )
+
             # Get user input
             k = stdscr.getch()
             if k == ord("q"):
                 # Exit
                 return
+            elif k == ord("l"):
+                # Leftmost
+                x = 0
+                continue
+            elif k == ord("t"):
+                # Top
+                eof = False
+                y = 0
+                continue
+            elif k == ord("r"):
+                # Rightmost
+                if not cols > max_x:
+                    x = max_x - cols + 1
+                continue
+            elif k == ord("b"):
+                # Bottom
+                if not eof and not disp_y_num == len(lines):
+                    eof = True
+                    y = len(lines) - rows
+                continue
             elif k == curses.KEY_DOWN:
-                if not eof and not rows > len(lines) - 2:
+                if disp_y_num == len(lines):
+                    eof = True
+                elif not eof:
                     y += 1
                     if y + rows == len(lines) + 1:
                         eof = True
@@ -140,7 +202,8 @@ def diff(args):
                     y -= 1
                 continue
             elif k == curses.KEY_RIGHT:
-                x += 20
+                if x + cols < max_x:
+                    x += 20
                 continue
             elif k == curses.KEY_LEFT:
                 if x > 0:
@@ -148,11 +211,7 @@ def diff(args):
                 continue
 
     finally:
-        # Clean up window
-        stdscr.keypad(False)
-        curses.nocbreak()
-        curses.echo()
-        curses.endwin()
+        close_screen(stdscr)
 
 
 def run(args):
