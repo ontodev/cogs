@@ -9,6 +9,7 @@ from cogs.helpers import get_diff, get_sheets, set_logging, validate_cogs_projec
 
 
 def close_screen(stdscr):
+    """Reset curses options and end window."""
     # Clean up window
     stdscr.keypad(False)
     curses.nocbreak()
@@ -97,6 +98,7 @@ def diff(args):
     # Get lines for the diff display
     lines = get_lines(sheets)
     if not lines:
+        # Nothing to display
         close_screen(stdscr)
         print(
             "Local sheets are up to date with remote sheets (nothing to push or pull).\n"
