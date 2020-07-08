@@ -213,10 +213,12 @@ cogs status
 ```
 
 There are five kinds of statuses (note that any changes to the remote spreadsheet will not be accounted for until you run `cogs fetch`)
-* **Changed**: the sheet exists both locally and remotely (cached in the `.cogs` directory), but there is a difference between the local and cached version
+* **Modified locally**: the sheet exists both locally and remotely, but the local version has been edited since the last time `cogs fetch` or `cogs push` were run
     * use `cogs diff [path]` to see details
-    * use `cogs push` to sync local changes to remote version (overwriting any changes to remote not yet pulled)
-    * OR use `cogs pull` to sync remote changes to local version (overwriting any changes to local not yet pushed)
+	* use `cogs push` to sync local changes to remote version (overwriting any changes to remote not yet pulled)
+* **Modified remotely**: the sheet exists both locally and remotely, but `cogs fetch` has been run and returned a modified sheet since the last time the local version was edited
+    * use `cogs diff [path]` to see details
+    * use `cogs pull` to sync remote changes to local version (overwriting any changes to local not yet pushed)
 * **Added locally**: the sheet exists locally and has been added to tracking, but is not yet pushed to the remote spreadsheet
     * use `cogs push` to add the sheet to the remote spreadsheet
 * **Added remotely**: the sheet exists remotely and has been added to tracking, but is not yet pulled to a local copy
