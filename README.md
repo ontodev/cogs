@@ -183,12 +183,12 @@ cogs push
 
 ### `rm`
 
-Running `rm` will stop tracking one or multiple local TSV table. They get removed from `.cogs/sheet.tsv`, and the `.cogs/field.tsv` is updated to remove the fields that were unique to those file.
+Running `rm` will stop tracking one or more local sheets. They are removed from `.cogs/sheet.tsv`, and the `.cogs/field.tsv` is updated to remove the fields that were unique to those sheets. Additionally, this does not delete any local copies of sheets specified by their paths.
 ```
 cogs rm [paths]
 ```
 
-This does not delete the table(s) from the spreadsheet as sheet(s) - use `cogs push` to push all tracked local tables to the project spreadsheet.
+This does not delete the sheet(s) from the spreadsheet - use `cogs push` to push all local changes to the remote spreadsheet and remove cached data about the sheet.
 
 ### `share`
 
