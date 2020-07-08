@@ -6,8 +6,6 @@ import termcolor
 from cogs.exceptions import CogsError
 from cogs.helpers import (
     get_diff,
-    get_client,
-    get_config,
     get_sheets,
     set_logging,
     validate_cogs_project,

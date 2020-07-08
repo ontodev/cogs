@@ -60,9 +60,10 @@ def rm(args):
     fields_candidates_for_removal = set()
 
     for title, sheet in sheets.items():
-        if not os.path.exists(f".cogs/{title}.tsv"):
-            continue
-        if os.stat(f".cogs/{title}.tsv").st_size == 0:
+        if (
+            not os.path.exists(f".cogs/{title}.tsv")
+            or os.stat(f".cogs/{title}.tsv").st_size == 0
+        ):
             continue
         with open(f".cogs/{title}.tsv", "r") as sheet_file:
             try:
