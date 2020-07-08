@@ -20,7 +20,7 @@ we try to follow the familiar `git` interface and workflow:
 - `cogs mv` updates the path to the local version of a spreadsheet
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
-- `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
+- [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
@@ -172,6 +172,16 @@ Running `open` displays the URL of the spreadsheet.
 ```
 cogs open
 ```
+
+### `pull`
+
+Running `pull` will sync local sheets with remote sheets after running `cogs fetch`.
+
+```
+cogs pull
+```
+
+Note that if you make changes to a local sheet without running `cogs push`, then run `cogs fetch` and `cogs pull`, the local changes **will be overwritten**.
 
 ### `push`
 

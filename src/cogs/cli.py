@@ -9,6 +9,7 @@ import cogs.fetch as fetch
 import cogs.helpers as helpers
 import cogs.init as init
 import cogs.open as open
+import cogs.pull as pull
 import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
@@ -68,6 +69,10 @@ def main():
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser("open", parents=[global_parser])
     sp.set_defaults(func=open.run)
+
+    # ------------------------------- pull -------------------------------
+    sp = subparsers.add_parser("pull", parents=[global_parser])
+    sp.set_defaults(func=pull.run)
 
     # ------------------------------- push -------------------------------
     sp = subparsers.add_parser("push", parents=[global_parser])
