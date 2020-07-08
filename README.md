@@ -47,6 +47,9 @@ Otherwise, most commands succeed silently.
 
 - **Spreadsheet**: the remote Google Sheets spreadsheet - each COGS project corresponds to one spreadsheet
 - **Sheet**: a tab in the spreadsheet - each sheet corresponds to one local TSV or CSV table
+- **Remote**: data from Google Sheets
+- **Local**: data from your local working directory
+- **Cached**: data stored in `.cogs/` which is fetched from the remote spreadsheet
 
 ---
 
@@ -223,7 +226,7 @@ cogs status
 ```
 
 There are five kinds of statuses (note that any changes to the remote spreadsheet will not be accounted for until you run `cogs fetch`)
-* **Modified locally**: the sheet exists both locally and remotely, but the local version has been edited since the last time `cogs fetch` or `cogs push` were run
+* **Modified locally**: the sheet exists both locally and remotely (cached), but the local version has been edited since the last time `cogs fetch` or `cogs push` were run
     * use `cogs diff [path]` to see details
 	* use `cogs push` to sync local changes to remote version (overwriting any changes to remote not yet pulled)
 * **Modified remotely**: the sheet exists both locally and remotely, but `cogs fetch` has been run and returned a modified sheet since the last time the local version was edited
