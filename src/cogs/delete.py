@@ -20,7 +20,7 @@ def delete(args):
         "         Do you wish to proceed? [y/n]\n"
     )
     if resp.lower().strip() != "y":
-        logging.info("'delete' operation stopped")
+        logging.warning("'delete' operation stopped")
         sys.exit(0)
 
     # Get a client to perform Sheet actions

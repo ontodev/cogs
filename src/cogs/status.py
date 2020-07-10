@@ -5,20 +5,19 @@ import termcolor
 
 from cogs.exceptions import CogsError
 from cogs.helpers import (
+    get_cached,
     get_diff,
+    get_renamed,
     get_sheets,
     set_logging,
     validate_cogs_project,
 )
 
 
-def get_changes(tracked_sheets):
+def get_changes(tracked_sheets, renamed):
     """Get sets of changes between local and remote sheets."""
     # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = []
-    for f in os.listdir(".cogs"):
-        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]:
-            cached_sheet_titles.append(f.split(".")[0])
+    cached_sheet_titles = get_cached()
 
     # Get all tracked sheet titles
     tracked_sheet_titles = list(tracked_sheets.keys())
@@ -72,8 +71,9 @@ def get_changes(tracked_sheets):
             # Added locally and not yet pushed
             added_local.append(sheet_title)
         elif not tracked and not local and cached:
-            # Removed locally and not yet pushed
-            removed_local.append(sheet_title)
+            if sheet_title not in renamed:
+                # Removed locally and not yet pushed
+                removed_local.append(sheet_title)
         elif tracked and not local and cached:
             # Added remotely and not yet pulled
             added_remote.append(sheet_title)
@@ -128,7 +128,6 @@ def get_changes(tracked_sheets):
 
 def print_diff(sheet_title, path, diff):
     """Print the diff summary for a sheet."""
-    new_version = diff["new_version"]
     added_lines = diff["added_lines"]
     removed_lines = diff["removed_lines"]
     changed_lines = diff["changed_lines"]
@@ -197,19 +196,29 @@ def status(args):
 
     # Get the sets of changes
     tracked_sheets = get_sheets()
+    renamed = get_renamed()
     diffs, added_local, added_remote, removed_local, removed_remote = get_changes(
-        tracked_sheets
+        tracked_sheets, renamed
     )
 
     # Check to see if we have any changes
     all_changes = set(
         list(diffs.keys()) + added_local + added_remote + removed_local + removed_remote
     )
-    if len(all_changes) == 0:
+
+    if len(all_changes) == 0 and len(renamed) == 0:
         print("Local sheets are up to date with remote spreadsheet.")
         return
 
     # Print various changes
+    if len(renamed) > 0:
+        print(termcolor.colored("\nRenamed:", attrs=["bold"]))
+        print("  (use `cogs push` to update in remote spreadsheet)")
+        for old, details in renamed.items():
+            new = details["new"]
+            path = details["path"]
+            print(termcolor.colored(f"\t{old} -> {new} ({path})", "cyan"))
+
     if len(diffs) > 0:
         changed_local = {
             sheet_title: diff

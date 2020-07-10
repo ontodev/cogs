@@ -1,15 +1,15 @@
 import csv
 import logging
 import os
-import re
 import sys
 
 from cogs.exceptions import CogsError, FetchError
 from cogs.helpers import (
     get_config,
     get_client,
-    get_fields,
+    get_renamed,
     get_sheets,
+    maybe_update_fields,
     set_logging,
     validate_cogs_project,
 )
@@ -20,7 +20,7 @@ def get_remote_sheets(sheets):
     # Validate sheet titles before downloading anything
     remote_sheets = {}
     for sheet in sheets:
-        if sheet.title in ["user", "config", "sheet", "field"]:
+        if sheet.title in ["user", "config", "sheet", "field", "renamed"]:
             raise FetchError(
                 f"cannot export remote sheet with the reserved name '{sheet.title}'"
             )
@@ -38,50 +38,57 @@ def fetch(args):
     title = config["Title"]
     spreadsheet = client.open(title)
 
-    # Get existing fields to see if we need to add new fields
-    fields = get_fields()
-    update_fields = False
+    # Get existing fields (headers) to see if we need to add/remove fields
+    headers = []
 
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
+    tracked_sheets = get_sheets()
+    id_to_title = {
+        int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
+    }
+
+    renamed_local = get_renamed()
+    new_local_titles = [details["new"] for details in renamed_local.values()]
+
+    renamed_remote = {}
 
     # Export the sheets as TSV to .cogs/ (while checking the fieldnames)
     for sheet in sheets:
-        logging.info(f"Downloading '{sheet.title}'")
-        with open(f".cogs/{sheet.title}.tsv", "w") as f:
+        # Download the sheet as the renamed sheet if necessary
+        if sheet.title in renamed_local:
+            st = renamed_local[sheet.title]["new"]
+            logging.info(
+                f"Downloading remote sheet '{sheet.title}' as {st} (renamed locally)"
+            )
+        else:
+            st = sheet.title
+            if sheet.id in id_to_title:
+                local_title = id_to_title[sheet.id]
+                if local_title != sheet.title:
+                    # The sheet title has been changed remotely
+                    # This will be updated in tracking but the local sheet will remain
+                    old_path = tracked_sheets[local_title]["Path"]
+                    logging.warning(
+                        f"Local sheet '{local_title}' has been renamed to '{st}' remotely:"
+                        f"\n  - '{local_title}' is removed from tracking and replaced with '{st}'"
+                        f"\n  - {old_path} will not be updated when running `cogs pull` "
+                        f"\n  - changes to {old_path} will not be pushed to the remote spreadsheet"
+                    )
+                    renamed_remote[local_title] = {"new": st, "path": st + ".tsv"}
+            logging.info(f"Downloading remote sheet '{st}'")
+        with open(f".cogs/{st}.tsv", "w") as f:
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)
-
-            # Check for new fields in sheet header
             if lines:
-                for h in lines[0]:
-                    field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
-                    if field not in fields:
-                        update_fields = True
-                        fields[field] = {
-                            "Label": h,
-                            "Datatype": "cogs:text",
-                            "Description": "",
-                        }
+                headers.extend(lines[0])
 
-    # Update field.tsv if we need to
-    if update_fields:
-        with open(".cogs/field.tsv", "w") as f:
-            writer = csv.DictWriter(
-                f,
-                delimiter="\t",
-                lineterminator="\n",
-                fieldnames=["Field", "Label", "Datatype", "Description"],
-            )
-            writer.writeheader()
-            for field, items in fields.items():
-                items["Field"] = field
-                writer.writerow(items)
+    # Maybe update fields if they have changed
+    maybe_update_fields(headers)
 
     # Update local sheets with new IDs
-    tracked_sheets = get_sheets()
     all_sheets = []
     for sheet_title, details in tracked_sheets.items():
         if sheet_title in remote_sheets:
@@ -93,19 +100,19 @@ def fetch(args):
     # Get all cached sheet titles that are not COGS defaults
     cached_sheet_titles = []
     for f in os.listdir(".cogs"):
-        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv"]:
+        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv", "renamed.tsv"]:
             cached_sheet_titles.append(f.split(".")[0])
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
     remote_titles = [x.title for x in sheets]
     for sheet_title in cached_sheet_titles:
-        if sheet_title not in remote_titles:
+        if sheet_title not in remote_titles and sheet_title not in new_local_titles:
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
             if (
                 sheet_title in tracked_sheets
                 and tracked_sheets[sheet_title]["ID"].strip != ""
-            ) or sheet_title not in tracked_sheets:
+            ) or (sheet_title not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
                 logging.info(f"Removing '{sheet_title}'")
@@ -118,14 +125,15 @@ def fetch(args):
         if sheet_title not in tracked_sheets
     }
     for sheet_title, sid in new_sheets.items():
-        logging.info(f"new sheet '{sheet_title}' added to project")
-        details = {
-            "ID": sid,
-            "Title": sheet_title,
-            "Path": f"{sheet_title}.tsv",
-            "Description": "",
-        }
-        all_sheets.append(details)
+        if sheet_title not in renamed_local:
+            logging.info(f"new sheet '{sheet_title}' added to project")
+            details = {
+                "ID": sid,
+                "Title": sheet_title,
+                "Path": f"{sheet_title}.tsv",
+                "Description": "",
+            }
+            all_sheets.append(details)
 
     # Then update sheet.tsv
     with open(".cogs/sheet.tsv", "w") as f:

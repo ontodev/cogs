@@ -22,5 +22,9 @@ class InitError(CogsError):
     """Used to indicate an error occurred during the init step."""
 
 
+class MvError(CogsError):
+    """Used to indicate an error occurred during the mv step."""
+
+
 class RmError(CogsError):
     """Used to indicate an error occurred during the rm step."""
