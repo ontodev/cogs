@@ -70,15 +70,16 @@ def get_changes(tracked_sheets, renamed):
         elif tracked and local and not local_pushed and not cached:
             # Added locally and not yet pushed
             added_local.append(sheet_title)
-        elif not tracked and not local and cached:
-            if sheet_title not in renamed:
-                # Removed locally and not yet pushed
-                removed_local.append(sheet_title)
+        elif not tracked and not local and cached and sheet_title not in renamed:
+            # Removed locally and not yet pushed
+            removed_local.append(sheet_title)
         elif tracked and not local and cached:
             # Added remotely and not yet pulled
             added_remote.append(sheet_title)
         else:
             # Exists in both - run diff
+            if sheet_title in renamed:
+                sheet_title = renamed[sheet_title]["new"]
             local_path = tracked_sheets[sheet_title]["Path"]
             remote_path = f".cogs/{sheet_title}.tsv"
 

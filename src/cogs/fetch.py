@@ -49,9 +49,9 @@ def fetch(args):
         int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
     }
 
+    # Get details about renamed sheets
     renamed_local = get_renamed()
     new_local_titles = [details["new"] for details in renamed_local.values()]
-
     renamed_remote = {}
 
     # Export the sheets as TSV to .cogs/ (while checking the fieldnames)
