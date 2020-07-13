@@ -8,7 +8,9 @@ import cogs.diff as diff
 import cogs.fetch as fetch
 import cogs.helpers as helpers
 import cogs.init as init
+import cogs.mv as mv
 import cogs.open as open
+import cogs.pull as pull
 import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
@@ -65,9 +67,19 @@ def main():
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=init.run)
 
+    # ------------------------------- mv -------------------------------
+    sp = subparsers.add_parser("mv", parents=[global_parser])
+    sp.add_argument("path", help="Path of local sheet to move")
+    sp.add_argument("new_path", help="New path for local sheet")
+    sp.set_defaults(func=mv.run)
+
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser("open", parents=[global_parser])
     sp.set_defaults(func=open.run)
+
+    # ------------------------------- pull -------------------------------
+    sp = subparsers.add_parser("pull", parents=[global_parser])
+    sp.set_defaults(func=pull.run)
 
     # ------------------------------- push -------------------------------
     sp = subparsers.add_parser("push", parents=[global_parser])

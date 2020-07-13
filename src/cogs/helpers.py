@@ -14,6 +14,15 @@ required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
 required_keys = ["Spreadsheet ID", "Title", "Credentials"]
 
 
+def get_cached():
+    """Return a list of cached sheets from .cogs."""
+    cached = []
+    for f in os.listdir(".cogs"):
+        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv", "renamed.tsv"]:
+            cached.append(f.split(".")[0])
+    return cached
+
+
 def get_diff(local, remote):
     """Return the diff between a local and remote sheet as a list of lines with formatting. The
        remote table is the 'old' version and the local table is the 'new' version."""
@@ -113,6 +122,20 @@ def get_fields():
     return fields
 
 
+def get_renamed():
+    """Get a set of renamed sheets from renamed.tsv."""
+    renamed = {}
+    if os.path.exists(".cogs/renamed.tsv"):
+        with open(".cogs/renamed.tsv", "r") as f:
+            reader = csv.reader(f, delimiter="\t")
+            for row in reader:
+                old = row[0]
+                new = row[1]
+                path = row[2]
+                renamed[old] = {"new": new, "path": path}
+    return renamed
+
+
 def get_sheets():
     """Get the current local sheets in this project from sheet.tsv."""
     sheets = {}
@@ -144,6 +167,44 @@ def is_email(email):
 def is_valid_role(role):
     """Check if a string is a valid role for use with gspread."""
     return role in ["writer", "reader"]
+
+
+def maybe_update_fields(headers):
+    """Given a list of headers, check if any fields were added or removed and update the field.tsv
+    if necessary."""
+    fields = get_fields()
+    update_fields = False
+    # Determine if fields were removed
+    new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
+    remove_fields = [f for f in fields.keys() if f not in new_fields.keys()]
+    if remove_fields:
+        update_fields = True
+        for rf in remove_fields:
+            del fields[rf]
+
+    # Determine if fields were added
+    for f, h in new_fields.items():
+        if f not in fields:
+            update_fields = True
+            fields[f] = {
+                "Label": h,
+                "Datatype": "cogs:text",
+                "Description": "",
+            }
+
+    # Update the field file if fields were added or removed
+    if update_fields:
+        with open(".cogs/field.tsv", "w") as f:
+            writer = csv.DictWriter(
+                f,
+                delimiter="\t",
+                lineterminator="\n",
+                fieldnames=["Field", "Label", "Datatype", "Description"],
+            )
+            writer.writeheader()
+            for field, items in fields.items():
+                items["Field"] = field
+                writer.writerow(items)
 
 
 def set_logging(verbose):

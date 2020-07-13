@@ -29,7 +29,7 @@ def add(args):
 
     # Create the sheet title from file basename
     title = ntpath.basename(args.path).split(".")[0]
-    if title in ["user", "config", "sheet", "field"]:
+    if title in ["user", "config", "sheet", "field", "renamed"]:
         raise AddError(f"sheet cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table

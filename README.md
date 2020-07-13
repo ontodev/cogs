@@ -17,10 +17,10 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs rm foo.tsv`](#rm) stops tracking the `foo.tsv` table as a sheet
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
-- `cogs mv` updates the path to the local version of a spreadsheet
+- [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
-- `cogs pull` overwrites local files with the data from the spreadsheet, if they have changed
+- [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 
 There is no step corresponding to `git commit`.
@@ -47,6 +47,9 @@ Otherwise, most commands succeed silently.
 
 - **Spreadsheet**: the remote Google Sheets spreadsheet - each COGS project corresponds to one spreadsheet
 - **Sheet**: a tab in the spreadsheet - each sheet corresponds to one local TSV or CSV table
+- **Remote**: data from Google Sheets
+- **Local**: data from your local working directory
+- **Cached**: data stored in `.cogs/` which is fetched from the remote spreadsheet
 
 ---
 
@@ -76,7 +79,7 @@ cogs add [path] -d "[description]"
 
 The `-d`/`--description` is optional.
 
-The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, or `user`.
+The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
 
 This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
 
@@ -143,6 +146,8 @@ If a new sheet has been added to the Google spreadsheet, this sheet will be down
 
 To sync the local version of sheets with the data in `.cogs/`, run `cogs pull`.
 
+Note that if a sheet has been _renamed_ remotely, the old sheet title will be replaced with the new sheet title. Any changes made to the local file corresponding to the old title will not be synced with the remote spreadsheet. Instead, once you run `cogs pull`, a new sheet `{new-sheet-title}.tsv` will appear in the current working directory (the same as if a new sheet were created). It is the same as if you were to delete the old sheet remotely and create a new sheet remotely with the same contents. Use `cogs pull` to write the new path - the old local file will not be deleted.
+
 ### `init`
 
 Running `init` creates a `.cogs` directory containing configuration data. This also creates a new Google Sheets spreadsheet and stores the ID. Optionally, this new sheet may be shared with users.
@@ -173,6 +178,16 @@ Running `open` displays the URL of the spreadsheet.
 cogs open
 ```
 
+### `pull`
+
+Running `pull` will sync local sheets with remote sheets after running `cogs fetch`.
+
+```
+cogs pull
+```
+
+Note that if you make changes to a local sheet without running `cogs push`, then run `cogs fetch` and `cogs pull`, the local changes **will be overwritten**.
+
 ### `push`
 
 Running `push` will sync the spreadsheet with your local changes. This includes creating new sheets for any added tables (`cogs add`) and deleting sheets for any removed tables (`cogs rm`). Any changes to the local tables are also pushed to the corresponding sheets.
@@ -180,6 +195,18 @@ Running `push` will sync the spreadsheet with your local changes. This includes 
 ```
 cogs push
 ```
+
+### `mv`
+
+Running `mv` will update the path of a local sheet.
+
+```
+cogs mv [old_path] [new_path]
+```
+
+The old path must exist as a local file. It will be renamed to the new path during this process. If the basename of the new path (e.g., `tables/foo.tsv` -> `foo`) is already a tracked sheet, this command will fail as you cannot have two sheets with the same name.
+
+We recommend running `cogs push` after `cogs mv` to keep the remote spreadsheet in sync.
 
 ### `rm`
 
@@ -213,7 +240,7 @@ cogs status
 ```
 
 There are five kinds of statuses (note that any changes to the remote spreadsheet will not be accounted for until you run `cogs fetch`)
-* **Modified locally**: the sheet exists both locally and remotely, but the local version has been edited since the last time `cogs fetch` or `cogs push` were run
+* **Modified locally**: the sheet exists both locally and remotely (cached), but the local version has been edited since the last time `cogs fetch` or `cogs push` were run
     * use `cogs diff [path]` to see details
 	* use `cogs push` to sync local changes to remote version (overwriting any changes to remote not yet pulled)
 * **Modified remotely**: the sheet exists both locally and remotely, but `cogs fetch` has been run and returned a modified sheet since the last time the local version was edited
