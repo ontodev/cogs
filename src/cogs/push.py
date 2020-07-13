@@ -1,12 +1,16 @@
 import csv
 import logging
+import os
 import sys
+
+import cogs.status as status
 
 from cogs.exceptions import CogsError
 from cogs.helpers import (
     get_client,
     get_colstr,
     get_config,
+    get_diff,
     get_sheets,
     set_logging,
     validate_cogs_project,
@@ -24,7 +28,8 @@ def push(args):
     gc = get_client(config["Credentials"])
     spreadsheet = gc.open(config["Title"])
 
-    local_sheets = get_sheets()
+    # Get tracked sheets
+    tracked_sheets = get_sheets()
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws
@@ -37,13 +42,16 @@ def push(args):
 
     # Add new data to the sheets in the Sheet
     sheet_rows = []
-    for sheet_title, details in local_sheets.items():
+    for sheet_title, details in tracked_sheets.items():
         sheet_path = details["Path"]
         delimiter = "\t"
         if sheet_path.endswith(".csv"):
             delimiter = ","
         rows = []
         cols = 0
+        if not os.path.exists(sheet_path):
+            logging.warning(f"'{sheet_title}' exists remotely but has not been pulled")
+            continue
         with open(sheet_path, "r") as f:
             reader = csv.reader(f, delimiter=delimiter)
             for row in reader:
@@ -85,9 +93,13 @@ def push(args):
             writer.writerows(rows)
 
     for sheet_title, sheet in remote_sheets.items():
-        if sheet_title not in local_sheets.keys():
+        if sheet_title not in tracked_sheets.keys():
             logging.info(f"removing sheet '{sheet_title}'")
+            # Remove remote copy
             spreadsheet.del_worksheet(sheet)
+            # Remove local copy
+            if os.path.exists(f".cogs/{sheet_title}.tsv"):
+                os.remove(f".cogs/{sheet_title}.tsv")
 
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(

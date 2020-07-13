@@ -60,6 +60,11 @@ def rm(args):
     fields_candidates_for_removal = set()
 
     for title, sheet in sheets.items():
+        if (
+            not os.path.exists(f".cogs/{title}.tsv")
+            or os.stat(f".cogs/{title}.tsv").st_size == 0
+        ):
+            continue
         with open(f".cogs/{title}.tsv", "r") as sheet_file:
             try:
                 reader = csv.DictReader(sheet_file, delimiter="\t")
@@ -89,11 +94,6 @@ def rm(args):
             if items["Label"] not in fields_to_remove:
                 items["Field"] = field
                 writer.writerow(items)
-
-    # We finally delete the cached copies
-    for sheet_title in sheets_to_remove.keys():
-        os.remove(f".cogs/{sheet_title}.tsv")
-        logging.info(f"successfully removed '{sheet_title}'")
 
 
 def run(args):
