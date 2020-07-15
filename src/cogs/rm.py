@@ -1,10 +1,7 @@
-import csv
-import logging
-import os
 import sys
 
-from cogs.exceptions import CogsError, RmError
-from cogs.helpers import get_fields, get_sheets, set_logging, validate_cogs_project
+from cogs.exceptions import RmError
+from cogs.helpers import *
 
 
 def rm(args):
@@ -25,6 +22,7 @@ def rm(args):
     sheets_to_remove = {
         title: sheet for title, sheet in sheets.items() if sheet["Path"] in args.paths
     }
+    ids_to_remove = [sheet["ID"] for title, sheet in sheets.items() if sheet["Path"] in args.paths]
 
     # Make sure we are not deleting the last sheet as Google spreadsheet would refuse to do so
     if len(sheets) - len(sheets_to_remove) == 0:
@@ -94,6 +92,18 @@ def rm(args):
             if items["Label"] not in fields_to_remove:
                 items["Field"] = field
                 writer.writerow(items)
+
+    # Check for notes to remove
+    sheet_notes = get_sheet_notes()
+    update = any((True for sheet_id in sheet_notes.keys() if sheet_id in ids_to_remove))
+    if update:
+        update_note(sheet_notes, ids_to_remove)
+
+    # Check for formats to remove
+    sheet_formats = get_sheet_formats()
+    update = any((True for sheet_id in sheet_formats.keys() if sheet_id in ids_to_remove))
+    if update:
+        update_format(sheet_formats, ids_to_remove)
 
 
 def run(args):

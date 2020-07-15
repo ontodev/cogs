@@ -50,6 +50,8 @@ Otherwise, most commands succeed silently.
 - **Remote**: data from Google Sheets
 - **Local**: data from your local working directory
 - **Cached**: data stored in `.cogs/` which is fetched from the remote spreadsheet
+- **Format**: the format applied to a cell in a sheet (e.g., background color, font family, etc.)
+- **Note**: a note (a.k.a. comment) on a cell that appears when hovered over in the sheet
 
 ---
 
@@ -142,6 +144,8 @@ cogs fetch
 
 This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/`, but will not overwrite the local versions specified by their path. As the sheets are downloaded, the fields are checked against existing fields in `.cogs/field.tsv` and any new fields are added with the default datatype of `cogs:text` (text string). Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
 
+`.cogs/format.tsv` and `.cogs/note.tsv` are also updated for any cell formatting or notes on cells, respectively. Each unique format is given a numerical ID and is stored as [CellFormat JSON](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#cellformat).
+
 If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in). This path can be updated with `cogs mv`.
 
 To sync the local version of sheets with the data in `.cogs/`, run `cogs pull`.
@@ -166,6 +170,8 @@ Options:
 Three files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the spreadsheet details 
 - `field.tsv`: Field names used in sheets (contains default COGS fields)
+- `format.tsv`: Sheet ID, Cell location, and format IDs (the format for each format ID is stored as a JSON dictionary in `.cogs/formats.json`)
+- `note.tsv`: Sheet ID, Cell location, and note for all notes
 - `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
@@ -195,6 +201,8 @@ Running `push` will sync the spreadsheet with your local changes. This includes 
 ```
 cogs push
 ```
+
+This will also push all notes and formatting from `.cogs/format.tsv` and `.cogs/note.tsv`.
 
 ### `mv`
 

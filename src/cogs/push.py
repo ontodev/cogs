@@ -1,19 +1,41 @@
-import csv
-import logging
-import os
+import gspread.exceptions
+import gspread.utils
+import gspread_formatting as gf
 import sys
 
-from cogs.exceptions import CogsError
-from cogs.helpers import (
-    get_client,
-    get_colstr,
-    get_config,
-    get_renamed,
-    get_sheets,
-    maybe_update_fields,
-    set_logging,
-    validate_cogs_project,
-)
+from cogs.helpers import *
+
+
+def add_note(sheet, label, note):
+    """Add a note to a cell (by label) in a sheet."""
+    spreadsheet = sheet.spreadsheet
+    sheet_id = sheet.id
+
+    row, col = gspread.utils.a1_to_rowcol(label)
+    requests = {
+        "requests": [
+            {
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": row - 1,
+                        "endRowIndex": row,
+                        "startColumnIndex": col - 1,
+                        "endColumnIndex": col,
+                    },
+                    "rows": [{"values": [{"note": note}]}],
+                    "fields": "note",
+                }
+            }
+        ]
+    }
+    try:
+        spreadsheet.batch_update(requests)
+    except gspread.exceptions.APIError as e:
+        logging.error(
+            f"Unable to add note to {sheet.title}!{label}\n"
+            + e.response.text
+        )
 
 
 def push(args):
@@ -29,6 +51,9 @@ def push(args):
 
     # Get tracked sheets
     tracked_sheets = get_sheets()
+    id_to_title = {
+        int(details["ID"]): sheet for sheet, details in tracked_sheets.items()
+    }
     renamed_local = get_renamed()
 
     # Clear existing sheets (wait to delete any that were removed)
@@ -36,8 +61,12 @@ def push(args):
     remote_sheets = {}
     for sheet in spreadsheet.worksheets():
         sheet_title = sheet.title
-        colstr = get_colstr(sheet.col_count)
-        spreadsheet.values_clear(f"{sheet_title}!A1:{colstr}{sheet.row_count}")
+        requests = {
+            "requests": [
+                {"updateCells": {"range": {"sheetId": sheet.id}, "fields": "*"}}
+            ]
+        }
+        spreadsheet.batch_update(requests)
 
         if sheet_title in renamed_local:
             # Maybe rename
@@ -47,6 +76,29 @@ def push(args):
             remote_sheets[new_title] = sheet
         else:
             remote_sheets[sheet_title] = sheet
+
+    # Get formatting and notes on the sheets
+    sheet_formats = get_sheet_formats()
+    id_to_format = get_format_dict()
+    sheet_notes = get_sheet_notes()
+
+    # Add formatting
+    for sheet_id, cell_to_format in sheet_formats.items():
+        sheet_title = id_to_title[int(sheet_id)]
+        sheet = spreadsheet.worksheet(sheet_title)
+        formats = []
+        for cell, fmt_id in cell_to_format.items():
+            fmt = id_to_format[int(fmt_id)]
+            cell_format = gf.CellFormat.from_props(fmt)
+            formats.append((cell, cell_format))
+        gf.format_cell_ranges(sheet, formats)
+
+    # Add notes
+    for sheet_id, cell_to_note in sheet_notes.items():
+        sheet_title = id_to_title[int(sheet_id)]
+        sheet = spreadsheet.worksheet(sheet_title)
+        for cell, note in cell_to_note.items():
+            add_note(sheet, cell, note)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
