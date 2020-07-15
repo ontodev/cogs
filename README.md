@@ -170,8 +170,8 @@ Options:
 Three files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the spreadsheet details 
 - `field.tsv`: Field names used in sheets (contains default COGS fields)
-- `format.tsv`: Sheet ID, Cell location, and format IDs (the format for each format ID is stored as a JSON dictionary in `.cogs/formats.json`)
-- `note.tsv`: Sheet ID, Cell location, and note for all notes
+- `format.tsv`: Sheet ID, cell location or range, and format IDs (the format for each format ID is stored as a JSON dictionary in `.cogs/formats.json`)
+- `note.tsv`: Sheet ID, cell location, and note for all notes
 - `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
