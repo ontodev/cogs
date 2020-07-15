@@ -119,7 +119,7 @@ def get_fields():
 
 
 def get_format_dict():
-    """"""
+    """Get a dict of numerical format ID -> the format dict."""
     if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
         with open(".cogs/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
@@ -128,7 +128,7 @@ def get_format_dict():
 
 
 def get_sheet_formats():
-    """"""
+    """Get a dict of sheet ID -> formatted cells."""
     sheet_to_formats = {}
     with open(".cogs/format.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
@@ -146,7 +146,7 @@ def get_sheet_formats():
 
 
 def get_sheet_notes():
-    """"""
+    """Get a dict of sheet ID -> notes on cells."""
     sheet_to_notes = {}
     with open(".cogs/note.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
