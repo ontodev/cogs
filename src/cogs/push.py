@@ -8,8 +8,8 @@ from cogs.helpers import (
     get_client,
     get_colstr,
     get_config,
-    get_renamed,
-    get_sheets,
+    get_renamed_sheets,
+    get_tracked_sheets,
     maybe_update_fields,
     set_logging,
     validate_cogs_project,
@@ -28,8 +28,8 @@ def push(args):
     spreadsheet = gc.open(config["Title"])
 
     # Get tracked sheets
-    tracked_sheets = get_sheets()
-    renamed_local = get_renamed()
+    tracked_sheets = get_tracked_sheets()
+    renamed_local = get_renamed_sheets()
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws

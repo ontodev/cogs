@@ -8,6 +8,7 @@ import cogs.diff as diff
 import cogs.fetch as fetch
 import cogs.helpers as helpers
 import cogs.init as init
+import cogs.ls as ls
 import cogs.mv as mv
 import cogs.open as open
 import cogs.pull as pull
@@ -66,6 +67,10 @@ def main():
     )
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=init.run)
+
+    # ------------------------------- ls -------------------------------
+    sp = subparsers.add_parser("ls", parents=[global_parser])
+    sp.set_defaults(func=ls.run)
 
     # ------------------------------- mv -------------------------------
     sp = subparsers.add_parser("mv", parents=[global_parser])
