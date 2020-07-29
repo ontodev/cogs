@@ -93,17 +93,13 @@ def rm(args):
                 items["Field"] = field
                 writer.writerow(items)
 
-    # Check for notes to remove
-    sheet_notes = get_sheet_notes()
-    update = any((True for sheet_id in sheet_notes.keys() if sheet_id in ids_to_remove))
-    if update:
-        update_note(sheet_notes, ids_to_remove)
-
-    # Check for formats to remove
+    # Update formats and notes
     sheet_formats = get_sheet_formats()
-    update = any((True for sheet_id in sheet_formats.keys() if sheet_id in ids_to_remove))
-    if update:
-        update_format(sheet_formats, ids_to_remove)
+    update_format(sheet_formats, ids_to_remove)
+
+    sheet_notes = get_sheet_notes()
+    update_note(sheet_notes, ids_to_remove)
+
 
 
 def run(args):
