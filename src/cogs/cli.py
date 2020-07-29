@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-
 import cogs.add as add
 import cogs.delete as delete
 import cogs.diff as diff
@@ -24,7 +22,6 @@ def version(args):
     """Print COGS version information."""
     v = helpers.get_version()
     print(f"COGS version {v}")
-    sys.exit(0)
 
 
 def main():
