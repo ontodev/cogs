@@ -7,8 +7,8 @@ from cogs.exceptions import CogsError, FetchError
 from cogs.helpers import (
     get_config,
     get_client,
-    get_renamed,
-    get_sheets,
+    get_renamed_sheets,
+    get_tracked_sheets,
     maybe_update_fields,
     set_logging,
     validate_cogs_project,
@@ -44,13 +44,13 @@ def fetch(args):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_sheets()
+    tracked_sheets = get_tracked_sheets()
     id_to_title = {
         int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
     }
 
     # Get details about renamed sheets
-    renamed_local = get_renamed()
+    renamed_local = get_renamed_sheets()
     new_local_titles = [details["new"] for details in renamed_local.values()]
     renamed_remote = {}
 

@@ -4,7 +4,7 @@ import os
 import sys
 
 from cogs.exceptions import CogsError, RmError
-from cogs.helpers import get_fields, get_sheets, set_logging, validate_cogs_project
+from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def rm(args):
@@ -14,7 +14,7 @@ def rm(args):
     validate_cogs_project()
 
     # Make sure the sheets exist
-    sheets = get_sheets()
+    sheets = get_tracked_sheets()
 
     paths = [sheet["Path"] for sheet in sheets.values()]
     if len(set(args.paths) - set(paths)) > 0:

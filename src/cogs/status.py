@@ -5,10 +5,10 @@ import termcolor
 
 from cogs.exceptions import CogsError
 from cogs.helpers import (
-    get_cached,
+    get_cached_sheets,
     get_diff,
-    get_renamed,
-    get_sheets,
+    get_renamed_sheets,
+    get_tracked_sheets,
     set_logging,
     validate_cogs_project,
 )
@@ -17,7 +17,7 @@ from cogs.helpers import (
 def get_changes(tracked_sheets, renamed):
     """Get sets of changes between local and remote sheets."""
     # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = get_cached()
+    cached_sheet_titles = get_cached_sheets()
 
     # Get all tracked sheet titles
     tracked_sheet_titles = list(tracked_sheets.keys())
@@ -196,8 +196,8 @@ def status(args):
     validate_cogs_project()
 
     # Get the sets of changes
-    tracked_sheets = get_sheets()
-    renamed = get_renamed()
+    tracked_sheets = get_tracked_sheets()
+    renamed = get_renamed_sheets()
     diffs, added_local, added_remote, removed_local, removed_remote = get_changes(
         tracked_sheets, renamed
     )

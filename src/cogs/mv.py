@@ -6,7 +6,7 @@ import shutil
 import sys
 
 from cogs.exceptions import CogsError, MvError
-from cogs.helpers import get_sheets, set_logging, validate_cogs_project
+from cogs.helpers import get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def mv(args):
@@ -29,7 +29,7 @@ def mv(args):
             sys.exit(0)
 
     # Get the tracked sheets
-    tracked_sheets = get_sheets()
+    tracked_sheets = get_tracked_sheets()
     path_to_sheet = {
         os.path.abspath(details["Path"]): sheet_title
         for sheet_title, details in tracked_sheets.items()

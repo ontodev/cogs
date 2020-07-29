@@ -4,7 +4,7 @@ import shutil
 import sys
 
 from cogs.exceptions import CogsError
-from cogs.helpers import get_cached, get_sheets, set_logging, validate_cogs_project
+from cogs.helpers import get_cached_sheets, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def pull(args):
@@ -12,8 +12,8 @@ def pull(args):
     set_logging(args.verbose)
     validate_cogs_project()
 
-    cached_sheets = get_cached()
-    tracked_sheets = get_sheets()
+    cached_sheets = get_cached_sheets()
+    tracked_sheets = get_tracked_sheets()
     remove_sheets = [s for s in cached_sheets if s not in tracked_sheets.keys()]
     for sheet_title, details in tracked_sheets.items():
         cached_sheet = f".cogs/{sheet_title}.tsv"
