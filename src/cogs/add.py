@@ -1,9 +1,7 @@
-import csv
-import logging
 import ntpath
-import re
 import sys
 
+from cogs.helpers import *
 from cogs.exceptions import CogsError, AddError
 from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_cogs_project
 
@@ -29,7 +27,7 @@ def add(args):
 
     # Create the sheet title from file basename
     title = ntpath.basename(args.path).split(".")[0]
-    if title in ["user", "config", "sheet", "field", "renamed"]:
+    if title in reserved_names:
         raise AddError(f"sheet cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table

@@ -130,6 +130,26 @@ def write_data(args, sheet):
         writer.writeheader()
         writer.writerows(default_fields)
 
+    # format.tsv contains all cells with formats -> format IDs
+    with open(".cogs/format.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet ID", "Cell", "Format ID"],
+        )
+        writer.writeheader()
+
+    # note.tsv contains all cells with notes -> note
+    with open(".cogs/note.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet ID", "Cell", "Note"],
+        )
+        writer.writeheader()
+
 
 def init(args):
     """Init a new .cogs configuration directory in the current working directory. If one already

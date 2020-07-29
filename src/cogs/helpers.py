@@ -1,6 +1,7 @@
 import csv
 import google.auth.exceptions
 import gspread
+import json
 import logging
 import os
 import pkg_resources
@@ -9,7 +10,9 @@ import re
 from cogs.exceptions import CogsError
 from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 
-required_files = ["sheet.tsv", "field.tsv", "config.tsv"]
+reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
+required_files = ["config.tsv", "field.tsv", "format.tsv", "note.tsv", "sheet.tsv"]
+optional_files = ["user.tsv", "renamed.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title", "Credentials"]
 
@@ -20,7 +23,9 @@ def get_cached_sheets():
     tracked in sheet.tsv."""
     cached = []
     for f in os.listdir(".cogs"):
-        if f not in ["user.tsv", "sheet.tsv", "field.tsv", "config.tsv", "renamed.tsv"]:
+        if not f.endswith("tsv"):
+            continue
+        if f not in required_files and f not in optional_files:
             cached.append(f.split(".")[0])
     return cached
 
@@ -45,15 +50,6 @@ def get_client(credentials):
                 f"Unable to create a Client; cannot refresh credentials in '{credentials}'"
                 f"\nCAUSE: {str(e)}"
             )
-
-
-def get_colstr(n):
-    """Transform an int (corresponding to a column) to a letter column for use in Google Sheets"""
-    string = ""
-    while n > 0:
-        n, remainder = divmod(n - 1, 26)
-        string = chr(65 + remainder) + string
-    return string
 
 
 def get_config():
@@ -122,6 +118,51 @@ def get_fields():
             del row["Field"]
             fields[field] = row
     return fields
+
+
+def get_format_dict():
+    """Get a dict of numerical format ID -> the format dict."""
+    if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
+        with open(".cogs/formats.json", "r") as f:
+            fmt_dict = json.loads(f.read())
+            return {int(k): v for k, v in fmt_dict.items()}
+    return {}
+
+
+def get_sheet_formats():
+    """Get a dict of sheet ID -> formatted cells."""
+    sheet_to_formats = {}
+    with open(".cogs/format.tsv") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            sheet = int(row["Sheet ID"])
+            cell = row["Cell"]
+            fmt = int(row["Format ID"])
+            if sheet in sheet_to_formats:
+                cell_to_format = sheet_to_formats[sheet]
+            else:
+                cell_to_format = {}
+            cell_to_format[cell] = fmt
+            sheet_to_formats[sheet] = cell_to_format
+    return sheet_to_formats
+
+
+def get_sheet_notes():
+    """Get a dict of sheet ID -> notes on cells."""
+    sheet_to_notes = {}
+    with open(".cogs/note.tsv") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            sheet = int(row["Sheet ID"])
+            cell = row["Cell"]
+            note = row["Note"]
+            if sheet in sheet_to_notes:
+                cell_to_note = sheet_to_notes[sheet]
+            else:
+                cell_to_note = {}
+            cell_to_note[cell] = note
+            sheet_to_notes[sheet] = cell_to_note
+    return sheet_to_notes
 
 
 def get_renamed_sheets():
@@ -218,6 +259,52 @@ def set_logging(verbose):
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     else:
         logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+
+
+def update_format(sheet_formats, removed_ids):
+    """Update format.tsv with current remote formatting.
+    Remove any lines with a Sheet ID in removed_ids."""
+    current_sheet_formats = get_sheet_formats()
+    fmt_rows = []
+    for sheet, formats in sheet_formats.items():
+        current_sheet_formats[sheet] = formats
+    for sheet, formats in current_sheet_formats.items():
+        if sheet in removed_ids:
+            continue
+        for cell, fmt in formats.items():
+            fmt_rows.append({"Sheet ID": sheet, "Cell": cell, "Format ID": fmt})
+    with open(".cogs/format.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet ID", "Cell", "Format ID"],
+        )
+        writer.writeheader()
+        writer.writerows(fmt_rows)
+
+
+def update_note(sheet_notes, removed_ids):
+    """Update note.tsv with current remote notes.
+    Remove any lines with a Sheet ID in removed_ids."""
+    current_sheet_notes = get_sheet_notes()
+    note_rows = []
+    for sheet, notes in sheet_notes.items():
+        current_sheet_notes[sheet] = notes
+    for sheet, notes in current_sheet_notes.items():
+        if sheet in removed_ids:
+            continue
+        for cell, note in notes.items():
+            note_rows.append({"Sheet ID": sheet, "Cell": cell, "Note": note})
+    with open(".cogs/note.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet ID", "Cell", "Note"],
+        )
+        writer.writeheader()
+        writer.writerows(note_rows)
 
 
 def validate_cogs_project():
