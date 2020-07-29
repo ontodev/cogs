@@ -18,6 +18,7 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
 - [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
+- [`cogs ls`](#ls) shows a list of currently-tracked sheet names and their local names
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
 - [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
@@ -175,6 +176,14 @@ Three files are created in the `.cogs/` directory when running `init`:
 - `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
+
+### `ls`
+
+Running `ls` displays a list of tracked sheet names and their local paths, even if the local path does not yet exist.
+
+```
+cogs ls
+```
 
 ### `open`
 

@@ -5,7 +5,7 @@ import sys
 import tabulate
 
 from cogs.exceptions import CogsError, DiffError
-from cogs.helpers import get_diff, get_sheets, set_logging, validate_cogs_project
+from cogs.helpers import get_diff, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def close_screen(stdscr):
@@ -66,7 +66,7 @@ def diff(args):
     set_logging(args.verbose)
     validate_cogs_project()
 
-    sheets = get_sheets()
+    sheets = get_tracked_sheets()
     paths = [details["Path"] for details in sheets.values()]
     if args.paths:
         for p in args.paths:

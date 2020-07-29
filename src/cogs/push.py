@@ -50,11 +50,11 @@ def push(args):
     spreadsheet = gc.open(config["Title"])
 
     # Get tracked sheets
-    tracked_sheets = get_sheets()
+    tracked_sheets = get_tracked_sheets()
     id_to_title = {
         int(details["ID"]): sheet for sheet, details in tracked_sheets.items()
     }
-    renamed_local = get_renamed()
+    renamed_local = get_renamed_sheets()
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws

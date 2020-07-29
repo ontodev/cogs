@@ -11,7 +11,7 @@ def rm(args):
     validate_cogs_project()
 
     # Make sure the sheets exist
-    sheets = get_sheets()
+    sheets = get_tracked_sheets()
 
     paths = [sheet["Path"] for sheet in sheets.values()]
     if len(set(args.paths) - set(paths)) > 0:

@@ -1,8 +1,9 @@
 import ntpath
 import sys
 
-from cogs.exceptions import AddError
 from cogs.helpers import *
+from cogs.exceptions import CogsError, AddError
+from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def add(args):
@@ -30,7 +31,7 @@ def add(args):
         raise AddError(f"sheet cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table
-    local_sheets = get_sheets()
+    local_sheets = get_tracked_sheets()
     if title in local_sheets:
         raise AddError(f"'{title}' sheet already exists in this project")
 

@@ -68,14 +68,14 @@ def fetch(args):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_sheets()
+    tracked_sheets = get_tracked_sheets()
     id_to_title = {
         int(details["ID"]): sheet_title
         for sheet_title, details in tracked_sheets.items()
     }
 
     # Get details about renamed sheets
-    renamed_local = get_renamed()
+    renamed_local = get_renamed_sheets()
     new_local_titles = [details["new"] for details in renamed_local.values()]
     renamed_remote = {}
 
@@ -219,7 +219,7 @@ def fetch(args):
         all_sheets.append(details)
 
     # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = get_cached()
+    cached_sheet_titles = get_cached_sheets()
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
     remote_titles = [x.title for x in sheets]

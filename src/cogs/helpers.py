@@ -17,8 +17,10 @@ optional_files = ["user.tsv", "renamed.tsv"]
 required_keys = ["Spreadsheet ID", "Title", "Credentials"]
 
 
-def get_cached():
-    """Return a list of cached sheets from .cogs."""
+def get_cached_sheets():
+    """Return a list of names of cached sheets from .cogs. These are any sheets that have been
+    downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may not be
+    tracked in sheet.tsv."""
     cached = []
     for f in os.listdir(".cogs"):
         if not f.endswith("tsv"):
@@ -26,49 +28,6 @@ def get_cached():
         if f not in required_files and f not in optional_files:
             cached.append(f.split(".")[0])
     return cached
-
-
-def get_diff(local, remote):
-    """Return the diff between a local and remote sheet as a list of lines with formatting. The
-       remote table is the 'old' version and the local table is the 'new' version."""
-    local_data = []
-    with open(local, "r") as f:
-        # Local might be CSV or TSV
-        if local.endswith("csv"):
-            reader = csv.reader(f)
-        else:
-            reader = csv.reader(f, delimiter="\t")
-        header = next(reader)
-        local_data.append(header)
-        for row in reader:
-            if len(row) < len(header):
-                add = [''] * (len(header) - len(row))
-                row.extend(add)
-            local_data.append(row)
-
-    remote_data = []
-    with open(remote, "r") as f:
-        # Remote is always TSV
-        reader = csv.reader(f, delimiter="\t")
-        header = next(reader)
-        remote_data.append(header)
-        for row in reader:
-            if len(row) < len(header):
-                add = [''] * (len(header) - len(row))
-                row.extend(add)
-            remote_data.append(row)
-
-    local_table = PythonTableView(local_data)
-    remote_table = PythonTableView(remote_data)
-    align = Coopy.compareTables(remote_table, local_table).align()
-
-    data_diff = []
-    table_diff = PythonTableView(data_diff)
-    flags = CompareFlags()
-    highlighter = TableDiff(align, flags)
-    highlighter.hilite(table_diff)
-
-    return data_diff
 
 
 def get_client(credentials):
@@ -106,8 +65,51 @@ def get_config():
     return config
 
 
+def get_diff(local, remote):
+    """Return the diff between a local and remote sheet as a list of lines with formatting. The
+       remote table is the 'old' version and the local table is the 'new' version."""
+    local_data = []
+    with open(local, "r") as f:
+        # Local might be CSV or TSV
+        if local.endswith("csv"):
+            reader = csv.reader(f)
+        else:
+            reader = csv.reader(f, delimiter="\t")
+        header = next(reader)
+        local_data.append(header)
+        for row in reader:
+            if len(row) < len(header):
+                add = [""] * (len(header) - len(row))
+                row.extend(add)
+            local_data.append(row)
+
+    remote_data = []
+    with open(remote, "r") as f:
+        # Remote is always TSV
+        reader = csv.reader(f, delimiter="\t")
+        header = next(reader)
+        remote_data.append(header)
+        for row in reader:
+            if len(row) < len(header):
+                add = [""] * (len(header) - len(row))
+                row.extend(add)
+            remote_data.append(row)
+
+    local_table = PythonTableView(local_data)
+    remote_table = PythonTableView(remote_data)
+    align = Coopy.compareTables(remote_table, local_table).align()
+
+    data_diff = []
+    table_diff = PythonTableView(data_diff)
+    flags = CompareFlags()
+    highlighter = TableDiff(align, flags)
+    highlighter.hilite(table_diff)
+
+    return data_diff
+
+
 def get_fields():
-    """Get the current fields in this project from field.tsv."""
+    """Get the current fields in this project from field.tsv as a dict of field name -> details."""
     fields = {}
     with open(".cogs/field.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
@@ -163,8 +165,8 @@ def get_sheet_notes():
     return sheet_to_notes
 
 
-def get_renamed():
-    """Get a set of renamed sheets from renamed.tsv."""
+def get_renamed_sheets():
+    """Get a set of renamed sheets from renamed.tsv as a dict of old name -> new name & path."""
     renamed = {}
     if os.path.exists(".cogs/renamed.tsv"):
         with open(".cogs/renamed.tsv", "r") as f:
@@ -177,8 +179,9 @@ def get_renamed():
     return renamed
 
 
-def get_sheets():
-    """Get the current local sheets in this project from sheet.tsv."""
+def get_tracked_sheets():
+    """Get the current tracked sheets in this project from sheet.tsv as a dict of sheet title ->
+    path & ID. They may or may not have corresponding cached/local sheets."""
     sheets = {}
     with open(".cogs/sheet.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
@@ -216,7 +219,9 @@ def maybe_update_fields(headers):
     fields = get_fields()
     update_fields = False
     # Determine if fields were removed
-    new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
+    new_fields = {
+        re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers
+    }
     remove_fields = [f for f in fields.keys() if f not in new_fields.keys()]
     if remove_fields:
         update_fields = True
