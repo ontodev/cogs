@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cogs.add as add
+import cogs.apply as apply
 import cogs.delete as delete
 import cogs.diff as diff
 import cogs.fetch as fetch
@@ -38,6 +39,11 @@ def main():
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
     sp.add_argument("-d", "--description", help="Description of sheet to add to spreadsheet")
     sp.set_defaults(func=add.run)
+
+    # ------------------------------- apply -------------------------------
+    sp = subparsers.add_parser("apply", parents=[global_parser])
+    sp.add_argument("problems_table", help="Path to ROBOT standardized problems table")
+    sp.set_defaults(func=apply.run)
 
     # ------------------------------- delete -------------------------------
     sp = subparsers.add_parser("delete", parents=[global_parser])

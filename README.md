@@ -11,18 +11,22 @@ Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a spreadsheet for the project
-- [`cogs open`](#open) displays the URL of the spreadsheet
-- [`cogs share`](#share) shares the spreadsheet with specified users
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
 - [`cogs rm foo.tsv`](#rm) stops tracking the `foo.tsv` table as a sheet
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
-- [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs ls`](#ls) shows a list of currently-tracked sheet names and their local names
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
 - [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
+
+There are some other commands that do not correspond to any `git` actions:
+
+- [`cogs apply`](#apply) applys formatting & notes to the spreadsheet from a standardized table
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
+- [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
+- [`cogs open`](#open) displays the URL of the spreadsheet
+- [`cogs share`](#share) shares the spreadsheet with specified users
 
 There is no step corresponding to `git commit`.
 
@@ -85,6 +89,23 @@ The `-d`/`--description` is optional.
 The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
 
 This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
+
+### `apply`
+<!-- TODO: ROBOT page describing error tables? -->
+Running `apply` applies the details of [standardized problems]() from [ROBOT validate](http://robot.obolibrary.org/validate) or [ROBOT template](http://robot.obolibrary.org/template) to the spreadsheet as cell formatting and notes.
+
+```
+cogs apply [problems_table]
+```
+
+ROBOT has three levels of problems which will be formatted as such:
+* **error**: red background with white text
+* **warn/warning**: yellow background
+* **info**: light blue background
+
+The formats will be added to any existing formats, but will take priority over the existing formats.
+
+The "rule name" value from the standardized problems table will become the note on the cell. All existing notes on a sheet will be overwritten and replaced with the notes from `apply`.
 
 ### `delete`
 

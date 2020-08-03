@@ -1,5 +1,6 @@
 import csv
 import gspread
+import json
 import logging
 import os
 import sys
@@ -46,6 +47,28 @@ default_fields = [
         "Description": "The datatype for this row",
     },
 ]
+
+# 0 = error, 1 = warn, 2 = info
+default_formats = {
+    "0": {
+        "backgroundColor": {"red": 1},
+        "backgroundColorStyle": {"rgbColor": {"red": 1}},
+        "textFormat": {
+            "foregroundColor": {"blue": 1, "green": 1, "red": 1},
+            "foregroundColorStyle": {"rgbColor": {"blue": 1, "green": 1, "red": 1}},
+        },
+    },
+    "1": {
+        "backgroundColor": {"green": 1, "red": 1},
+        "backgroundColorStyle": {"rgbColor": {"green": 1, "red": 1}},
+    },
+    "2": {
+        "backgroundColor": {"blue": 0.9529412, "green": 0.8862745, "red": 0.8117647},
+        "backgroundColorStyle": {
+            "rgbColor": {"blue": 0.9529412, "green": 0.8862745, "red": 0.8117647}
+        },
+    },
+}
 
 
 def get_users(args):
@@ -136,9 +159,12 @@ def write_data(args, sheet):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Format ID"],
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
+
+    with open(".cogs/formats.json", "w") as f:
+        f.write(json.dumps(default_formats, sort_keys=True, indent=4))
 
     # note.tsv contains all cells with notes -> note
     with open(".cogs/note.tsv", "w") as f:
@@ -146,7 +172,7 @@ def write_data(args, sheet):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Note"],
+            fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
 
