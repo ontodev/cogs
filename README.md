@@ -98,14 +98,14 @@ Running `apply` applies the details of [standardized problems]() from [ROBOT val
 cogs apply [problems_table]
 ```
 
-ROBOT has three levels of problems which will be formatted as such:
-* **error**: red background with white text
-* **warn/warning**: yellow background
+ROBOT has three levels of problems which will be formatted with a black border and the following backgrounds:
+* **error**: light red background
+* **warn/warning**: light yellow background
 * **info**: light blue background
 
-The formats will be added to any existing formats, but will take priority over the existing formats.
+The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
 
-The "rule name" value from the standardized problems table will become the note on the cell. All existing notes on a sheet will be overwritten and replaced with the notes from `apply`.
+Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table. To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
 
 ### `delete`
 

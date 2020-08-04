@@ -51,21 +51,97 @@ default_fields = [
 # 0 = error, 1 = warn, 2 = info
 default_formats = {
     "0": {
-        "backgroundColor": {"red": 1},
-        "backgroundColorStyle": {"rgbColor": {"red": 1}},
-        "textFormat": {
-            "foregroundColor": {"blue": 1, "green": 1, "red": 1},
-            "foregroundColorStyle": {"rgbColor": {"blue": 1, "green": 1, "red": 1}},
+        "backgroundColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1},
+        "backgroundColorStyle": {
+            "rgbColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1}
+        },
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
         },
     },
     "1": {
-        "backgroundColor": {"green": 1, "red": 1},
-        "backgroundColorStyle": {"rgbColor": {"green": 1, "red": 1}},
+        "backgroundColor": {"blue": 0.5921569, "green": 1, "red": 1},
+        "backgroundColorStyle": {"rgbColor": {"blue": 0.5921569, "green": 1, "red": 1}},
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+        },
     },
     "2": {
-        "backgroundColor": {"blue": 0.9529412, "green": 0.8862745, "red": 0.8117647},
+        "backgroundColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902},
         "backgroundColorStyle": {
-            "rgbColor": {"blue": 0.9529412, "green": 0.8862745, "red": 0.8117647}
+            "rgbColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902}
+        },
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
         },
     },
 }

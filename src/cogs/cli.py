@@ -42,7 +42,7 @@ def main():
 
     # ------------------------------- apply -------------------------------
     sp = subparsers.add_parser("apply", parents=[global_parser])
-    sp.add_argument("problems_table", help="Path to ROBOT standardized problems table")
+    sp.add_argument("problems_table", nargs="?", default=None, help="Path to ROBOT standardized problems table")
     sp.set_defaults(func=apply.run)
 
     # ------------------------------- delete -------------------------------
