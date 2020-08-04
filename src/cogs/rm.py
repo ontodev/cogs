@@ -22,7 +22,6 @@ def rm(args):
     sheets_to_remove = {
         title: sheet for title, sheet in sheets.items() if sheet["Path"] in args.paths
     }
-    ids_to_remove = [sheet["ID"] for title, sheet in sheets.items() if sheet["Path"] in args.paths]
 
     # Make sure we are not deleting the last sheet as Google spreadsheet would refuse to do so
     if len(sheets) - len(sheets_to_remove) == 0:
@@ -95,11 +94,10 @@ def rm(args):
 
     # Update formats and notes
     sheet_formats = get_sheet_formats()
-    update_format(sheet_formats, ids_to_remove)
+    update_format(sheet_formats, sheets_to_remove.keys())
 
     sheet_notes = get_sheet_notes()
-    update_note(sheet_notes, ids_to_remove)
-
+    update_note(sheet_notes, sheets_to_remove.keys())
 
 
 def run(args):

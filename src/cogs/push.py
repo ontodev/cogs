@@ -80,8 +80,7 @@ def push(args):
     sheet_notes = get_sheet_notes()
 
     # Add formatting
-    for sheet_id, cell_to_format in sheet_formats.items():
-        sheet_title = id_to_title[int(sheet_id)]
+    for sheet_title, cell_to_format in sheet_formats.items():
         sheet = spreadsheet.worksheet(sheet_title)
         formats = []
         for cell, fmt_id in cell_to_format.items():
@@ -91,8 +90,7 @@ def push(args):
         gf.format_cell_ranges(sheet, formats)
 
     # Add notes
-    for sheet_id, cell_to_note in sheet_notes.items():
-        sheet_title = id_to_title[int(sheet_id)]
+    for sheet_title, cell_to_note in sheet_notes.items():
         sheet = spreadsheet.worksheet(sheet_title)
         for cell, note in cell_to_note.items():
             add_note(sheet, cell, note)

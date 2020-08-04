@@ -11,18 +11,22 @@ Since COGS is designed to synchronize local and remote sets of tables,
 we try to follow the familiar `git` interface and workflow:
 
 - [`cogs init`](#init) creates a `.cogs/` directory to store configuration data and creates a spreadsheet for the project
-- [`cogs open`](#open) displays the URL of the spreadsheet
-- [`cogs share`](#share) shares the spreadsheet with specified users
 - [`cogs add foo.tsv`](#add) starts tracking the `foo.tsv` table as a sheet
 - [`cogs rm foo.tsv`](#rm) stops tracking the `foo.tsv` table as a sheet
 - [`cogs push`](#push) pushes changes to local sheets to the project spreadsheet
 - [`cogs fetch`](#fetch) fetches the data from the spreadsheet and stores it in `.cogs/`
-- [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs ls`](#ls) shows a list of currently-tracked sheet names and their local names
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
 - [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
+
+There are some other commands that do not correspond to any `git` actions:
+
+- [`cogs apply`](#apply) applys formatting & notes to the spreadsheet from a standardized table
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
+- [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
+- [`cogs open`](#open) displays the URL of the spreadsheet
+- [`cogs share`](#share) shares the spreadsheet with specified users
 
 There is no step corresponding to `git commit`.
 
@@ -85,6 +89,37 @@ The `-d`/`--description` is optional.
 The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
 
 This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
+
+### `apply`
+
+Running `apply` applies the details of [standardized problems tables](#standardized-problems-tables) to the spreadsheet as cell formatting and notes.
+
+```
+cogs apply [problems_table]
+```
+
+The three levels of problems will be formatted with a black border and the following backgrounds:
+* **error**: light red background
+* **warn/warning**: light yellow background
+* **info**: light blue background
+
+The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
+
+Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table. To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
+
+#### Standardized Problems Tables
+
+Standardized problems tables provide a standard table output that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of problem can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
+
+These tables must have the following headers:
+* **ID**: local numeric identifier starting at 1 and counting up
+* **table**: name of the table that the problem occurs in
+* **cell**: A1 format of problematic cell location
+* **level**: severity of the problem; error, warn, or info - this determines the background color of the cell
+* **rule ID**: an IRI or CURIE to uniquely identify the problem
+* **rule name**: descriptive name of the problem - this is converted to the cell note
+* **value**: value of the cell causing problem
+* **fix**: can be left blank; a suggestion of how to fix the problem
 
 ### `delete`
 
@@ -271,3 +306,4 @@ There are five kinds of statuses (note that any changes to the remote spreadshee
     * use `cogs push` to remove the sheet from the remote spreadsheet
 * **Removed remotely**: the sheet exists locally but has been removed from remote spreadsheet
     * use `cogs pull` to remove the sheet locally
+

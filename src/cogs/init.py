@@ -1,5 +1,6 @@
 import csv
 import gspread
+import json
 import logging
 import os
 import sys
@@ -46,6 +47,104 @@ default_fields = [
         "Description": "The datatype for this row",
     },
 ]
+
+# 0 = error, 1 = warn, 2 = info
+default_formats = {
+    "0": {
+        "backgroundColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1},
+        "backgroundColorStyle": {
+            "rgbColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1}
+        },
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+        },
+    },
+    "1": {
+        "backgroundColor": {"blue": 0.5921569, "green": 1, "red": 1},
+        "backgroundColorStyle": {"rgbColor": {"blue": 0.5921569, "green": 1, "red": 1}},
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+        },
+    },
+    "2": {
+        "backgroundColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902},
+        "backgroundColorStyle": {
+            "rgbColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902}
+        },
+        "borders": {
+            "bottom": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "left": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "right": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+            "top": {
+                "color": {},
+                "colorStyle": {"rgbColor": {}},
+                "style": "SOLID",
+                "width": 1,
+            },
+        },
+    },
+}
 
 
 def get_users(args):
@@ -143,9 +242,12 @@ def write_data(args, sheet):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Format ID"],
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
+
+    with open(".cogs/formats.json", "w") as f:
+        f.write(json.dumps(default_formats, sort_keys=True, indent=4))
 
     # note.tsv contains all cells with notes -> note
     with open(".cogs/note.tsv", "w") as f:
@@ -153,7 +255,7 @@ def write_data(args, sheet):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Note"],
+            fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
 

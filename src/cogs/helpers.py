@@ -135,15 +135,15 @@ def get_sheet_formats():
     with open(".cogs/format.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
-            sheet = int(row["Sheet ID"])
+            sheet_title = row["Sheet Title"]
             cell = row["Cell"]
             fmt = int(row["Format ID"])
-            if sheet in sheet_to_formats:
-                cell_to_format = sheet_to_formats[sheet]
+            if sheet_title in sheet_to_formats:
+                cell_to_format = sheet_to_formats[sheet_title]
             else:
                 cell_to_format = {}
             cell_to_format[cell] = fmt
-            sheet_to_formats[sheet] = cell_to_format
+            sheet_to_formats[sheet_title] = cell_to_format
     return sheet_to_formats
 
 
@@ -153,15 +153,15 @@ def get_sheet_notes():
     with open(".cogs/note.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
-            sheet = int(row["Sheet ID"])
+            sheet_title = row["Sheet Title"]
             cell = row["Cell"]
             note = row["Note"]
-            if sheet in sheet_to_notes:
-                cell_to_note = sheet_to_notes[sheet]
+            if sheet_title in sheet_to_notes:
+                cell_to_note = sheet_to_notes[sheet_title]
             else:
                 cell_to_note = {}
             cell_to_note[cell] = note
-            sheet_to_notes[sheet] = cell_to_note
+            sheet_to_notes[sheet_title] = cell_to_note
     return sheet_to_notes
 
 
@@ -261,47 +261,47 @@ def set_logging(verbose):
         logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
-def update_format(sheet_formats, removed_ids):
+def update_format(sheet_formats, removed_titles):
     """Update format.tsv with current remote formatting.
     Remove any lines with a Sheet ID in removed_ids."""
     current_sheet_formats = get_sheet_formats()
     fmt_rows = []
-    for sheet, formats in sheet_formats.items():
-        current_sheet_formats[sheet] = formats
-    for sheet, formats in current_sheet_formats.items():
-        if sheet in removed_ids:
+    for sheet_title, formats in sheet_formats.items():
+        current_sheet_formats[sheet_title] = formats
+    for sheet_title, formats in current_sheet_formats.items():
+        if sheet_title in removed_titles:
             continue
         for cell, fmt in formats.items():
-            fmt_rows.append({"Sheet ID": sheet, "Cell": cell, "Format ID": fmt})
+            fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Format ID"],
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
 
 
-def update_note(sheet_notes, removed_ids):
+def update_note(sheet_notes, removed_titles):
     """Update note.tsv with current remote notes.
     Remove any lines with a Sheet ID in removed_ids."""
     current_sheet_notes = get_sheet_notes()
     note_rows = []
-    for sheet, notes in sheet_notes.items():
-        current_sheet_notes[sheet] = notes
-    for sheet, notes in current_sheet_notes.items():
-        if sheet in removed_ids:
+    for sheet_title, notes in sheet_notes.items():
+        current_sheet_notes[sheet_title] = notes
+    for sheet_title, notes in current_sheet_notes.items():
+        if sheet_title in removed_titles:
             continue
         for cell, note in notes.items():
-            note_rows.append({"Sheet ID": sheet, "Cell": cell, "Note": note})
+            note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(".cogs/note.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet ID", "Cell", "Note"],
+            fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)
