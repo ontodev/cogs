@@ -96,6 +96,7 @@ def fetch(args):
     # We also collect the formatting and note data for each sheet during this step
     sheet_formats = {}
     sheet_notes = {}
+    sheet_frozen = {}
     for sheet in sheets:
         remote_title = sheet.title
         # Download the sheet as the renamed sheet if necessary
@@ -124,6 +125,9 @@ def fetch(args):
         if st in reserved_names:
             # Remote sheet has reserved sheet name - exit
             raise FetchError(f"sheet cannot use reserved name '{st}'")
+
+        # Get frozen rows & columns
+        sheet_frozen[st] = {"row": sheet.frozen_row_count, "col": sheet.frozen_col_count}
 
         # Get the cells with format, value, and note from remote sheet
         cells = get_cell_data(sheet)
@@ -220,6 +224,13 @@ def fetch(args):
         if sheet_title in remote_sheets:
             sid = remote_sheets[sheet_title]
             details["ID"] = sid
+            if sheet_title in sheet_frozen:
+                frozen = sheet_frozen[sheet_title]
+                details["Frozen Rows"] = frozen["row"]
+                details["Frozen Columns"] = frozen["col"]
+            else:
+                details["Frozen Rows"] = 0
+                details["Frozen Columns"] = 0
         details["Title"] = sheet_title
         all_sheets.append(details)
 
@@ -255,12 +266,21 @@ def fetch(args):
     }
     for sheet_title, sid in new_sheets.items():
         if sheet_title not in renamed_local:
+            if sheet_title in sheet_frozen:
+                frozen = sheet_frozen[sheet_title]
+                frozen_row = frozen["row"]
+                frozen_col = frozen["col"]
+            else:
+                frozen_row = 0
+                frozen_col = 0
             logging.info(f"new sheet '{sheet_title}' added to project")
             details = {
                 "ID": sid,
                 "Title": sheet_title,
                 "Path": f"{sheet_title}.tsv",
                 "Description": "",
+                "Frozen Rows": frozen_row,
+                "Frozen Columns": frozen_col
             }
             all_sheets.append(details)
 
@@ -270,7 +290,7 @@ def fetch(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description"],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         writer.writerows(all_sheets)

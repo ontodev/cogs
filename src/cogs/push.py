@@ -51,9 +51,6 @@ def push(args):
 
     # Get tracked sheets
     tracked_sheets = get_tracked_sheets()
-    id_to_title = {
-        int(details["ID"]): sheet for sheet, details in tracked_sheets.items()
-    }
     renamed_local = get_renamed_sheets()
 
     # Clear existing sheets (wait to delete any that were removed)
@@ -151,6 +148,11 @@ def push(args):
             body={"values": rows},
         )
 
+        # Add frozen rows & cols
+        frozen_row = int(details["Frozen Rows"])
+        frozen_col = int(details["Frozen Columns"])
+        sheet.freeze(frozen_row, frozen_col)
+
         # Copy this table into COGS data
         with open(f".cogs/{sheet_title}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
@@ -174,7 +176,7 @@ def push(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description"],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)
