@@ -172,27 +172,32 @@ def fetch(args):
                 next_fmt_id += 1
 
             if last_fmt and fmt_id == last_fmt:
-                # Add to range
+                # The last cell had a format and the this cell's format is the same as the last
+                # so we increase the range
                 cell_range_end = cell
-            elif last_fmt and cell_range_start and cell_range_end:
-                if cell_range_start == cell_range_end:
-                    cell_to_format_id[cell_range_start] = fmt_id
+            elif last_fmt and fmt_id != last_fmt:
+                # The last cell had a format but it was different than the current format
+                if cell_range_start == cell_range_end or not cell_range_end:
+                    # Not a range, just a single cell (the previous cell)
+                    cell_to_format_id[cell_range_start] = last_fmt
                 else:
-                    cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = fmt_id
+                    cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = last_fmt
+                # Restarting a new range at this cell
                 cell_range_start = cell
                 cell_range_end = None
             else:
+                # No last formatting to compare to, start a new range
                 cell_range_start = cell
                 cell_range_end = cell
             last_fmt = fmt_id
 
         if cell_to_format_id:
-            sheet_formats[sheet.id] = cell_to_format_id
+            sheet_formats[st] = cell_to_format_id
 
         # Add the cell to note
         cell_to_note = {cell: data["note"] for cell, data in cells.items() if "note" in data}
         if cell_to_note:
-            sheet_notes[sheet.id] = cell_to_note
+            sheet_notes[st] = cell_to_note
 
         # Write values to .cogs/{sheet title}.tsv
         with open(f".cogs/{st}.tsv", "w") as f:
@@ -223,7 +228,7 @@ def fetch(args):
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
     remote_titles = [x.title for x in sheets]
-    removed_ids = []
+    removed_titles = []
     for sheet_title in cached_sheet_titles:
         if sheet_title not in remote_titles and sheet_title not in new_local_titles:
             # This sheet has a cached copy but does not exist in the remote version
@@ -234,13 +239,13 @@ def fetch(args):
             ) or (sheet_title not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
-                removed_ids.append(tracked_sheets[sheet_title]["ID"])
+                removed_titles.append(sheet_title)
                 logging.info(f"Removing '{sheet_title}'")
                 os.remove(f".cogs/{sheet_title}.tsv")
 
     # Rewrite format.tsv and note.tsv with current remote formats & notes
-    update_format(sheet_formats, removed_ids)
-    update_note(sheet_notes, removed_ids)
+    update_format(sheet_formats, removed_titles)
+    update_note(sheet_notes, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
     new_sheets = {
