@@ -91,14 +91,14 @@ The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `
 This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
 
 ### `apply`
-<!-- TODO: ROBOT page describing error tables? -->
-Running `apply` applies the details of [standardized problems]() from [ROBOT validate](http://robot.obolibrary.org/validate) or [ROBOT template](http://robot.obolibrary.org/template) to the spreadsheet as cell formatting and notes.
+
+Running `apply` applies the details of [standardized problems tables](#standardized-problems-tables) to the spreadsheet as cell formatting and notes.
 
 ```
 cogs apply [problems_table]
 ```
 
-ROBOT has three levels of problems which will be formatted with a black border and the following backgrounds:
+The three levels of problems will be formatted with a black border and the following backgrounds:
 * **error**: light red background
 * **warn/warning**: light yellow background
 * **info**: light blue background
@@ -106,6 +106,20 @@ ROBOT has three levels of problems which will be formatted with a black border a
 The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
 
 Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table. To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
+
+#### Standardized Problems Tables
+
+Standardized problems tables provide a standard table output that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of problem can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
+
+These tables must have the following headers:
+* **ID**: local numeric identifier starting at 1 and counting up
+* **table**: name of the table that the problem occurs in
+* **cell**: A1 format of problematic cell location
+* **level**: severity of the problem; error, warn, or info - this determines the background color of the cell
+* **rule ID**: an IRI or CURIE to uniquely identify the problem
+* **rule name**: descriptive name of the problem - this is converted to the cell note
+* **value**: value of the cell causing problem
+* **fix**: can be left blank; a suggestion of how to fix the problem
 
 ### `delete`
 
@@ -292,3 +306,4 @@ There are five kinds of statuses (note that any changes to the remote spreadshee
     * use `cogs push` to remove the sheet from the remote spreadsheet
 * **Removed remotely**: the sheet exists locally but has been removed from remote spreadsheet
     * use `cogs pull` to remove the sheet locally
+
