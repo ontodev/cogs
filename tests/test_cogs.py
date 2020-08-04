@@ -5,6 +5,7 @@ def test_modules():
     """Test that modules are properly loaded."""
     for module in [
         "add",
+        "apply",
         "delete",
         "diff",
         "exceptions",
