@@ -3,7 +3,12 @@ import sys
 
 from cogs.helpers import *
 from cogs.exceptions import CogsError, AddError
-from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_cogs_project
+from cogs.helpers import (
+    get_fields,
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+)
 
 
 def add(args):
@@ -69,11 +74,25 @@ def add(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         # ID gets filled in when we add it to the Sheet
         writer.writerow(
-            {"ID": "", "Title": title, "Path": args.path, "Description": description}
+            {
+                "ID": "",
+                "Title": title,
+                "Path": args.path,
+                "Description": description,
+                "Frozen Rows": 0,
+                "Frozen Columns": 0,
+            }
         )
 
     logging.info(f"{title} successfully added to project")
