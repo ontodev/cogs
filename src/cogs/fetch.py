@@ -39,9 +39,6 @@ def get_cell_data(sheet):
     return cells
 
 
-def get_formats():
-    pass
-
 def get_remote_sheets(sheets):
     """Retrieve a map of sheet title -> sheet ID from the spreadsheet."""
     # Validate sheet titles before downloading anything
