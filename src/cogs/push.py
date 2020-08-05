@@ -6,34 +6,32 @@ import sys
 from cogs.helpers import *
 
 
-def add_note(sheet, label, note):
-    """Add a note to a cell (by label) in a sheet."""
-    spreadsheet = sheet.spreadsheet
-    sheet_id = sheet.id
-
-    row, col = gspread.utils.a1_to_rowcol(label)
-    requests = {
-        "requests": [
-            {
-                "updateCells": {
-                    "range": {
-                        "sheetId": sheet_id,
-                        "startRowIndex": row - 1,
-                        "endRowIndex": row,
-                        "startColumnIndex": col - 1,
-                        "endColumnIndex": col,
-                    },
-                    "rows": [{"values": [{"note": note}]}],
-                    "fields": "note",
-                }
-            }
-        ]
-    }
+def add_notes(spreadsheet, sheet_notes, tracked_sheets):
+    """Batch add notes to a spreadsheet."""
+    requests = []
+    for sheet_title, cell_to_note in sheet_notes.items():
+        sheet_id = tracked_sheets[sheet_title]["ID"]
+        for cell, note in cell_to_note.items():
+            row, col = gspread.utils.a1_to_rowcol(cell)
+            requests.append({
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": row - 1,
+                            "endRowIndex": row,
+                            "startColumnIndex": col - 1,
+                            "endColumnIndex": col,
+                        },
+                        "rows": [{"values": [{"note": note}]}],
+                        "fields": "note",
+                    }
+                })
     try:
-        spreadsheet.batch_update(requests)
+        logging.info(f"adding {len(requests)} notes to spreadsheet")
+        spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
         logging.error(
-            f"Unable to add note to {sheet.title}!{label}\n"
+            f"Unable to add {len(requests)} notes to spreadsheet\n"
             + e.response.text
         )
 
@@ -90,10 +88,7 @@ def push(args):
         gf.format_cell_ranges(sheet, formats)
 
     # Add notes
-    for sheet_title, cell_to_note in sheet_notes.items():
-        sheet = spreadsheet.worksheet(sheet_title)
-        for cell, note in cell_to_note.items():
-            add_note(sheet, cell, note)
+    add_notes(spreadsheet, sheet_notes, tracked_sheets)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
