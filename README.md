@@ -119,7 +119,8 @@ These tables must have the following headers:
 * **rule ID**: an IRI or CURIE to uniquely identify the problem
 * **rule name**: descriptive name of the problem - this is converted to the cell note
 * **value**: value of the cell causing problem
-* **fix**: can be left blank; a suggestion of how to fix the problem
+* **fix**: can be left blank; a suggested value to replace the problematic value
+* **instructions**: can be left blank; detailed instructions on how to fix the problem
 
 ### `delete`
 

@@ -107,13 +107,34 @@ def apply(args):
                 if current_fmt > 1:
                     cell_to_formats[cell] = 2
 
+            instructions = None
+            if "instructions" in row:
+                instructions = row["instructions"]
+                if instructions == "":
+                    instructions = None
+
+            fix = None
+            if "fix" in row:
+                fix = row["fix"]
+                if fix == "":
+                    fix = None
+
             # Add the note
             rule_name = row["rule name"]
             logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
+
+            # Format the note
+            note = f"{level.upper()}: {rule_name}"
+            if instructions:
+                note += f"\nInstructions: {instructions}"
+            if fix:
+                note += f"\nSuggested Fix: \"{fix}\""
+
+            # Add to dict
             if current_note:
-                cell_to_notes[cell] = f"{current_note}\n\n{level.upper()}: {rule_name}"
+                cell_to_notes[cell] = f"{current_note}\n\n{note}"
             else:
-                cell_to_notes[cell] = f"{level.upper()}: {rule_name}"
+                cell_to_notes[cell] = note
 
             sheet_to_formats[table] = cell_to_formats
             sheet_to_notes[table] = cell_to_notes
