@@ -3,23 +3,34 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+with open(here + "/README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
-    name='COGS',
-    version='0.0.1',
-    description='',
+    name="ontodev-cogs",
+    version="0.0.1",
+    description="COGS Operates Google Sheets",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/ontodev/cogs',
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
-    python_requires='>=3.6, <4',
-    install_requires=["google", "gspread"],
-    entry_points={
-        "console_scripts": [
-            "cogs = cogs.cli:main",
-        ],
-    },
+    long_description_content_type="text/markdown",
+    url="https://github.com/ontodev/cogs",
+    author="Rebecca C Jackson",
+    author_email="rbca.jackson@gmail.com",
+    license="",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Environment :: Console",
+        "Operating System :: OS Independent",
+        "License :: OSI Approved :: BSD License",
+    ],
+    packages=find_packages(exclude="tests"),
+    python_requires=">=3.6, <4",
+    install_requires=[
+        "daff",
+        "google",
+        "gspread",
+        "gspread-formatting",
+        "tabulate",
+        "termcolor",
+    ],
+    entry_points={"console_scripts": ["cogs=cogs.cli:main"]},
 )

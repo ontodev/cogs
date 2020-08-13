@@ -19,6 +19,26 @@ import cogs.status as status
 from argparse import ArgumentParser
 
 
+def usage():
+    return f"""cogs [command] [options] <arguments>
+commands:
+  add       {add.msg()}
+  apply     {apply.msg()}
+  delete    {delete.msg()}
+  diff      {diff.msg()}
+  fetch     {fetch.msg()}
+  init      {init.msg()}
+  ls        {ls.msg()}
+  mv        {mv.msg()}
+  open      {open.msg()}
+  pull      {pull.msg()}
+  push      {push.msg()}
+  rm        {rm.msg()}
+  share     {share.msg()}
+  status    {status.msg()}
+  version   Print the COGS version"""
+
+
 def version(args):
     """Print COGS version information."""
     v = helpers.get_version()
@@ -26,7 +46,7 @@ def version(args):
 
 
 def main():
-    parser = ArgumentParser()
+    parser = ArgumentParser(usage=usage())
     global_parser = ArgumentParser(add_help=False)
     global_parser.add_argument(
         "-v", "--verbose", help="Print logging", action="store_true"
@@ -37,7 +57,12 @@ def main():
     sp.set_defaults(func=version)
 
     # ------------------------------- add -------------------------------
-    sp = subparsers.add_parser("add", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "add",
+        parents=[global_parser],
+        description=add.msg(),
+        usage="cogs add PATH [-d DESCRIPTION]",
+    )
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
     sp.add_argument(
         "-d", "--description", help="Description of sheet to add to spreadsheet"
@@ -45,9 +70,14 @@ def main():
     sp.set_defaults(func=add.run)
 
     # ------------------------------- apply -------------------------------
-    sp = subparsers.add_parser("apply", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "apply",
+        parents=[global_parser],
+        description=apply.msg(),
+        usage="cogs apply [PATH ...]",
+    )
     sp.add_argument(
-        "problems_tables",
+        "paths",
         nargs="*",
         default=None,
         help="Path(s) to ROBOT standardized problems table",
@@ -55,20 +85,40 @@ def main():
     sp.set_defaults(func=apply.run)
 
     # ------------------------------- delete -------------------------------
-    sp = subparsers.add_parser("delete", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "delete",
+        parents=[global_parser],
+        description=delete.msg(),
+        usage="cogs delete [-f]",
+    )
     sp.set_defaults(func=delete.run)
+    sp.add_argument(
+        "-f", "--force", action="store_true", help="Delete without confirming"
+    )
 
     # ------------------------------- diff -------------------------------
-    sp = subparsers.add_parser("diff", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "diff",
+        parents=[global_parser],
+        description=diff.msg(),
+        usage="cogs diff [PATH ...]",
+    )
     sp.set_defaults(func=diff.run)
     sp.add_argument("paths", nargs="*", help="Paths to local sheets to diff")
 
     # ------------------------------- fetch -------------------------------
-    sp = subparsers.add_parser("fetch", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "fetch", parents=[global_parser], description=fetch.msg(), usage="cogs fetch"
+    )
     sp.set_defaults(func=fetch.run)
 
     # ------------------------------- init -------------------------------
-    sp = subparsers.add_parser("init", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "init",
+        parents=[global_parser],
+        description=init.msg(),
+        usage="cogs init -c CREDENTIALS -t TITLE [-u USER [-r ROLE]] [-U USERS]",
+    )
     sp.add_argument(
         "-c", "--credentials", required=True, help="Path to service account credentials"
     )
@@ -84,36 +134,59 @@ def main():
     sp.set_defaults(func=init.run)
 
     # ------------------------------- ls -------------------------------
-    sp = subparsers.add_parser("ls", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "ls", parents=[global_parser], description=ls.msg(), usage="cogs ls"
+    )
     sp.set_defaults(func=ls.run)
 
     # ------------------------------- mv -------------------------------
-    sp = subparsers.add_parser("mv", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "mv",
+        parents=[global_parser],
+        description=mv.msg(),
+        usage="cogs mv PATH NEW_PATH",
+    )
     sp.add_argument("path", help="Path of local sheet to move")
     sp.add_argument("new_path", help="New path for local sheet")
     sp.set_defaults(func=mv.run)
 
     # ------------------------------- open -------------------------------
-    sp = subparsers.add_parser("open", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "open", parents=[global_parser], description=open.msg(), usage="cogs open"
+    )
     sp.set_defaults(func=open.run)
 
     # ------------------------------- pull -------------------------------
-    sp = subparsers.add_parser("pull", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "pull", parents=[global_parser], description=pull.msg(), usage="cogs pull"
+    )
     sp.set_defaults(func=pull.run)
 
     # ------------------------------- push -------------------------------
-    sp = subparsers.add_parser("push", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "push", parents=[global_parser], description=push.msg(), usage="cogs push"
+    )
     sp.set_defaults(func=push.run)
 
     # -------------------------------- rm --------------------------------
-    sp = subparsers.add_parser("rm", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "rm",
+        parents=[global_parser],
+        description=rm.msg(),
+        usage="cogs rm PATH [PATH ...]",
+    )
     sp.add_argument(
-        "paths", help="Path to TSV or CSV to remove from COGS project", nargs="+"
+        "paths", help="Path(s) to TSV or CSV to remove from COGS project", nargs="+"
     )
     sp.set_defaults(func=rm.run)
 
     # ------------------------------- share -------------------------------
-    sp = subparsers.add_parser("share", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "share",
+        parents=[global_parser],
+        description=share.msg(),
+        usage="cogs share [-o OWNER] [-w WRITER] [-r READER]",
+    )
     sp.add_argument(
         "-o", "--owner", help="Email of user to transfer ownership of spreadsheet to"
     )
@@ -122,12 +195,13 @@ def main():
     sp.set_defaults(func=share.run)
 
     # -------------------------------- status --------------------------------
-    sp = subparsers.add_parser("status", parents=[global_parser])
+    sp = subparsers.add_parser(
+        "status",
+        parents=[global_parser],
+        description=status.msg(),
+        usage="cogs add status",
+    )
     sp.set_defaults(func=status.run)
 
     args = parser.parse_args()
     args.func(args)
-
-
-if __name__ == "__main__":
-    main()

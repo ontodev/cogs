@@ -5,6 +5,10 @@ from cogs.exceptions import FetchError
 from cogs.helpers import *
 
 
+def msg():
+    return "Fetch remote versions of sheets"
+
+
 def get_cell_data(sheet):
     """Get cell data from a remote sheet. Cell data includes formatting and notes.
     Return as a map of cell location (e.g., B2) to {"format": dict, "note": str}."""

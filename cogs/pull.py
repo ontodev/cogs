@@ -7,6 +7,10 @@ from cogs.exceptions import CogsError
 from cogs.helpers import get_cached_sheets, get_tracked_sheets, set_logging, validate_cogs_project
 
 
+def msg():
+    return "Copy fetched sheets to their local paths"
+
+
 def pull(args):
     """Copy cached sheets to their local paths."""
     set_logging(args.verbose)

@@ -4,6 +4,10 @@ import tabulate
 from cogs.helpers import *
 
 
+def msg():
+    return "Show all tracked sheets"
+
+
 def ls(args):
     """Print a list of tracked files"""
     set_logging(args.verbose)

@@ -5,6 +5,10 @@ from cogs.exceptions import CogsError
 from cogs.helpers import get_config, set_logging, validate_cogs_project
 
 
+def msg():
+    return "Display the URL of the spreadsheet"
+
+
 def openSheet(args):
     """Display the URL of the spreadsheet."""
     set_logging(args.verbose)

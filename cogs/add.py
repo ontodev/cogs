@@ -11,6 +11,10 @@ from cogs.helpers import (
 )
 
 
+def msg():
+    return "Add a table (TSV or CSV) to the project"
+
+
 def add(args):
     """Add a table (TSV or CSV) to the COGS project. This updates sheet.tsv and field.tsv."""
     set_logging(args.verbose)

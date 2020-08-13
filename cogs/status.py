@@ -14,6 +14,10 @@ from cogs.helpers import (
 )
 
 
+def msg():
+    return "Summarize changes between local and fetched sheets"
+
+
 def get_changes(tracked_sheets, renamed):
     """Get sets of changes between local and remote sheets."""
     # Get all cached sheet titles that are not COGS defaults
