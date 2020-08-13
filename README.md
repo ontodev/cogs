@@ -92,10 +92,10 @@ This does not add the table to the spreadsheet as a sheet - use `cogs push` to p
 
 ### `apply`
 
-Running `apply` applies the details of [standardized problems tables](#standardized-problems-tables) to the spreadsheet as cell formatting and notes.
+Running `apply` applies the details of one or more [standardized problems tables](#standardized-problems-tables) to the spreadsheet as cell formatting and notes.
 
 ```
-cogs apply [problems_table]
+cogs apply [problems1.tsv problems2.tsv ...]
 ```
 
 The three levels of problems will be formatted with a black border and the following backgrounds:
@@ -105,7 +105,7 @@ The three levels of problems will be formatted with a black border and the follo
 
 The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
 
-Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table. To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
+Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table(s). To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
 
 #### Standardized Problems Tables
 
