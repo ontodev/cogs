@@ -49,95 +49,96 @@ def apply(args):
         sheet_to_manual_notes[sheet_title] = manual_notes
     sheet_to_notes = sheet_to_manual_notes
 
-    if not args.problems_table:
+    if not args.problems_tables:
         # No table provided - update without adding anything else
         update_note(sheet_to_notes, [])
         update_format(sheet_to_formats, [])
         return
 
     # Read the problems table to get the formats & notes to add
-    sep = "\t"
-    if args.problems_table.endswith(".csv"):
-        sep = ","
-    with open(args.problems_table, "r") as f:
-        reader = csv.DictReader(f, delimiter=sep)
-        for row in reader:
-            table = os.path.splitext(os.path.basename(row["table"]))[0]
-            if table not in tracked_sheets:
-                # TODO - error? warning?
-                logging.warning(f"'{table} is not a tracked table")
-                continue
+    for problems_table in args.problems_tables:
+        sep = "\t"
+        if problems_table.endswith(".csv"):
+            sep = ","
+        with open(problems_table, "r") as f:
+            reader = csv.DictReader(f, delimiter=sep)
+            for row in reader:
+                table = os.path.splitext(os.path.basename(row["table"]))[0]
+                if table not in tracked_sheets:
+                    # TODO - error? warning?
+                    logging.warning(f"'{table} is not a tracked table")
+                    continue
 
-            if table in sheet_to_formats:
-                cell_to_formats = sheet_to_formats[table]
-            else:
-                cell_to_formats = {}
+                if table in sheet_to_formats:
+                    cell_to_formats = sheet_to_formats[table]
+                else:
+                    cell_to_formats = {}
 
-            if table in sheet_to_notes:
-                cell_to_notes = sheet_to_notes[table]
-            else:
-                cell_to_notes = {}
+                if table in sheet_to_notes:
+                    cell_to_notes = sheet_to_notes[table]
+                else:
+                    cell_to_notes = {}
 
-            cell = row["cell"].upper()
+                cell = row["cell"].upper()
 
-            # Check for current applied formats and/or notes
-            current_fmt = -1
-            current_note = None
-            if cell in cell_to_formats and int(cell_to_formats[cell]) <= 2:
-                current_fmt = cell_to_formats[cell]
-            if cell in cell_to_notes:
-                current_note = cell_to_notes[cell]
-                if (
-                    not current_note.startswith("ERROR: ")
-                    and not current_note.startswith("WARN: ")
-                    and not current_note.startswith("INFO: ")
-                ):
-                    # Not an applied note
-                    current_note = None
+                # Check for current applied formats and/or notes
+                current_fmt = -1
+                current_note = None
+                if cell in cell_to_formats and int(cell_to_formats[cell]) <= 2:
+                    current_fmt = cell_to_formats[cell]
+                if cell in cell_to_notes:
+                    current_note = cell_to_notes[cell]
+                    if (
+                        not current_note.startswith("ERROR: ")
+                        and not current_note.startswith("WARN: ")
+                        and not current_note.startswith("INFO: ")
+                    ):
+                        # Not an applied note
+                        current_note = None
 
-            # Set formatting based on level of issue
-            level = row["level"].lower().strip()
-            if level == "error":
-                cell_to_formats[cell] = 0
-            elif level == "warn" or level == "warning":
-                level = "warn"
-                if current_fmt != 0:
-                    cell_to_formats[cell] = 1
-            elif level == "info":
-                if current_fmt > 1:
-                    cell_to_formats[cell] = 2
+                # Set formatting based on level of issue
+                level = row["level"].lower().strip()
+                if level == "error":
+                    cell_to_formats[cell] = 0
+                elif level == "warn" or level == "warning":
+                    level = "warn"
+                    if current_fmt != 0:
+                        cell_to_formats[cell] = 1
+                elif level == "info":
+                    if current_fmt > 1:
+                        cell_to_formats[cell] = 2
 
-            instructions = None
-            if "instructions" in row:
-                instructions = row["instructions"]
-                if instructions == "":
-                    instructions = None
+                instructions = None
+                if "instructions" in row:
+                    instructions = row["instructions"]
+                    if instructions == "":
+                        instructions = None
 
-            fix = None
-            if "fix" in row:
-                fix = row["fix"]
-                if fix == "":
-                    fix = None
+                fix = None
+                if "fix" in row:
+                    fix = row["fix"]
+                    if fix == "":
+                        fix = None
 
-            # Add the note
-            rule_name = row["rule name"]
-            logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
+                # Add the note
+                rule_name = row["rule name"]
+                logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
 
-            # Format the note
-            note = f"{level.upper()}: {rule_name}"
-            if instructions:
-                note += f"\nInstructions: {instructions}"
-            if fix:
-                note += f"\nSuggested Fix: \"{fix}\""
+                # Format the note
+                note = f"{level.upper()}: {rule_name}"
+                if instructions:
+                    note += f"\nInstructions: {instructions}"
+                if fix:
+                    note += f"\nSuggested Fix: \"{fix}\""
 
-            # Add to dict
-            if current_note:
-                cell_to_notes[cell] = f"{current_note}\n\n{note}"
-            else:
-                cell_to_notes[cell] = note
+                # Add to dict
+                if current_note:
+                    cell_to_notes[cell] = f"{current_note}\n\n{note}"
+                else:
+                    cell_to_notes[cell] = note
 
-            sheet_to_formats[table] = cell_to_formats
-            sheet_to_notes[table] = cell_to_notes
+                sheet_to_formats[table] = cell_to_formats
+                sheet_to_notes[table] = cell_to_notes
 
     # Update formats & notes TSVs
     update_note(sheet_to_notes, [])

@@ -28,7 +28,9 @@ def version(args):
 def main():
     parser = ArgumentParser()
     global_parser = ArgumentParser(add_help=False)
-    global_parser.add_argument("-v", "--verbose", help="Print logging", action="store_true")
+    global_parser.add_argument(
+        "-v", "--verbose", help="Print logging", action="store_true"
+    )
     subparsers = parser.add_subparsers(required=True, dest="cmd")
 
     sp = subparsers.add_parser("version", parents=[global_parser])
@@ -37,12 +39,19 @@ def main():
     # ------------------------------- add -------------------------------
     sp = subparsers.add_parser("add", parents=[global_parser])
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
-    sp.add_argument("-d", "--description", help="Description of sheet to add to spreadsheet")
+    sp.add_argument(
+        "-d", "--description", help="Description of sheet to add to spreadsheet"
+    )
     sp.set_defaults(func=add.run)
 
     # ------------------------------- apply -------------------------------
     sp = subparsers.add_parser("apply", parents=[global_parser])
-    sp.add_argument("problems_table", nargs="?", default=None, help="Path to ROBOT standardized problems table")
+    sp.add_argument(
+        "problems_tables",
+        nargs="*",
+        default=None,
+        help="Path(s) to ROBOT standardized problems table",
+    )
     sp.set_defaults(func=apply.run)
 
     # ------------------------------- delete -------------------------------
@@ -66,7 +75,10 @@ def main():
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")
     sp.add_argument(
-        "-r", "--role", default="writer", help="Role for specified user (default: owner)",
+        "-r",
+        "--role",
+        default="writer",
+        help="Role for specified user (default: owner)",
     )
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=init.run)
@@ -95,12 +107,16 @@ def main():
 
     # -------------------------------- rm --------------------------------
     sp = subparsers.add_parser("rm", parents=[global_parser])
-    sp.add_argument("paths", help="Path to TSV or CSV to remove from COGS project", nargs='+')
+    sp.add_argument(
+        "paths", help="Path to TSV or CSV to remove from COGS project", nargs="+"
+    )
     sp.set_defaults(func=rm.run)
 
     # ------------------------------- share -------------------------------
     sp = subparsers.add_parser("share", parents=[global_parser])
-    sp.add_argument("-o", "--owner", help="Email of user to transfer ownership of spreadsheet to")
+    sp.add_argument(
+        "-o", "--owner", help="Email of user to transfer ownership of spreadsheet to"
+    )
     sp.add_argument("-w", "--writer", help="Email of user to grant write access to")
     sp.add_argument("-r", "--reader", help="Email of user to grant read access to")
     sp.set_defaults(func=share.run)

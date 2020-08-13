@@ -26,6 +26,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
                         "fields": "note",
                     }
                 })
+    if not requests:
+        return
     try:
         logging.info(f"adding {len(requests)} notes to spreadsheet")
         spreadsheet.batch_update({"requests": requests})
