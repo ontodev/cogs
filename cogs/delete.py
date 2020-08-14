@@ -8,6 +8,10 @@ from cogs.exceptions import CogsError, DeleteError
 from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
 
 
+def msg():
+    return "Delete the Google spreadsheet and COGS configuration"
+
+
 def delete(args):
     """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
     Remove .cogs directory."""
@@ -15,13 +19,14 @@ def delete(args):
     validate_cogs_project()
     config = get_config()
 
-    resp = input(
-        "WARNING: This task will permanently destroy the spreadsheet and all COGS data.\n"
-        "         Do you wish to proceed? [y/n]\n"
-    )
-    if resp.lower().strip() != "y":
-        logging.warning("'delete' operation stopped")
-        sys.exit(0)
+    if not args.force:
+        resp = input(
+            "WARNING: This task will permanently destroy the spreadsheet and all COGS data.\n"
+            "         Do you wish to proceed? [y/n]\n"
+        )
+        if resp.lower().strip() != "y":
+            logging.warning("'delete' operation stopped")
+            sys.exit(0)
 
     # Get a client to perform Sheet actions
     gc = get_client(config["Credentials"])

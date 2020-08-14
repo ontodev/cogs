@@ -6,6 +6,10 @@ import sys
 from cogs.helpers import *
 
 
+def msg():
+    return "Push local sheets to the spreadsheet"
+
+
 def add_notes(spreadsheet, sheet_notes, tracked_sheets):
     """Batch add notes to a spreadsheet."""
     requests = []

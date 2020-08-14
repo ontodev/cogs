@@ -6,6 +6,10 @@ from cogs.exceptions import CogsError
 from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
 
 
+def msg():
+    return "Share the spreadsheet with a user"
+
+
 def share_spreadsheet(title, spreadsheet, user, role):
     """Share a sheet with a user (email) as role (reader, writer, owner)"""
     logging.info(f"Sharing spreadsheet '{title}' with {user} as '{role}'")

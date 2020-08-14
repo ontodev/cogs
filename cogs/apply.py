@@ -15,8 +15,12 @@ from cogs.helpers import (
 )
 
 
+def msg():
+    return "Apply a standardized problems table to the spreadsheet"
+
+
 def apply(args):
-    """Apply a standardized ROBOT problems table to the spreadsheet."""
+    """Apply a standardized problems table to the spreadsheet."""
     validate_cogs_project()
     set_logging(args.verbose)
     tracked_sheets = get_tracked_sheets()
@@ -49,14 +53,14 @@ def apply(args):
         sheet_to_manual_notes[sheet_title] = manual_notes
     sheet_to_notes = sheet_to_manual_notes
 
-    if not args.problems_tables:
+    if not args.paths:
         # No table provided - update without adding anything else
         update_note(sheet_to_notes, [])
         update_format(sheet_to_formats, [])
         return
 
     # Read the problems table to get the formats & notes to add
-    for problems_table in args.problems_tables:
+    for problems_table in args.paths:
         sep = "\t"
         if problems_table.endswith(".csv"):
             sep = ","

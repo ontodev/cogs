@@ -9,6 +9,10 @@ from cogs.exceptions import CogsError, MvError
 from cogs.helpers import get_tracked_sheets, set_logging, validate_cogs_project
 
 
+def msg():
+    return "Move a local sheet to a new path"
+
+
 def mv(args):
     """Move a local sheet to a new local path. If the file basename changes, the sheet title will
     also change."""

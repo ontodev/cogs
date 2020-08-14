@@ -4,6 +4,10 @@ from cogs.exceptions import RmError
 from cogs.helpers import *
 
 
+def msg():
+    return "Remove a table (TSV or CSV) from the project"
+
+
 def rm(args):
     """Remove a table (TSV or CSV) from the COGS project. 
     This updates sheet.tsv and field.tsv and delete the according cached file."""
