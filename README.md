@@ -5,6 +5,37 @@
 COGS takes a set of TSV files on your local file system and allows you to edit them using Google Sheets.
 
 
+## Setup
+
+COGS is distributed on [PyPI](https://pypi.org/project/ontodev-cogs/). To install:
+```
+pip install ontodev-cogs
+```
+
+To see a list of all commands:
+```
+cogs -h
+```
+
+For help with a specific command:
+```
+cogs [command] -h
+```
+
+#### Development
+
+For local development on Unix (Linux or macOS), we suggest these install instructions:
+
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+$ pip install -e .
+$ cogs -h
+```
+
+---
+
 ## Overview
 
 Since COGS is designed to synchronize local and remote sets of tables,
@@ -57,20 +88,6 @@ Otherwise, most commands succeed silently.
 - **Cached**: data stored in `.cogs/` which is fetched from the remote spreadsheet
 - **Format**: the format applied to a cell in a sheet (e.g., background color, font family, etc.)
 - **Note**: a note (a.k.a. comment) on a cell that appears when hovered over in the sheet
-
----
-
-## Development
-
-Until we distribute COGS with Pypi, and for local development on Unix (Linux or macOS), we suggest these install instructions:
-
-```
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ pip install -r requirements.txt
-$ pip install -e .
-$ cogs --help
-```
 
 ---
 
