@@ -1,12 +1,7 @@
-import csv
-import gspread
-import json
-import logging
-import os
 import sys
 
-from cogs.exceptions import CogsError, InitError
-from cogs.helpers import get_client, is_email, is_valid_role, get_version, set_logging
+from cogs.exceptions import InitError
+from cogs.helpers import *
 
 
 default_fields = [
@@ -208,7 +203,8 @@ def write_data(args, sheet):
         v = get_version()
         writer.writerow({"Key": "COGS", "Value": "https://github.com/ontodev/cogs"})
         writer.writerow({"Key": "COGS Version", "Value": v})
-        writer.writerow({"Key": "Credentials", "Value": args.credentials})
+        if args.credentials:
+            writer.writerow({"Key": "Credentials", "Value": args.credentials})
         writer.writerow({"Key": "Title", "Value": args.title})
         writer.writerow({"Key": "Spreadsheet ID", "Value": sheet.id})
 
@@ -281,7 +277,12 @@ def init(args):
     users = get_users(args)
 
     # Create a Client to access API
-    gc = get_client(args.credentials)
+    if args.credentials:
+        # Use a credentials file
+        gc = get_client(credentials_path=args.credentials)
+    else:
+        # Use environment vars
+        gc = get_client()
 
     # Create the new Sheet
     try:

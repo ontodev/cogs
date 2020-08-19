@@ -62,9 +62,9 @@ def fetch(args):
     validate_cogs_project()
 
     config = get_config()
-    client = get_client(config["Credentials"])
+    gc = get_client_from_config(config)
     title = config["Title"]
-    spreadsheet = client.open(title)
+    spreadsheet = gc.open(title)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []

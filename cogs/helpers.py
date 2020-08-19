@@ -9,12 +9,15 @@ import re
 
 from cogs.exceptions import CogsError
 from daff import Coopy, CompareFlags, PythonTableView, TableDiff
+from google.oauth2.service_account import Credentials
 
 reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
 required_files = ["config.tsv", "field.tsv", "format.tsv", "note.tsv", "sheet.tsv"]
 optional_files = ["user.tsv", "renamed.tsv"]
 
-required_keys = ["Spreadsheet ID", "Title", "Credentials"]
+required_keys = ["Spreadsheet ID", "Title"]
+
+credential_keys = []
 
 
 def get_cached_sheets():
@@ -30,26 +33,56 @@ def get_cached_sheets():
     return cached
 
 
-def get_client(credentials):
-    """Get the gspread Client to perform Google Sheets API actions."""
+def get_client(credentials_path=None):
+    """Get the google.auth Client to perform Google Sheets API actions."""
+    # First get the credentials JSON
+    if not credentials_path:
+        # No path provided, use environment variable
+        env = os.environ
+        if "GOOGLE_CREDENTIALS" not in env:
+            raise CogsError(
+                "Unable to create a Client; GOOGLE_CREDENTIALS environment variable is not set"
+            )
+        credentials = json.loads(env["GOOGLE_CREDENTIALS"])
+    else:
+        # Otherwise load from credentials path
+        credentials = json.load(open(credentials_path))
+
     try:
-        gc = gspread.service_account(credentials)
+        # Create Credentials object and add scope (spreadsheets & drive)
+        gcred = Credentials.from_service_account_info(credentials)
+        gcred = gcred.with_scopes(
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive",
+            ]
+        )
+        # Create gspread Client & log in
+        gc = gspread.Client(auth=gcred)
         gc.login()
         return gc
+    except ValueError as e:
+        # credentials are missing a required key
+        raise CogsError(f"Unable to create a Client from credentials; {str(e)}")
     except gspread.exceptions.APIError as e:
-        print(f"Unable to create a Client from credentials '{credentials}'")
-        print(e.response.text)
+        raise CogsError(
+            f"Unable to create a Client from credentials; {e.response.text}"
+        )
     except google.auth.exceptions.RefreshError as e:
         if "invalid_grant" in str(e):
             raise CogsError(
-                "Unable to create a Client; "
-                f"account for client_email in '{credentials}' cannot be found"
+                "Unable to create a Client; account for client_email cannot be found"
             )
         else:
-            raise CogsError(
-                f"Unable to create a Client; cannot refresh credentials in '{credentials}'"
-                f"\nCAUSE: {str(e)}"
-            )
+            raise CogsError(f"Unable to create a Client; {str(e)}")
+
+
+def get_client_from_config(config):
+    """Get the google.auth client from COGS configuration."""
+    if "Credentials" in config:
+        return get_client(config["Credentials"])
+    else:
+        return get_client()
 
 
 def get_config():
@@ -122,7 +155,10 @@ def get_fields():
 
 def get_format_dict():
     """Get a dict of numerical format ID -> the format dict."""
-    if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
+    if (
+        os.path.exists(".cogs/formats.json")
+        and not os.stat(".cogs/formats.json").st_size == 0
+    ):
         with open(".cogs/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
             return {int(k): v for k, v in fmt_dict.items()}
@@ -272,7 +308,9 @@ def update_format(sheet_formats, removed_titles):
         if sheet_title in removed_titles:
             continue
         for cell, fmt in formats.items():
-            fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
+            fmt_rows.append(
+                {"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt}
+            )
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
             f,

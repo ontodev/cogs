@@ -120,7 +120,7 @@ def main():
         usage="cogs init -c CREDENTIALS -t TITLE [-u USER [-r ROLE]] [-U USERS]",
     )
     sp.add_argument(
-        "-c", "--credentials", required=True, help="Path to service account credentials"
+        "-c", "--credentials", help="Path to service account credentials"
     )
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")

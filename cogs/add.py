@@ -3,12 +3,6 @@ import sys
 
 from cogs.helpers import *
 from cogs.exceptions import CogsError, AddError
-from cogs.helpers import (
-    get_fields,
-    get_tracked_sheets,
-    set_logging,
-    validate_cogs_project,
-)
 
 
 def msg():
