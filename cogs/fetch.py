@@ -23,7 +23,11 @@ def get_cell_data(sheet):
     )
     cells = {}
     idx_y = 1
-    for row in resp["sheets"][0]["data"][0]["rowData"]:
+    data = resp["sheets"][0]["data"][0]
+    if "rowData" not in data:
+        # Empty sheet
+        return cells
+    for row in data["rowData"]:
         if not row:
             # Empty row
             continue
