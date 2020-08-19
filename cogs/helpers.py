@@ -215,7 +215,7 @@ def get_renamed_sheets():
     return renamed
 
 
-def get_tracked_sheets():
+def get_tracked_sheets(include_no_id=True):
     """Get the current tracked sheets in this project from sheet.tsv as a dict of sheet title ->
     path & ID. They may or may not have corresponding cached/local sheets."""
     sheets = {}
@@ -224,6 +224,9 @@ def get_tracked_sheets():
         for row in reader:
             title = row["Title"]
             if not title:
+                continue
+            sheet_id = row["ID"]
+            if not include_no_id and sheet_id == "":
                 continue
             del row["Title"]
             sheets[title] = row

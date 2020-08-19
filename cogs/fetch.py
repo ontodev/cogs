@@ -72,7 +72,7 @@ def fetch(args):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_tracked_sheets()
+    tracked_sheets = get_tracked_sheets(include_no_id=False)
     id_to_title = {
         int(details["ID"]): sheet_title
         for sheet_title, details in tracked_sheets.items()
