@@ -23,7 +23,11 @@ def get_cell_data(sheet):
     )
     cells = {}
     idx_y = 1
-    for row in resp["sheets"][0]["data"][0]["rowData"]:
+    data = resp["sheets"][0]["data"][0]
+    if "rowData" not in data:
+        # Empty sheet
+        return cells
+    for row in data["rowData"]:
         if not row:
             # Empty row
             continue
@@ -62,9 +66,9 @@ def fetch(args):
     validate_cogs_project()
 
     config = get_config()
-    client = get_client(config["Credentials"])
+    gc = get_client_from_config(config)
     title = config["Title"]
-    spreadsheet = client.open(title)
+    spreadsheet = gc.open(title)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
@@ -72,7 +76,7 @@ def fetch(args):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_tracked_sheets()
+    tracked_sheets = get_tracked_sheets(include_no_id=False)
     id_to_title = {
         int(details["ID"]): sheet_title
         for sheet_title, details in tracked_sheets.items()

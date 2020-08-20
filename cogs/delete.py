@@ -1,11 +1,8 @@
-import gspread
-import logging
-import os
 import shutil
 import sys
 
-from cogs.exceptions import CogsError, DeleteError
-from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
+from cogs.exceptions import DeleteError
+from cogs.helpers import *
 
 
 def msg():
@@ -29,7 +26,7 @@ def delete(args):
             sys.exit(0)
 
     # Get a client to perform Sheet actions
-    gc = get_client(config["Credentials"])
+    gc = get_client_from_config(config)
 
     # Delete the Sheet
     title = config["Title"]

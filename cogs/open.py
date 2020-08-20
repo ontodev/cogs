@@ -1,8 +1,6 @@
-import logging
 import sys
 
-from cogs.exceptions import CogsError
-from cogs.helpers import get_config, set_logging, validate_cogs_project
+from cogs.helpers import *
 
 
 def msg():

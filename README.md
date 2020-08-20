@@ -214,9 +214,15 @@ Running `init` creates a `.cogs` directory containing configuration data. This a
 cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
 ```
 
+`gspread` needs credentials to create a service account; you can either provide these with a file (`-c [path]`) or with an environment variable (`GOOGLE_CREDENTIALS`). The environment variable should be a string containing the contents of the credentials file. You must surround the contents with single quotes when setting this variable:
+
+```
+export GOOGLE_CREDENTIALS='{...}'
+```
+
 Options:
-- `-c`/`--credentials`: **required**, path to [Google API credentials](https://gspread.readthedocs.io/en/latest/oauth2.html#enable-api-access-for-a-project) in JSON format
 - `-t`/`--title`: **required**, title of the project which will be used as the title of the Google spreadsheet
+- `-c`/`--credentials`: path to [Google API credentials](https://gspread.readthedocs.io/en/latest/oauth2.html#enable-api-access-for-a-project) in JSON format
 - `-u`/`--user`: email of the user to share the sheet with (if a `--role` is not specified, this user will be a writer)
 - `-r`/`--role`: role of the user specified by `--user`: `writer` or `reader`
 - `-U`/`--users`: path to TSV containing emails and roles for multiple users (header optional)

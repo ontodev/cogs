@@ -1,11 +1,9 @@
 import curses
-import logging
-import os
 import sys
 import tabulate
 
-from cogs.exceptions import CogsError, DiffError
-from cogs.helpers import get_diff, get_tracked_sheets, set_logging, validate_cogs_project
+from cogs.exceptions import DiffError
+from cogs.helpers import *
 
 
 def msg():

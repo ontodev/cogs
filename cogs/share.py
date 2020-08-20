@@ -1,9 +1,6 @@
-import gspread
-import logging
 import sys
 
-from cogs.exceptions import CogsError
-from cogs.helpers import get_client, get_config, set_logging, validate_cogs_project
+from cogs.helpers import *
 
 
 def msg():
@@ -25,7 +22,7 @@ def share(args):
     validate_cogs_project()
 
     config = get_config()
-    gc = get_client(config["Credentials"])
+    gc = get_client_from_config(config)
 
     title = config["Title"]
     spreadsheet = gc.open(title)

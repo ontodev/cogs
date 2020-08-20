@@ -50,7 +50,7 @@ def push(args):
     set_logging(args.verbose)
     validate_cogs_project()
     config = get_config()
-    gc = get_client(config["Credentials"])
+    gc = get_client_from_config(config)
     spreadsheet = gc.open(config["Title"])
 
     # Get tracked sheets
