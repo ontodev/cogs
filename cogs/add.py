@@ -88,8 +88,8 @@ def add(args):
                 "Title": title,
                 "Path": args.path,
                 "Description": description,
-                "Frozen Rows": 0,
-                "Frozen Columns": 0,
+                "Frozen Rows": args.freeze_row,
+                "Frozen Columns": args.freeze_column,
             }
         )
 

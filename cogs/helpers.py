@@ -46,7 +46,12 @@ def get_client(credentials_path=None):
         credentials = json.loads(env["GOOGLE_CREDENTIALS"])
     else:
         # Otherwise load from credentials path
-        credentials = json.load(open(credentials_path))
+        try:
+            credentials = json.load(open(credentials_path))
+        except FileNotFoundError:
+            raise CogsError(
+                f"Unable to create a Client; credentials file at {credentials_path} does not exist"
+            )
 
     try:
         # Create Credentials object and add scope (spreadsheets & drive)
