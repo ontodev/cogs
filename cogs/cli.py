@@ -61,7 +61,7 @@ def main():
         "add",
         parents=[global_parser],
         description=add.msg(),
-        usage="cogs add PATH [-d DESCRIPTION]",
+        usage="cogs add PATH [-d DESCRIPTION -r FREEZE_ROW -c FREEZE_COLUMN]",
     )
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
     sp.add_argument(
