@@ -61,11 +61,17 @@ def main():
         "add",
         parents=[global_parser],
         description=add.msg(),
-        usage="cogs add PATH [-d DESCRIPTION]",
+        usage="cogs add PATH [-d DESCRIPTION -r FREEZE_ROW -c FREEZE_COLUMN]",
     )
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
     sp.add_argument(
         "-d", "--description", help="Description of sheet to add to spreadsheet"
+    )
+    sp.add_argument(
+        "-r", "--freeze-row", help="Row number to freeze up to", default="0"
+    )
+    sp.add_argument(
+        "-c", "--freeze-column", help="Column number to freeze up to", default="0"
     )
     sp.set_defaults(func=add.run)
 
@@ -119,9 +125,7 @@ def main():
         description=init.msg(),
         usage="cogs init -c CREDENTIALS -t TITLE [-u USER [-r ROLE]] [-U USERS]",
     )
-    sp.add_argument(
-        "-c", "--credentials", help="Path to service account credentials"
-    )
+    sp.add_argument("-c", "--credentials", help="Path to service account credentials")
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")
     sp.add_argument(

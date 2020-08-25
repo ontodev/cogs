@@ -101,7 +101,13 @@ Running `add` will begin tracking a local TSV or CSV table. The table details (p
 cogs add [path] -d "[description]"
 ```
 
-The `-d`/`--description` is optional.
+The `-d`/`--description` is optional. You can also specify a number of rows and or columns to freeze:
+
+```
+cogs add [path] -r [freeze_row] -c [freeze_column]
+```
+
+If you specify `-r 2 -c 1`, then the first two rows and the first column will be frozen once the sheet is pushed to the remote Google Spreadsheet. If these options are not included, no rows or columns will be frozen.
 
 The sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
 
