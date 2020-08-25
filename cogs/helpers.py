@@ -113,25 +113,38 @@ def get_diff(local, remote):
             reader = csv.reader(f)
         else:
             reader = csv.reader(f, delimiter="\t")
-        header = next(reader)
-        local_data.append(header)
-        for row in reader:
-            if len(row) < len(header):
-                add = [""] * (len(header) - len(row))
-                row.extend(add)
-            local_data.append(row)
+        try:
+            header = next(reader)
+        except StopIteration:
+            # No data
+            header = None
+        if header:
+            local_data.append(header)
+            for row in reader:
+                if len(row) < len(header):
+                    add = [""] * (len(header) - len(row))
+                    row.extend(add)
+                local_data.append(row)
 
     remote_data = []
     with open(remote, "r") as f:
         # Remote is always TSV
         reader = csv.reader(f, delimiter="\t")
-        header = next(reader)
-        remote_data.append(header)
-        for row in reader:
-            if len(row) < len(header):
-                add = [""] * (len(header) - len(row))
-                row.extend(add)
-            remote_data.append(row)
+        try:
+            header = next(reader)
+        except StopIteration:
+            # No data
+            header = None
+        if header:
+            remote_data.append(header)
+            for row in reader:
+                if len(row) < len(header):
+                    add = [""] * (len(header) - len(row))
+                    row.extend(add)
+                remote_data.append(row)
+
+    if not local_data and not remote_data:
+        return []
 
     local_table = PythonTableView(local_data)
     remote_table = PythonTableView(remote_data)
