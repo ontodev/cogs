@@ -156,7 +156,7 @@ cogs connect -k [spreadsheet-key] -c [path-to-credentials]
 
 You can find the spreadsheet key in the URL of the Google Spreadsheet:
 ```
-https://docs.google.com/spreadsheets/d/[SPREADSHEEET-KEY]/edit#gid=0
+https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
 ```
 
 As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
