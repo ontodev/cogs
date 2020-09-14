@@ -148,7 +148,7 @@ These tables must have the following headers:
 
 ### `connect`
 
-`connect` is similar to [`init`](#init) in that it creates a new COGS project in the current directory. Instead of creating a new Google Spreadsheet, though, it connects to an existing one that you have already created. In order to run `connect`, you must not have an existing COGS project in the directory. We also recommend that you are the owner of the Spreadsheet you are connecting, as you will need to transfer ownership to the service accound defined in your credentials.
+`connect` is similar to [`init`](#init) in that it creates a new COGS project in the current directory. Instead of creating a new Google Spreadsheet, though, it connects to an existing one that you have already created. In order to run `connect`, you must not have an existing COGS project in the directory. We also recommend that you are the owner of the Spreadsheet you are connecting, as you will need to transfer ownership to the service account defined in your credentials.
 
 ```
 cogs connect -k [spreadsheet-key] -c [path-to-credentials]
@@ -161,7 +161,7 @@ https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
 
 As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
 
-After connecting to the existing spreadsheet, COGS will pause to ask you to transfer ownership to the service account. It will provide a link to the sheet and the serivce email to share with. To transfer ownership:
+After connecting to the existing spreadsheet, COGS will pause to ask you to transfer ownership to the service account. It will provide a link to the sheet and the service email to share with. To transfer ownership:
 1. Open the Google Spreadsheet in your browser
 2. Click "Share" in the upper right corner
 3. Enter in the provided service email and click "Send" (note: you may receive an email that says the email failed to send - just ignore this, since the service email is not a "real" email address)
