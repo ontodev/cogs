@@ -34,7 +34,7 @@ def get_cached_sheets():
 
 
 def get_credentials(credentials_path=None):
-    """"""
+    """Get the Google credentials as a dictionary."""
     # First get the credentials JSON
     if not credentials_path:
         # No path provided, use environment variable

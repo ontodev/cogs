@@ -9,7 +9,7 @@ def msg():
 
 
 def connect(args):
-    """"""
+    """Connect an existing Google Spreadsheet to a new COGS project."""
     set_logging(args.verbose)
     cwd = os.getcwd()
     if os.path.exists(".cogs"):
