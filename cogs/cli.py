@@ -96,7 +96,7 @@ def main():
     sp = subparsers.add_parser(
         "connect",
         parents=[global_parser],
-        description=delete.msg(),
+        description=connect.msg(),
         usage="cogs connect -k KEY [-c CREDENTIALS]",
     )
     sp.set_defaults(func=connect.run)
