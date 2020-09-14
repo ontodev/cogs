@@ -33,8 +33,8 @@ def get_cached_sheets():
     return cached
 
 
-def get_client(credentials_path=None):
-    """Get the google.auth Client to perform Google Sheets API actions."""
+def get_credentials(credentials_path=None):
+    """"""
     # First get the credentials JSON
     if not credentials_path:
         # No path provided, use environment variable
@@ -52,6 +52,12 @@ def get_client(credentials_path=None):
             raise CogsError(
                 f"Unable to create a Client; credentials file at {credentials_path} does not exist"
             )
+    return credentials
+
+
+def get_client(credentials_path=None):
+    """Get the google.auth Client to perform Google Sheets API actions."""
+    credentials = get_credentials(credentials_path=credentials_path)
 
     try:
         # Create Credentials object and add scope (spreadsheets & drive)
