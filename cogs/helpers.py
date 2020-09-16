@@ -20,6 +20,11 @@ required_keys = ["Spreadsheet ID", "Title"]
 credential_keys = []
 
 
+def clear_data_validation():
+    with open(".cogs/validation.tsv", "w") as f:
+        f.write("Sheet\tRange\tCondition\tValue\n")
+
+
 def get_cached_sheets():
     """Return a list of names of cached sheets from .cogs. These are any sheets that have been
     downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may not be
@@ -103,9 +108,26 @@ def get_config():
     return config
 
 
+def get_data_validation():
+    """"""
+    sheet_to_dv_rules = {}
+    with open(".cogs/validation.tsv") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            sheet_title = row["Sheet Title"]
+            del row["Sheet Title"]
+            if sheet_title in sheet_to_dv_rules:
+                dv_rules = sheet_to_dv_rules[sheet_title]
+            else:
+                dv_rules = []
+            dv_rules.append(row)
+            sheet_to_dv_rules[sheet_title] = dv_rules
+    return sheet_to_dv_rules
+
+
 def get_diff(local, remote):
     """Return the diff between a local and remote sheet as a list of lines with formatting. The
-       remote table is the 'old' version and the local table is the 'new' version."""
+    remote table is the 'old' version and the local table is the 'new' version."""
     local_data = []
     with open(local, "r") as f:
         # Local might be CSV or TSV
@@ -364,6 +386,35 @@ def update_note(sheet_notes, removed_titles):
         )
         writer.writeheader()
         writer.writerows(note_rows)
+
+
+def update_data_validation(sheet_dv_rules, removed_titles):
+    """"""
+    # TODO - can we be smarter and error on overlap?
+    current_sheet_dv_rules = get_data_validation()
+    dv_rows = []
+    for sheet_title, dv_rules in sheet_dv_rules.items():
+        if sheet_title in current_sheet_dv_rules:
+            current_dv_rules = current_sheet_dv_rules[sheet_title]
+        else:
+            current_dv_rules = []
+        current_dv_rules.extend(dv_rules)
+        current_sheet_dv_rules[sheet_title] = current_dv_rules
+    for sheet_title, dv_rules in current_sheet_dv_rules.items():
+        if sheet_title in removed_titles:
+            continue
+        for row in dv_rules:
+            row["Sheet Title"] = sheet_title
+            dv_rows.append(row)
+    with open(".cogs/validation.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
+        )
+        writer.writeheader()
+        writer.writerows(dv_rows)
 
 
 def validate_cogs_project():

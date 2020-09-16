@@ -15,6 +15,7 @@ import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
 import cogs.status as status
+import cogs.validate as validate
 
 from argparse import ArgumentParser
 
@@ -36,6 +37,7 @@ commands:
   rm        {rm.msg()}
   share     {share.msg()}
   status    {status.msg()}
+  validate  {validate.msg()}
   version   Print the COGS version"""
 
 
@@ -203,9 +205,24 @@ def main():
         "status",
         parents=[global_parser],
         description=status.msg(),
-        usage="cogs add status",
+        usage="cogs status",
     )
     sp.set_defaults(func=status.run)
+
+    # -------------------------------- validate --------------------------------
+    sp = subparsers.add_parser(
+        "validate",
+        parents=[global_parser],
+        description=validate.msg(),
+        usage="cogs validate -s SHEET -r RANGE -c CONDITION -v VALUE",
+    )
+    sp.add_argument("-a", "--apply", help="Path to table of data validation rules to add")
+    sp.add_argument("-s", "--sheet", help="Sheet name to add data validation to")
+    sp.add_argument("-r", "--range", help="Range to apply data validation to")
+    sp.add_argument("-c", "--condition", help="Condition type for data validation")
+    sp.add_argument("-V", "--value", help="Allowed value(s) for data validation")
+    sp.add_argument("-C", "--clear", help="Clear all data validation from a sheet")
+    sp.set_defaults(func=validate.run)
 
     args = parser.parse_args()
     args.func(args)

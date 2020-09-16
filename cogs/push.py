@@ -42,6 +42,53 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         )
 
 
+def _range_to_gridrange_object(range, worksheet_id):
+    parts = range.split(':')
+    start = parts[0]
+    end = parts[1] if len(parts) > 1 else ''
+    row_offset, column_offset = gspread.utils.a1_to_rowcol(start)
+    last_row, last_column = gspread.utils.a1_to_rowcol(end) if end else (row_offset, column_offset)
+    # check for illegal ranges
+    if (row_offset is not None and last_row is not None and row_offset > last_row):
+        raise ValueError(range)
+    if (column_offset is not None and last_column is not None and column_offset > last_column):
+        raise ValueError(range)
+    obj = {
+        'sheetId': worksheet_id
+    }
+    if row_offset is not None:
+        obj['startRowIndex'] = row_offset-1
+    if last_row is not None:
+        obj['endRowIndex'] = last_row
+    if column_offset is not None:
+        obj['startColumnIndex'] = column_offset-1
+    if last_column is not None:
+        obj['endColumnIndex'] = last_column
+    return obj
+
+
+def _build_repeat_cell_request(sheet):
+    loc = gspread.utils.rowcol_to_a1(sheet.row_count, sheet.col_count)
+    return {
+        'repeatCell': {
+            'range': _range_to_gridrange_object(loc, sheet.id),
+            'cell': {},
+            'fields': "*"
+        }
+    }
+
+
+def add_data_validation(spreadsheet, data_validation):
+    for sheet_title, dv_rules in data_validation.items():
+        worksheet = spreadsheet.worksheet(sheet_title)
+        for dv_rule in dv_rules:
+            loc = dv_rule["Range"]
+            condition = dv_rule["Condition"]
+            value = dv_rule["Value"].split(", ")
+            validation_rule = gf.DataValidationRule(gf.BooleanCondition(condition, value))
+            gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
+
+
 def push(args):
     """Push local tables to the spreadsheet as sheets. Only the sheets in sheet.tsv will be
     pushed. If a sheet in the Sheet does not exist in the local sheet.tsv, it will be removed
@@ -82,6 +129,7 @@ def push(args):
     sheet_formats = get_sheet_formats()
     id_to_format = get_format_dict()
     sheet_notes = get_sheet_notes()
+    data_validation = get_data_validation()
 
     # Add formatting
     for sheet_title, cell_to_format in sheet_formats.items():
@@ -95,6 +143,9 @@ def push(args):
 
     # Add notes
     add_notes(spreadsheet, sheet_notes, tracked_sheets)
+
+    # Add data validation
+    add_data_validation(spreadsheet, data_validation)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []

@@ -58,6 +58,7 @@ There are some other commands that do not correspond to any `git` actions:
 - [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs open`](#open) displays the URL of the spreadsheet
 - [`cogs share`](#share) shares the spreadsheet with specified users
+- [`cogs validate`](#validate) allows you to apply custom data validation rules to ranges of cells in a sheet
 
 There is no step corresponding to `git commit`.
 
@@ -337,3 +338,103 @@ There are five kinds of statuses (note that any changes to the remote spreadshee
 * **Removed remotely**: the sheet exists locally but has been removed from remote spreadsheet
     * use `cogs pull` to remove the sheet locally
 
+### `validate`
+
+The `validate` command is used to apply data validation rules to a sheet. Data validation rules restrict the allowed values for a cell and will warn when an invalid value is entered.
+
+```
+cogs validate -s [sheet-title] -r [A1-range] -c [condition-type] -v [value(s)]
+```
+
+Each data validation rule has four components:
+* **Sheet title**: the title of the sheet to apply the data validation rule to
+* **Range**: the range of cells in A1 notation to apply the data validation rule to (e.g., `B2` or `B2:B`)
+* **Condition**: the type of data validation condition (the rule)
+* **Value**: the allowed value or values (depending on the condition)
+
+#### Data Validation Tables
+
+You can also provide a set of data validation rules using a TSV or CSV table with the `--apply` arugment:
+```
+cogs validate --apply [path-to-table]
+```
+
+The table should be formatted as follows:
+
+| Sheet Title | Range | Condition   | Value         |
+| ----------- | ----- | ----------- | ------------- |
+| Sheet1      | A2:A  | TEXT_EQ     | foo           |
+| Sheet1      | B2:B  | ONE_OF_LIST | foo, bar, baz |
+
+#### Conditions and Values
+
+For full descriptions of each condition type, please see [Google Sheets API ConditionType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionType).
+
+Any value greater than one should be specified as a comma-separated list (e.g., `--condition NUMBER_BETWEEN --value "1, 5"`). For "0" values, the `--value` argument should not be provided (e.g. `--condition TEXT_IS_EMAIL`).
+
+**Number Conditions**
+
+| Condition                | Values |
+| ------------------------ | ------ |
+| `NUMBER_GREATER`         | 1      |
+| `NUMBER_GREATER_THAN_EQ` | 1      |
+| `NUMBER_LESS`            | 1      |
+| `NUMBER_LESS_THAN_EQ`    | 1      |
+| `NUMBER_EQ`              | 1      |
+| `NUMBER_NOT_EQ`          | 1      |
+| `NUMBER_BETWEEN`         | 2      |
+| `NUMBER_NOT_BETWEEN`     | 2      |
+
+**Text Conditions**
+
+| Condition           | Values |
+| ------------------- | ------ |
+| `TEXT_CONTAINS`     | 1      |
+| `TEXT_NOT_CONTAINS` | 1      |
+| `TEXT_STARTS_WITH`  | 1      |
+| `TEXT_ENDS_WITH`    | 1      |
+| `TEXT_EQ`           | 1      |
+| `TEXT_IS_EMAIL`     | 0      |
+| `TEXT_IS_URL`       | 0      |
+
+**Date Conditions**
+
+Dates should be supplied in `MM/DD/YYYY` or `DD/MM/YYYY` format. You can specify the exact day, a month (`MM/YYYY`), or a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
+
+| Condition           | Values |
+| ------------------- | ------ |
+| `DATE_EQ`           | 1      |
+| `DATE_BEFORE`       | 1      |
+| `DATE_AFTER`        | 1      |
+| `DATE_ON_OR_BEFORE` | 1      |
+| `DATE_ON_OR_AFTER`  | 1      |
+| `DATE_BETWEEN`      | 2      |
+| `DATE_NOT_BETWEEN`  | 2      |
+| `DATE_IS_VALID`     | 0      |
+
+**One-of Conditions**
+
+`ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead.
+
+| Condition      | Values |
+| -------------- | ------ |
+| `ONE_OF_RANGE` | 1      |
+| `ONE_OF_LIST`  | 2+     |
+
+**Other Conditions**
+
+The `CUSTOM_FORMULA` value must be a formula that evaluates to TRUE or FALSE.
+
+| Condition        | Values |
+| ---------------- | ------ |
+| `BLANK`          | 0      |
+| `NOT_BLANK`      | 0      |
+| `CUSTOM_FORMULA` | 1      |
+| `BOOLEAN`        | 0      |
+
+#### Clearing Data Validation
+
+You can clear all data validation rules from a sheet with `-c`/`--clear`:
+```
+cogs validate -c [sheet-title]
+```

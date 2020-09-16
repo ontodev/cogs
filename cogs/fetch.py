@@ -1,4 +1,5 @@
 import gspread.utils
+import gspread_formatting as gf
 import sys
 
 from cogs.exceptions import FetchError
@@ -9,6 +10,58 @@ def msg():
     return "Fetch remote versions of sheets"
 
 
+def clean_data_validation_rules(dv_rules, str_to_rule):
+    """"""
+    # Aggregate rules by range
+    agg_dv_rules = {}
+    for dv_rule_str, locs in dv_rules.items():
+        dv_rule = str_to_rule[dv_rule_str]
+        prev_loc = None
+        range_start = None
+        locs = sorted(locs)
+        agg_locs = []
+        for loc in locs:
+            row, col = gspread.utils.a1_to_rowcol(loc)
+            if not prev_loc:
+                prev_loc = loc
+                range_start = loc
+            else:
+                prev_row, prev_col = gspread.utils.a1_to_rowcol(prev_loc)
+                if (prev_col == col and prev_row == row - 1) or (
+                        prev_row == row and prev_col == col - 1
+                ):
+                    prev_loc = loc
+                else:
+                    if prev_loc == range_start:
+                        agg_locs.append(prev_loc)
+                    else:
+                        agg_locs.append(f"{range_start}:{prev_loc}")
+                    prev_loc = loc
+                    range_start = loc
+        # Handle last remaining location
+        if prev_loc:
+            if prev_loc == range_start:
+                agg_locs.append(prev_loc)
+            else:
+                agg_locs.append(f"{range_start}:{prev_loc}")
+        # Create loc -> rule map
+        for loc in agg_locs:
+            agg_dv_rules[loc] = dv_rule
+
+    # Format the data validation for validation.tsv
+    dv_rows = []
+    for loc, dv_rule in agg_dv_rules.items():
+        condition = dv_rule.condition.type
+        values = []
+        for cv in dv_rule.condition.values:
+            values.append(cv.userEnteredValue)
+        dv_rows.append(
+            {"Range": loc, "Condition": condition, "Value": ", ".join(values)}
+        )
+
+    return dv_rows
+
+
 def get_cell_data(sheet):
     """Get cell data from a remote sheet. Cell data includes formatting and notes.
     Return as a map of cell location (e.g., B2) to {"format": dict, "note": str}."""
@@ -16,10 +69,7 @@ def get_cell_data(sheet):
     last_loc = gspread.utils.rowcol_to_a1(sheet.row_count, sheet.col_count)
     label = f"{sheet.title}!A1:{last_loc}"
     resp = sheet.spreadsheet.fetch_sheet_metadata(
-        {
-            "includeGridData": True,
-            "ranges": label
-        }
+        {"includeGridData": True, "ranges": label}
     )
     cells = {}
     idx_y = 1
@@ -91,7 +141,9 @@ def fetch(args):
     id_to_format = get_format_dict()
     if id_to_format:
         # Format to format ID
-        format_to_id = {json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()}
+        format_to_id = {
+            json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()
+        }
         # Next ID for new formats
         format_ids = list(id_to_format.keys())
         format_ids.sort()
@@ -104,6 +156,7 @@ def fetch(args):
     # We also collect the formatting and note data for each sheet during this step
     sheet_formats = {}
     sheet_notes = {}
+    sheet_dv_rules = {}
     sheet_frozen = {}
     for sheet in sheets:
         remote_title = sheet.title
@@ -135,24 +188,52 @@ def fetch(args):
             raise FetchError(f"sheet cannot use reserved name '{st}'")
 
         # Get frozen rows & columns
-        sheet_frozen[st] = {"row": sheet.frozen_row_count, "col": sheet.frozen_col_count}
+        sheet_frozen[st] = {
+            "row": sheet.frozen_row_count,
+            "col": sheet.frozen_col_count,
+        }
 
         # Get the cells with format, value, and note from remote sheet
         cells = get_cell_data(sheet)
 
         # Get the ending row & col that have values
         # Otherwise we end up with a bunch of empty rows/columns
+        # Also get the data validation
         max_row = 0
         max_col = 0
+
+        dv_rules = {}
+        str_to_rule = {}
         for c in cells.keys():
+            # Check for data validation
+            try:
+                dv = gf.get_data_validation_rule(sheet, c)
+            except KeyError:
+                dv = None
+            if dv:
+                if str(dv) in dv_rules.keys():
+                    locs = dv_rules[str(dv)]
+                else:
+                    str_to_rule[str(dv)] = dv
+                    locs = []
+                locs.append(c)
+                dv_rules[str(dv)] = locs
+
+            # Then get max row/col
             row, col = gspread.utils.a1_to_rowcol(c)
             if row > max_row:
                 max_row = row
             if col > max_col:
                 max_col = col
 
+        # Format data validation for validate.tsv
+        dv_rows = clean_data_validation_rules(dv_rules, str_to_rule)
+        sheet_dv_rules[st] = dv_rows
+
         # Cell label to format dict
-        cell_to_format = {cell: data["format"] for cell, data in cells.items() if "format" in data}
+        cell_to_format = {
+            cell: data["format"] for cell, data in cells.items() if "format" in data
+        }
 
         # Create a cell to format ID dict based on the format dict for each cell
         cell_to_format_id = {}
@@ -165,7 +246,9 @@ def fetch(args):
                     if not cell_range_end or cell_range_start == cell_range_end:
                         cell_to_format_id[cell_range_start] = last_fmt
                     else:
-                        cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = last_fmt
+                        cell_to_format_id[
+                            f"{cell_range_start}:{cell_range_end}"
+                        ] = last_fmt
                 last_fmt = None
                 cell_range_start = None
                 cell_range_end = None
@@ -207,7 +290,9 @@ def fetch(args):
             sheet_formats[st] = cell_to_format_id
 
         # Add the cell to note
-        cell_to_note = {cell: data["note"] for cell, data in cells.items() if "note" in data}
+        cell_to_note = {
+            cell: data["note"] for cell, data in cells.items() if "note" in data
+        }
         if cell_to_note:
             sheet_notes[st] = cell_to_note
 
@@ -253,8 +338,8 @@ def fetch(args):
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
             if (
-                    sheet_title in tracked_sheets
-                    and tracked_sheets[sheet_title]["ID"].strip != ""
+                sheet_title in tracked_sheets
+                and tracked_sheets[sheet_title]["ID"].strip != ""
             ) or (sheet_title not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
@@ -265,6 +350,8 @@ def fetch(args):
     # Rewrite format.tsv and note.tsv with current remote formats & notes
     update_format(sheet_formats, removed_titles)
     update_note(sheet_notes, removed_titles)
+    clear_data_validation()
+    update_data_validation(sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
     new_sheets = {
@@ -288,7 +375,7 @@ def fetch(args):
                 "Path": f"{sheet_title}.tsv",
                 "Description": "",
                 "Frozen Rows": frozen_row,
-                "Frozen Columns": frozen_col
+                "Frozen Columns": frozen_col,
             }
             all_sheets.append(details)
 
@@ -298,7 +385,14 @@ def fetch(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         writer.writeheader()
         writer.writerows(all_sheets)

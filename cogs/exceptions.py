@@ -28,3 +28,7 @@ class MvError(CogsError):
 
 class RmError(CogsError):
     """Used to indicate an error occurred during the rm step."""
+
+
+class ValidateError(CogsError):
+    """Used to indicate an error occurred during the validate step."""
