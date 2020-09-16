@@ -350,7 +350,9 @@ def fetch(args):
     # Rewrite format.tsv and note.tsv with current remote formats & notes
     update_format(sheet_formats, removed_titles)
     update_note(sheet_notes, removed_titles)
-    clear_data_validation()
+    # Remove old data validation rules and rewrite with new
+    with open(".cogs/validation.tsv", "w") as f:
+        f.write("Sheet\tRange\tCondition\tValue\n")
     update_data_validation(sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets

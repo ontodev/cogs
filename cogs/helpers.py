@@ -20,11 +20,6 @@ required_keys = ["Spreadsheet ID", "Title"]
 credential_keys = []
 
 
-def clear_data_validation():
-    with open(".cogs/validation.tsv", "w") as f:
-        f.write("Sheet\tRange\tCondition\tValue\n")
-
-
 def get_cached_sheets():
     """Return a list of names of cached sheets from .cogs. These are any sheets that have been
     downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may not be
@@ -109,7 +104,7 @@ def get_config():
 
 
 def get_data_validation():
-    """"""
+    """Get a dict of sheet title -> data validation rules."""
     sheet_to_dv_rules = {}
     with open(".cogs/validation.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
