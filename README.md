@@ -434,7 +434,7 @@ The `CUSTOM_FORMULA` value must be a formula that evaluates to TRUE or FALSE.
 
 #### Clearing Data Validation
 
-You can clear all data validation rules from a sheet with `-c`/`--clear`:
+You can clear all data validation rules from a sheet with `-C`/`--clear`:
 ```
 cogs validate -c [sheet-title]
 ```
