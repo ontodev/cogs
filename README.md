@@ -372,7 +372,7 @@ For full descriptions of each condition type, please see [Google Sheets API Cond
 
 Any value greater than one should be specified as a comma-separated list (e.g., `--condition NUMBER_BETWEEN --value "1, 5"`). For "0" values, the `--value` argument should not be provided (e.g. `--condition TEXT_IS_EMAIL`).
 
-**Number Conditions**
+* **Number Conditions**
 
 | Condition                | Values |
 | ------------------------ | ------ |
@@ -385,7 +385,7 @@ Any value greater than one should be specified as a comma-separated list (e.g., 
 | `NUMBER_BETWEEN`         | 2      |
 | `NUMBER_NOT_BETWEEN`     | 2      |
 
-**Text Conditions**
+* **Text Conditions**
 
 | Condition           | Values |
 | ------------------- | ------ |
@@ -397,7 +397,7 @@ Any value greater than one should be specified as a comma-separated list (e.g., 
 | `TEXT_IS_EMAIL`     | 0      |
 | `TEXT_IS_URL`       | 0      |
 
-**Date Conditions**
+* **Date Conditions**
 
 Dates should be supplied in `MM/DD/YYYY` or `DD/MM/YYYY` format. You can specify the exact day, a month (`MM/YYYY`), or a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
 
@@ -412,7 +412,7 @@ Dates should be supplied in `MM/DD/YYYY` or `DD/MM/YYYY` format. You can specify
 | `DATE_NOT_BETWEEN`  | 2      |
 | `DATE_IS_VALID`     | 0      |
 
-**One-of Conditions**
+* **One-of Conditions**
 
 `ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead.
 
@@ -421,7 +421,7 @@ Dates should be supplied in `MM/DD/YYYY` or `DD/MM/YYYY` format. You can specify
 | `ONE_OF_RANGE` | 1      |
 | `ONE_OF_LIST`  | 2+     |
 
-**Other Conditions**
+* **Other Conditions**
 
 The `CUSTOM_FORMULA` value must be a formula that evaluates to TRUE or FALSE.
 
