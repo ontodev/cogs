@@ -42,43 +42,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         )
 
 
-def _range_to_gridrange_object(range, worksheet_id):
-    parts = range.split(':')
-    start = parts[0]
-    end = parts[1] if len(parts) > 1 else ''
-    row_offset, column_offset = gspread.utils.a1_to_rowcol(start)
-    last_row, last_column = gspread.utils.a1_to_rowcol(end) if end else (row_offset, column_offset)
-    # check for illegal ranges
-    if (row_offset is not None and last_row is not None and row_offset > last_row):
-        raise ValueError(range)
-    if (column_offset is not None and last_column is not None and column_offset > last_column):
-        raise ValueError(range)
-    obj = {
-        'sheetId': worksheet_id
-    }
-    if row_offset is not None:
-        obj['startRowIndex'] = row_offset-1
-    if last_row is not None:
-        obj['endRowIndex'] = last_row
-    if column_offset is not None:
-        obj['startColumnIndex'] = column_offset-1
-    if last_column is not None:
-        obj['endColumnIndex'] = last_column
-    return obj
-
-
-def _build_repeat_cell_request(sheet):
-    loc = gspread.utils.rowcol_to_a1(sheet.row_count, sheet.col_count)
-    return {
-        'repeatCell': {
-            'range': _range_to_gridrange_object(loc, sheet.id),
-            'cell': {},
-            'fields': "*"
-        }
-    }
-
-
 def add_data_validation(spreadsheet, data_validation):
+    """Add data validation rules from validation.tsv to the spreadsheet."""
     for sheet_title, dv_rules in data_validation.items():
         worksheet = spreadsheet.worksheet(sheet_title)
         for dv_rule in dv_rules:

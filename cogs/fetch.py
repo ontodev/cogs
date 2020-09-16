@@ -11,7 +11,8 @@ def msg():
 
 
 def clean_data_validation_rules(dv_rules, str_to_rule):
-    """"""
+    """Clean up the data validation rules retrieved from the sheets and format them to store in
+    validiation.tsv. This also aggregates the rules by ranges."""
     # Aggregate rules by range
     agg_dv_rules = {}
     for dv_rule_str, locs in dv_rules.items():
