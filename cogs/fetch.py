@@ -157,7 +157,7 @@ def fetch(args):
     # We also collect the formatting and note data for each sheet during this step
     sheet_formats = {}
     sheet_notes = {}
-    sheet_dv_rules = {}
+    # sheet_dv_rules = {}
     sheet_frozen = {}
     for sheet in sheets:
         remote_title = sheet.title
@@ -203,11 +203,11 @@ def fetch(args):
         max_row = 0
         max_col = 0
 
-        dv_rules = {}
-        str_to_rule = {}
+        # dv_rules = {}
+        # str_to_rule = {}
         for c in cells.keys():
             # Check for data validation
-            try:
+            """try:
                 dv = gf.get_data_validation_rule(sheet, c)
             except KeyError:
                 dv = None
@@ -218,7 +218,7 @@ def fetch(args):
                     str_to_rule[str(dv)] = dv
                     locs = []
                 locs.append(c)
-                dv_rules[str(dv)] = locs
+                dv_rules[str(dv)] = locs"""
 
             # Then get max row/col
             row, col = gspread.utils.a1_to_rowcol(c)
@@ -228,8 +228,8 @@ def fetch(args):
                 max_col = col
 
         # Format data validation for validate.tsv
-        dv_rows = clean_data_validation_rules(dv_rules, str_to_rule)
-        sheet_dv_rules[st] = dv_rows
+        """dv_rows = clean_data_validation_rules(dv_rules, str_to_rule)
+        sheet_dv_rules[st] = dv_rows"""
 
         # Cell label to format dict
         cell_to_format = {
@@ -352,9 +352,9 @@ def fetch(args):
     update_format(sheet_formats, removed_titles)
     update_note(sheet_notes, removed_titles)
     # Remove old data validation rules and rewrite with new
-    with open(".cogs/validation.tsv", "w") as f:
+    """with open(".cogs/validation.tsv", "w") as f:
         f.write("Sheet\tRange\tCondition\tValue\n")
-    update_data_validation(sheet_dv_rules, removed_titles)
+    update_data_validation(sheet_dv_rules, removed_titles)"""
 
     # Get just the remote sheets that are not in local sheets
     new_sheets = {
