@@ -4,6 +4,20 @@ import sys
 
 from cogs.exceptions import FetchError
 from cogs.helpers import *
+from googleapiclient import discovery
+from googleapiclient.discovery_cache.base import Cache
+
+
+class MemoryCache(Cache):
+    """Workaround from https://github.com/googleapis/google-api-python-client/issues/325 -
+    google-api-python-client is not compatible with oauth2client >= 4.0.0"""
+    _CACHE = {}
+
+    def get(self, url):
+        return MemoryCache._CACHE.get(url)
+
+    def set(self, url, content):
+        MemoryCache._CACHE[url] = content
 
 
 def msg():
@@ -29,7 +43,7 @@ def clean_data_validation_rules(dv_rules, str_to_rule):
             else:
                 prev_row, prev_col = gspread.utils.a1_to_rowcol(prev_loc)
                 if (prev_col == col and prev_row == row - 1) or (
-                        prev_row == row and prev_col == col - 1
+                    prev_row == row and prev_col == col - 1
                 ):
                     prev_loc = loc
                 else:
@@ -67,11 +81,26 @@ def get_cell_data(sheet):
     """Get cell data from a remote sheet. Cell data includes formatting and notes.
     Return as a map of cell location (e.g., B2) to {"format": dict, "note": str}."""
     # Label is the range of cells in a sheet (e.g., foo!A1:B2)
-    last_loc = gspread.utils.rowcol_to_a1(sheet.row_count, sheet.col_count)
-    label = f"{sheet.title}!A1:{last_loc}"
-    resp = sheet.spreadsheet.fetch_sheet_metadata(
-        {"includeGridData": True, "ranges": label}
+    spreadsheet_id = sheet.spreadsheet.id
+    sheet_name = sheet.title
+
+    # Retrieve the credentials object to send request
+    config = get_config()
+    if "Credentials" in config:
+        credentials = get_credentials(config["Credentials"])
+    else:
+        credentials = get_credentials()
+
+    # Build service to send request & execute
+    service = discovery.build("sheets", "v4", credentials=credentials, cache=MemoryCache())
+    request = service.spreadsheets().get(
+        spreadsheetId=spreadsheet_id,
+        ranges=sheet_name,
+        fields="sheets(data(rowData(values(*))))",
     )
+    resp = request.execute()
+
+    # Process response
     cells = {}
     idx_y = 1
     data = resp["sheets"][0]["data"][0]
@@ -92,6 +121,14 @@ def get_cell_data(sheet):
                 cell_data["format"] = {}
             if "note" in cell:
                 cell_data["note"] = cell["note"].replace("\n", "\\n")
+            if "dataValidation" in cell:
+                condition = cell["dataValidation"]["condition"]
+                condition_type = condition["type"]
+                values = []
+                if "values" in condition:
+                    values = [v for v in condition["values"]]
+                cell_data["data_validation"] = {"condition": condition_type, "value": values}
+
             cells[label] = cell_data
             idx_x += 1
         idx_y += 1
@@ -157,7 +194,7 @@ def fetch(args):
     # We also collect the formatting and note data for each sheet during this step
     sheet_formats = {}
     sheet_notes = {}
-    # sheet_dv_rules = {}
+    sheet_dv_rules = {}
     sheet_frozen = {}
     for sheet in sheets:
         remote_title = sheet.title
@@ -197,39 +234,41 @@ def fetch(args):
         # Get the cells with format, value, and note from remote sheet
         cells = get_cell_data(sheet)
 
+        # Create a map of rule -> locs for data validation
+        dv_rules = {}
+        str_to_rule = {}
+        for loc, cell_data in cells.items():
+            if "data_validation" not in cell_data:
+                continue
+            data_validation = cell_data["data_validation"]
+            condition = data_validation["condition"]
+            bc = gf.BooleanCondition(condition, data_validation["value"])
+            dv = gf.DataValidationRule(bc)
+            if str(dv) not in str_to_rule:
+                str_to_rule[str(dv)] = dv
+            if str(dv) in dv_rules:
+                locs = dv_rules[str(dv)]
+            else:
+                locs = []
+            locs.append(loc)
+            dv_rules[str(dv)] = locs
+
+        # Aggregate by location and format for validate.tsv
+        dv_rows = clean_data_validation_rules(dv_rules, str_to_rule)
+        sheet_dv_rules[st] = dv_rows
+
         # Get the ending row & col that have values
         # Otherwise we end up with a bunch of empty rows/columns
         # Also get the data validation
         max_row = 0
         max_col = 0
 
-        # dv_rules = {}
-        # str_to_rule = {}
         for c in cells.keys():
-            # Check for data validation
-            """try:
-                dv = gf.get_data_validation_rule(sheet, c)
-            except KeyError:
-                dv = None
-            if dv:
-                if str(dv) in dv_rules.keys():
-                    locs = dv_rules[str(dv)]
-                else:
-                    str_to_rule[str(dv)] = dv
-                    locs = []
-                locs.append(c)
-                dv_rules[str(dv)] = locs"""
-
-            # Then get max row/col
             row, col = gspread.utils.a1_to_rowcol(c)
             if row > max_row:
                 max_row = row
             if col > max_col:
                 max_col = col
-
-        # Format data validation for validate.tsv
-        """dv_rows = clean_data_validation_rules(dv_rules, str_to_rule)
-        sheet_dv_rules[st] = dv_rows"""
 
         # Cell label to format dict
         cell_to_format = {
@@ -352,9 +391,9 @@ def fetch(args):
     update_format(sheet_formats, removed_titles)
     update_note(sheet_notes, removed_titles)
     # Remove old data validation rules and rewrite with new
-    """with open(".cogs/validation.tsv", "w") as f:
+    with open(".cogs/validation.tsv", "w") as f:
         f.write("Sheet\tRange\tCondition\tValue\n")
-    update_data_validation(sheet_dv_rules, removed_titles)"""
+    update_data_validation(sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
     new_sheets = {

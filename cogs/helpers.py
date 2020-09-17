@@ -33,9 +33,8 @@ def get_cached_sheets():
     return cached
 
 
-def get_client(credentials_path=None):
-    """Get the google.auth Client to perform Google Sheets API actions."""
-    # First get the credentials JSON
+def get_credentials(credentials_path=None):
+    """"""
     if not credentials_path:
         # No path provided, use environment variable
         env = os.environ
@@ -62,13 +61,22 @@ def get_client(credentials_path=None):
                 "https://www.googleapis.com/auth/drive",
             ]
         )
+    except ValueError as ve:
+        # credentials are missing a required key
+        raise CogsError(f"Unable to create a Client from credentials; {str(ve)}")
+    return gcred
+
+
+def get_client(credentials_path=None):
+    """Get the google.auth Client to perform Google Sheets API actions."""
+    # First get the credentials JSON
+    gcred = get_credentials(credentials_path=credentials_path)
+    try:
         # Create gspread Client & log in
         gc = gspread.Client(auth=gcred)
         gc.login()
         return gc
-    except ValueError as e:
-        # credentials are missing a required key
-        raise CogsError(f"Unable to create a Client from credentials; {str(e)}")
+
     except gspread.exceptions.APIError as e:
         raise CogsError(
             f"Unable to create a Client from credentials; {e.response.text}"
