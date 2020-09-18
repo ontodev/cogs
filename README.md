@@ -399,7 +399,7 @@ Any value greater than one should be specified as a comma-separated list (e.g., 
 
 * **Date Conditions**
 
-Dates should be supplied in `MM/DD/YYYY` or `DD/MM/YYYY` format. You can specify the exact day, a month (`MM/YYYY`), or a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
+Dates can be supplied in whatever format you like, but we recomment `YYYY-MM-DD`. You can also specify the exact day, a month (`MM-YYYY`), or just a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
 
 | Condition           | Values |
 | ------------------- | ------ |
