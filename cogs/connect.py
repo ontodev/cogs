@@ -26,19 +26,33 @@ def connect(args):
         # Use environment vars
         gc = get_client()
         credentials = get_credentials()
-
-    spreadsheet = gc.open_by_key(args.key)
-    args.title = spreadsheet.title
     service_email = credentials["client_email"]
 
+    # Maybe extract the key from a full URL
+    key_or_url = args.key
+    if "docs.google.com" in key_or_url:
+        if key_or_url.startswith("http://"):
+            key_or_url = key_or_url[7:]
+        elif key_or_url.startswith("https://"):
+            key_or_url = key_or_url[8:]
+        key = key_or_url.split("/")[3]
+    else:
+        key = key_or_url
+
     input(
-        f"Please go to {spreadsheet.url} and transfer ownership of the sheet to {service_email}: "
+        f"Please go to https://docs.google.com/spreadsheets/d/{key} and transfer ownership of the "
+        f"sheet to {service_email}: "
         "\n1. Click \"Share\" and share this sheet with the service email"
         "\n2. Click \"Share\" again and click the drop down to the right of the service email"
         "\n3. Select \"Make owner\""
         "\nPress ENTER to continue. Press CTRL + C to cancel."
     )
 
+    # Open the newly-shared sheet
+    spreadsheet = gc.open_by_key(key)
+    args.title = spreadsheet.title
+
+    # init the COGS directory
     logging.info(f"connecting COGS project {spreadsheet.title} in {cwd}/.cogs/")
     os.mkdir(".cogs")
     write_data(args, spreadsheet)

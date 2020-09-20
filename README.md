@@ -151,10 +151,10 @@ These tables must have the following headers:
 `connect` is similar to [`init`](#init) in that it creates a new COGS project in the current directory. Instead of creating a new Google Spreadsheet, though, it connects to an existing one that you have already created. In order to run `connect`, you must not have an existing COGS project in the directory. We also recommend that you are the owner of the Spreadsheet you are connecting, as you will need to transfer ownership to the service account defined in your credentials.
 
 ```
-cogs connect -k [spreadsheet-key] -c [path-to-credentials]
+cogs connect -k [spreadsheet-url-or-key] -c [path-to-credentials]
 ```
 
-You can find the spreadsheet key in the URL of the Google Spreadsheet:
+The `--key`/`-k` argument accepts either the full sheet URL or just the key. You can find the spreadsheet key in the URL of the Google Spreadsheet:
 ```
 https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
 ```
