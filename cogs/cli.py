@@ -61,9 +61,10 @@ def main():
         "add",
         parents=[global_parser],
         description=add.msg(),
-        usage="cogs add PATH [-d DESCRIPTION -r FREEZE_ROW -c FREEZE_COLUMN]",
+        usage="cogs add PATH [-t TITLE -d DESCRIPTION -r FREEZE_ROW -c FREEZE_COLUMN]",
     )
     sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
+    sp.add_argument("-t", "--title", help="Title of the sheet")
     sp.add_argument(
         "-d", "--description", help="Description of sheet to add to spreadsheet"
     )
