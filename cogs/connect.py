@@ -39,14 +39,13 @@ def connect(args):
     else:
         key = key_or_url
 
-    input(
-        f"Please go to https://docs.google.com/spreadsheets/d/{key} and transfer ownership of the "
-        f"sheet to {service_email}: "
-        "\n1. Click \"Share\" and share this sheet with the service email"
-        "\n2. Click \"Share\" again and click the drop down to the right of the service email"
-        "\n3. Select \"Make owner\""
-        "\nPress ENTER to continue. Press CTRL + C to cancel."
-    )
+    input(f"""Please open https://docs.google.com/spreadsheets/d/{key}
+and transfer ownership of the sheet to
+    {service_email}
+1. Click "Share" and share this sheet with the service email
+2. Click "Share" again and click the drop down to the right of the service email
+3. Select "Make owner"
+Press ENTER to continue. Press CTRL + C to cancel.""")
 
     # Open the newly-shared sheet
     spreadsheet = gc.open_by_key(key)
