@@ -2,6 +2,7 @@
 
 import cogs.add as add
 import cogs.apply as apply
+import cogs.connect as connect
 import cogs.delete as delete
 import cogs.diff as diff
 import cogs.fetch as fetch
@@ -24,6 +25,7 @@ def usage():
 commands:
   add       {add.msg()}
   apply     {apply.msg()}
+  connect   {connect.msg()}
   delete    {delete.msg()}
   diff      {diff.msg()}
   fetch     {fetch.msg()}
@@ -90,6 +92,19 @@ def main():
         help="Path(s) to ROBOT standardized problems table",
     )
     sp.set_defaults(func=apply.run)
+
+    # ------------------------------- connect -------------------------------
+    sp = subparsers.add_parser(
+        "connect",
+        parents=[global_parser],
+        description=connect.msg(),
+        usage="cogs connect -k KEY [-c CREDENTIALS]",
+    )
+    sp.set_defaults(func=connect.run)
+    sp.add_argument(
+        "-k", "--key", help="Existing Google Sheet key to connect"
+    )
+    sp.add_argument("-c", "--credentials", help="Path to service account credentials")
 
     # ------------------------------- delete -------------------------------
     sp = subparsers.add_parser(
