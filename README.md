@@ -54,6 +54,7 @@ we try to follow the familiar `git` interface and workflow:
 There are some other commands that do not correspond to any `git` actions:
 
 - [`cogs apply`](#apply) applys formatting & notes to the spreadsheet from a standardized table
+- [`cogs connect`](#connect) initiates a new COGS project by connecting an existing Google Spreadsheet
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 - [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs open`](#open) displays the URL of the spreadsheet
@@ -144,6 +145,30 @@ These tables must have the following headers:
 * **value**: value of the cell causing problem
 * **fix**: can be left blank; a suggested value to replace the problematic value
 * **instructions**: can be left blank; detailed instructions on how to fix the problem
+
+### `connect`
+
+`connect` is similar to [`init`](#init) in that it creates a new COGS project in the current directory. Instead of creating a new Google Spreadsheet, though, it connects to an existing one that you have already created. In order to run `connect`, you must not have an existing COGS project in the directory. We also recommend that you are the owner of the Spreadsheet you are connecting, as you will need to transfer ownership to the service account defined in your credentials.
+
+```
+cogs connect -k [spreadsheet-url-or-key] -c [path-to-credentials]
+```
+
+The `--key`/`-k` argument accepts either the full sheet URL or just the key. You can find the spreadsheet key in the URL of the Google Spreadsheet:
+```
+https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
+```
+
+As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
+
+After connecting to the existing spreadsheet, COGS will pause to ask you to transfer ownership to the service account. It will provide a link to the sheet and the service email to share with. To transfer ownership:
+1. Open the Google Spreadsheet in your browser
+2. Click "Share" in the upper right corner
+3. Enter in the provided service email and click "Send" (note: you may receive an email that says the email failed to send - just ignore this, since the service email is not a "real" email address)
+4. Click "Share" again and click the drop-down next to the service email and select "Make owner"
+6. Return to the terminal and press ENTER to continue
+
+You can always transfer ownership back to yourself using the [`share`](#share) command, but the service account must be the sheet owner for all COGS operations.
 
 ### `delete`
 
