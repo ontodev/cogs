@@ -21,11 +21,11 @@ def connect(args):
     if args.credentials:
         # Use a credentials file
         gc = get_client(credentials_path=args.credentials)
-        credentials = get_credentials(credentials_path=args.credentials)
+        credentials = get_json_credentials(credentials_path=args.credentials)
     else:
         # Use environment vars
         gc = get_client()
-        credentials = get_credentials()
+        credentials = get_json_credentials()
     service_email = credentials["client_email"]
 
     # Maybe extract the key from a full URL
@@ -39,13 +39,15 @@ def connect(args):
     else:
         key = key_or_url
 
-    input(f"""Please open https://docs.google.com/spreadsheets/d/{key}
+    input(
+        f"""Please open https://docs.google.com/spreadsheets/d/{key}
 and transfer ownership of the sheet to
     {service_email}
 1. Click "Share" and share this sheet with the service email
 2. Click "Share" again and click the drop down to the right of the service email
 3. Select "Make owner"
-Press ENTER to continue. Press CTRL + C to cancel.""")
+Press ENTER to continue. Press CTRL + C to cancel."""
+    )
 
     # Open the newly-shared sheet
     spreadsheet = gc.open_by_key(key)
