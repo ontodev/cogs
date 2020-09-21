@@ -109,7 +109,7 @@ cogs add [path] -r [freeze_row] -c [freeze_column]
 
 If you specify `-r 2 -c 1`, then the first two rows and the first column will be frozen once the sheet is pushed to the remote Google Spreadsheet. If these options are not included, no rows or columns will be frozen.
 
-By default, he sheet title is created from the path (e.g., `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet/file name cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
+By default, the sheet title is created from the path (e.g. `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet title cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
 
 You can also specify a sheet title that is different from the path with the `-t`/`--title` option:
 
@@ -117,7 +117,7 @@ You can also specify a sheet title that is different from the path with the `-t`
 cogs add [path] -t "[title]"
 ```
 
-This does not add the table to the spreadsheet as a sheet - use `cogs push` to push all tracked local tables to the project spreadsheet.
+This does not immediately change the Google Sheet -- use `cogs push` to push all tracked local tables to the project spreadsheet.
 
 ### `apply`
 
