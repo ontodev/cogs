@@ -113,14 +113,19 @@ def push(args):
             continue
         with open(sheet_path, "r") as f:
             reader = csv.reader(f, delimiter=delimiter)
-            header = next(reader)
-            rows.append(header)
-            headers.extend(header)
-            for row in reader:
-                row_len = len(row)
-                if row_len > cols:
-                    cols = row_len
-                rows.append(row)
+            try:
+                header = next(reader)
+            except StopIteration:
+                # No contents in file
+                header = None
+            if header:
+                rows.append(header)
+                headers.extend(header)
+                for row in reader:
+                    row_len = len(row)
+                    if row_len > cols:
+                        cols = row_len
+                    rows.append(row)
 
         # Set sheet size
         if len(rows) < 500:
