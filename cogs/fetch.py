@@ -1,3 +1,4 @@
+import datetime
 import gspread.utils
 import sys
 
@@ -16,10 +17,7 @@ def get_cell_data(sheet):
     last_loc = gspread.utils.rowcol_to_a1(sheet.row_count, sheet.col_count)
     label = f"{sheet.title}!A1:{last_loc}"
     resp = sheet.spreadsheet.fetch_sheet_metadata(
-        {
-            "includeGridData": True,
-            "ranges": label
-        }
+        {"includeGridData": True, "ranges": label}
     )
     cells = {}
     idx_y = 1
@@ -91,7 +89,9 @@ def fetch(args):
     id_to_format = get_format_dict()
     if id_to_format:
         # Format to format ID
-        format_to_id = {json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()}
+        format_to_id = {
+            json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()
+        }
         # Next ID for new formats
         format_ids = list(id_to_format.keys())
         format_ids.sort()
@@ -135,7 +135,10 @@ def fetch(args):
             raise FetchError(f"sheet cannot use reserved name '{st}'")
 
         # Get frozen rows & columns
-        sheet_frozen[st] = {"row": sheet.frozen_row_count, "col": sheet.frozen_col_count}
+        sheet_frozen[st] = {
+            "row": sheet.frozen_row_count,
+            "col": sheet.frozen_col_count,
+        }
 
         # Get the cells with format, value, and note from remote sheet
         cells = get_cell_data(sheet)
@@ -152,7 +155,9 @@ def fetch(args):
                 max_col = col
 
         # Cell label to format dict
-        cell_to_format = {cell: data["format"] for cell, data in cells.items() if "format" in data}
+        cell_to_format = {
+            cell: data["format"] for cell, data in cells.items() if "format" in data
+        }
 
         # Create a cell to format ID dict based on the format dict for each cell
         cell_to_format_id = {}
@@ -165,7 +170,9 @@ def fetch(args):
                     if not cell_range_end or cell_range_start == cell_range_end:
                         cell_to_format_id[cell_range_start] = last_fmt
                     else:
-                        cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = last_fmt
+                        cell_to_format_id[
+                            f"{cell_range_start}:{cell_range_end}"
+                        ] = last_fmt
                 last_fmt = None
                 cell_range_start = None
                 cell_range_end = None
@@ -207,7 +214,9 @@ def fetch(args):
             sheet_formats[st] = cell_to_format_id
 
         # Add the cell to note
-        cell_to_note = {cell: data["note"] for cell, data in cells.items() if "note" in data}
+        cell_to_note = {
+            cell: data["note"] for cell, data in cells.items() if "note" in data
+        }
         if cell_to_note:
             sheet_notes[st] = cell_to_note
 
@@ -253,8 +262,8 @@ def fetch(args):
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
             if (
-                    sheet_title in tracked_sheets
-                    and tracked_sheets[sheet_title]["ID"].strip != ""
+                sheet_title in tracked_sheets
+                and tracked_sheets[sheet_title]["ID"].strip != ""
             ) or (sheet_title not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
@@ -267,6 +276,10 @@ def fetch(args):
     update_note(sheet_notes, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
+    sheet_paths = {
+        details["Path"]: loc_sheet_title
+        for loc_sheet_title, details in tracked_sheets.items()
+    }
     new_sheets = {
         sheet_title: sid
         for sheet_title, sid in remote_sheets.items()
@@ -281,14 +294,24 @@ def fetch(args):
             else:
                 frozen_row = 0
                 frozen_col = 0
-            logging.info(f"new sheet '{sheet_title}' added to project")
+            sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()).strip("_")
+            # Make sure the path is unique - the user can change this later
+            if sheet_path + ".tsv" in sheet_paths.keys():
+                # Append datetime if this path already exists
+                td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                sheet_path += f"_{td}.tsv"
+            else:
+                sheet_path += ".tsv"
+            logging.info(
+                f"new sheet '{sheet_title}' added to project with local path {sheet_path}"
+            )
             details = {
                 "ID": sid,
                 "Title": sheet_title,
-                "Path": f"{sheet_title}.tsv",
+                "Path": sheet_path,
                 "Description": "",
                 "Frozen Rows": frozen_row,
-                "Frozen Columns": frozen_col
+                "Frozen Columns": frozen_col,
             }
             all_sheets.append(details)
 
@@ -298,7 +321,14 @@ def fetch(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         writer.writeheader()
         writer.writerows(all_sheets)

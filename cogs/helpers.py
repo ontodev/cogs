@@ -12,7 +12,14 @@ from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 from google.oauth2.service_account import Credentials
 
 reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
-required_files = ["config.tsv", "field.tsv", "format.tsv", "note.tsv", "sheet.tsv"]
+required_files = [
+    "config.tsv",
+    "field.tsv",
+    "format.tsv",
+    "note.tsv",
+    "sheet.tsv",
+    "validation.tsv",
+]
 optional_files = ["user.tsv", "renamed.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title"]
