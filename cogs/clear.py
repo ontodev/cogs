@@ -75,7 +75,7 @@ def clear(args):
     elif keyword == "notes":
         for st in on_sheets:
             clear_notes(st)
-    elif keyword == "rules":
+    elif keyword == "validation":
         for st in on_sheets:
             clear_data_validation(st)
     elif keyword == "all":

@@ -241,7 +241,7 @@ cogs clear [keyword] [sheet-title-1] [sheet-title-2] ...
 The keyword must be one of:
 * **formats**: sheet formatting
 * **notes**: sheet notes
-* **rules**: data validation rules
+* **validation**: data validation rules
 * **all**: formats, notes, and rules
 
 After the keyword, you can supply zero or more sheet titles to remove attributes from. If no sheet titles are provided, the attribute(s) specified by the keyword will be removed from *all* sheets.
