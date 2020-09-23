@@ -53,13 +53,13 @@ we try to follow the familiar `git` interface and workflow:
 
 There are some other commands that do not correspond to any `git` actions:
 
-- [`cogs apply`](#apply) applys formatting & notes to the spreadsheet from a standardized table
+- [`cogs apply`](#apply) applies attributes from standardized tables to one or more sheets
+- [`cogs clear`](#clear) removes formatting, notes, and/or data validation rules from one or more sheets
 - [`cogs connect`](#connect) initiates a new COGS project by connecting an existing Google Spreadsheet
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
 - [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs open`](#open) displays the URL of the spreadsheet
 - [`cogs share`](#share) shares the spreadsheet with specified users
-- [`cogs validate`](#validate) allows you to apply custom data validation rules to ranges of cells in a sheet
 
 There is no step corresponding to `git commit`.
 
@@ -123,24 +123,22 @@ This does not immediately change the Google Sheet -- use `cogs push` to push all
 
 ### `apply`
 
-Running `apply` applies the details of one or more [standardized problems tables](#standardized-problems-tables) to the spreadsheet as cell formatting and notes.
+Running `apply` applies the details of one or more [standardized problems tables](#standardized-problems-tables) or [data validation tables](#data-validation-tables) to the spreadsheet as cell formatting and notes.
 
 ```
-cogs apply [problems1.tsv problems2.tsv ...]
+cogs apply [table1.tsv table2.tsv ...]
 ```
 
-The three levels of problems will be formatted with a black border and the following backgrounds:
+#### Standardized Problems Tables
+
+Standardized problems tables provide a standard table output that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of problem can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
+
+These tables are applied to the sheets as formats and notes. The three levels of problems will be formatted with a black border and the following backgrounds:
 * **error**: light red background
 * **warn/warning**: light yellow background
 * **info**: light blue background
 
 The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
-
-Running `apply` again will remove any "applied" formats and notes from the last time `apply` was run and add new details from the current problems table(s). To erase all "applied" formats and notes, run `cogs apply` with no additional arguments. Existing formats and notes added by the user will not be removed.
-
-#### Standardized Problems Tables
-
-Standardized problems tables provide a standard table output that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of problem can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
 
 These tables must have the following headers:
 * **ID**: local numeric identifier starting at 1 and counting up
@@ -152,6 +150,101 @@ These tables must have the following headers:
 * **value**: value of the cell causing problem
 * **fix**: can be left blank; a suggested value to replace the problematic value
 * **instructions**: can be left blank; detailed instructions on how to fix the problem
+
+#### Data Valildation Tables
+
+The data validation tables are applied to the sheets as data validation rules. These tables must have the following headers:
+* **table**: name of the table to add data validation rules to
+* **cell**: A1 format of the cell or range of cells to apply data validation rules to
+* **condition**: the condition (see below) for the data validation rule
+* **value**: the allowed value or values (see bellow)for the data validation rule
+
+For example:
+
+| table  | cell | condition   | value         |
+| ------ | ---- | ----------- | ------------- |
+| Sheet1 | A2:A | TEXT_EQ     | foo           |
+| Sheet1 | B2:B | ONE_OF_LIST | foo, bar, baz |
+
+For full descriptions of each condition type, please see [Google Sheets API ConditionType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionType).
+
+Any value greater than one should be specified as a comma-separated list (e.g., for `NUMBER_BETWEEN`, the value could be `1, 10`). For "0" values, leave the `value` column empty.
+
+* *Number Conditions*
+
+| Condition                | Values |
+| ------------------------ | ------ |
+| `NUMBER_GREATER`         | 1      |
+| `NUMBER_GREATER_THAN_EQ` | 1      |
+| `NUMBER_LESS`            | 1      |
+| `NUMBER_LESS_THAN_EQ`    | 1      |
+| `NUMBER_EQ`              | 1      |
+| `NUMBER_NOT_EQ`          | 1      |
+| `NUMBER_BETWEEN`         | 2      |
+| `NUMBER_NOT_BETWEEN`     | 2      |
+
+* *Text Conditions*
+
+| Condition           | Values |
+| ------------------- | ------ |
+| `TEXT_CONTAINS`     | 1      |
+| `TEXT_NOT_CONTAINS` | 1      |
+| `TEXT_STARTS_WITH`  | 1      |
+| `TEXT_ENDS_WITH`    | 1      |
+| `TEXT_EQ`           | 1      |
+| `TEXT_IS_EMAIL`     | 0      |
+| `TEXT_IS_URL`       | 0      |
+
+* *Date Conditions*
+
+Dates can be supplied in whatever format you like, but we recomment `YYYY-MM-DD`. You can also specify the exact day, a month (`MM-YYYY`), or just a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
+
+| Condition           | Values |
+| ------------------- | ------ |
+| `DATE_EQ`           | 1      |
+| `DATE_BEFORE`       | 1      |
+| `DATE_AFTER`        | 1      |
+| `DATE_ON_OR_BEFORE` | 1      |
+| `DATE_ON_OR_AFTER`  | 1      |
+| `DATE_BETWEEN`      | 2      |
+| `DATE_NOT_BETWEEN`  | 2      |
+| `DATE_IS_VALID`     | 0      |
+
+* *One-of Conditions*
+
+`ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead.
+
+| Condition      | Values |
+| -------------- | ------ |
+| `ONE_OF_RANGE` | 1      |
+| `ONE_OF_LIST`  | 2+     |
+
+* *Other Conditions*
+
+The `CUSTOM_FORMULA` value must be a formula that evaluates to TRUE or FALSE.
+
+| Condition        | Values |
+| ---------------- | ------ |
+| `BLANK`          | 0      |
+| `NOT_BLANK`      | 0      |
+| `CUSTOM_FORMULA` | 1      |
+| `BOOLEAN`        | 0      |
+
+### `clear`
+
+`clear` removes applied attributes (either from [`apply`](#apply) or manually added to the sheet remotely) from one or more sheets:
+
+```
+cogs clear [keyword] [sheet-title-1] [sheet-title-2] ...
+```
+
+The keyword must be one of:
+* **formats**: sheet formatting
+* **notes**: sheet notes
+* **rules**: data validation rules
+* **all**: formats, notes, and rules
+
+After the keyword, you can supply zero or more sheet titles to remove attributes from. If no sheet titles are provided, the attribute(s) specified by the keyword will be removed from *all* sheets.
 
 ### `connect`
 
@@ -368,104 +461,3 @@ There are five kinds of statuses (note that any changes to the remote spreadshee
     * use `cogs push` to remove the sheet from the remote spreadsheet
 * **Removed remotely**: the sheet exists locally but has been removed from remote spreadsheet
     * use `cogs pull` to remove the sheet locally
-
-### `validate`
-
-The `validate` command is used to apply data validation rules to a sheet. Data validation rules restrict the allowed values for a cell and will warn when an invalid value is entered.
-
-```
-cogs validate -s [sheet-title] -r [A1-range] -c [condition-type] -v [value(s)]
-```
-
-Each data validation rule has four components:
-* **Sheet title**: the title of the sheet to apply the data validation rule to
-* **Range**: the range of cells in A1 notation to apply the data validation rule to (e.g., `B2` or `B2:B`)
-* **Condition**: the type of data validation condition (the rule)
-* **Value**: the allowed value or values (depending on the condition)
-
-#### Data Validation Tables
-
-You can also provide a set of data validation rules using a TSV or CSV table with the `--apply` arugment:
-```
-cogs validate --apply [path-to-table]
-```
-
-The table should be formatted as follows:
-
-| Sheet Title | Range | Condition   | Value         |
-| ----------- | ----- | ----------- | ------------- |
-| Sheet1      | A2:A  | TEXT_EQ     | foo           |
-| Sheet1      | B2:B  | ONE_OF_LIST | foo, bar, baz |
-
-#### Conditions and Values
-
-For full descriptions of each condition type, please see [Google Sheets API ConditionType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionType).
-
-Any value greater than one should be specified as a comma-separated list (e.g., `--condition NUMBER_BETWEEN --value "1, 5"`). For "0" values, the `--value` argument should not be provided (e.g. `--condition TEXT_IS_EMAIL`).
-
-* **Number Conditions**
-
-| Condition                | Values |
-| ------------------------ | ------ |
-| `NUMBER_GREATER`         | 1      |
-| `NUMBER_GREATER_THAN_EQ` | 1      |
-| `NUMBER_LESS`            | 1      |
-| `NUMBER_LESS_THAN_EQ`    | 1      |
-| `NUMBER_EQ`              | 1      |
-| `NUMBER_NOT_EQ`          | 1      |
-| `NUMBER_BETWEEN`         | 2      |
-| `NUMBER_NOT_BETWEEN`     | 2      |
-
-* **Text Conditions**
-
-| Condition           | Values |
-| ------------------- | ------ |
-| `TEXT_CONTAINS`     | 1      |
-| `TEXT_NOT_CONTAINS` | 1      |
-| `TEXT_STARTS_WITH`  | 1      |
-| `TEXT_ENDS_WITH`    | 1      |
-| `TEXT_EQ`           | 1      |
-| `TEXT_IS_EMAIL`     | 0      |
-| `TEXT_IS_URL`       | 0      |
-
-* **Date Conditions**
-
-Dates can be supplied in whatever format you like, but we recomment `YYYY-MM-DD`. You can also specify the exact day, a month (`MM-YYYY`), or just a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
-
-| Condition           | Values |
-| ------------------- | ------ |
-| `DATE_EQ`           | 1      |
-| `DATE_BEFORE`       | 1      |
-| `DATE_AFTER`        | 1      |
-| `DATE_ON_OR_BEFORE` | 1      |
-| `DATE_ON_OR_AFTER`  | 1      |
-| `DATE_BETWEEN`      | 2      |
-| `DATE_NOT_BETWEEN`  | 2      |
-| `DATE_IS_VALID`     | 0      |
-
-* **One-of Conditions**
-
-`ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead.
-
-| Condition      | Values |
-| -------------- | ------ |
-| `ONE_OF_RANGE` | 1      |
-| `ONE_OF_LIST`  | 2+     |
-
-* **Other Conditions**
-
-The `CUSTOM_FORMULA` value must be a formula that evaluates to TRUE or FALSE.
-
-| Condition        | Values |
-| ---------------- | ------ |
-| `BLANK`          | 0      |
-| `NOT_BLANK`      | 0      |
-| `CUSTOM_FORMULA` | 1      |
-| `BOOLEAN`        | 0      |
-
-#### Clearing Data Validation
-
-You can clear all data validation rules from a sheet with `-C`/`--clear`:
-```
-cogs validate -c [sheet-title]
-```

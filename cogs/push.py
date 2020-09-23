@@ -47,9 +47,13 @@ def add_data_validation(spreadsheet, data_validation):
     for sheet_title, dv_rules in data_validation.items():
         worksheet = spreadsheet.worksheet(sheet_title)
         for dv_rule in dv_rules:
-            loc = dv_rule["Range"]
+            loc = dv_rule["Cell"]
             condition = dv_rule["Condition"]
-            value = dv_rule["Value"].split(", ")
+            value_str = dv_rule["Value"]
+            if value_str != "":
+                value = value_str.split(", ")
+            else:
+                value = []
             validation_rule = gf.DataValidationRule(gf.BooleanCondition(condition, value))
             gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
 

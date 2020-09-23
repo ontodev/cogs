@@ -2,6 +2,7 @@
 
 import cogs.add as add
 import cogs.apply as apply
+import cogs.clear as clear
 import cogs.connect as connect
 import cogs.delete as delete
 import cogs.diff as diff
@@ -16,7 +17,6 @@ import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
 import cogs.status as status
-import cogs.validate as validate
 
 from argparse import ArgumentParser
 
@@ -27,6 +27,7 @@ commands:
   add       {add.msg()}
   apply     {apply.msg()}
   connect   {connect.msg()}
+  clear     {clear.msg()}
   delete    {delete.msg()}
   diff      {diff.msg()}
   fetch     {fetch.msg()}
@@ -39,7 +40,6 @@ commands:
   rm        {rm.msg()}
   share     {share.msg()}
   status    {status.msg()}
-  validate  {validate.msg()}
   version   Print the COGS version"""
 
 
@@ -91,9 +91,15 @@ def main():
         "paths",
         nargs="*",
         default=None,
-        help="Path(s) to ROBOT standardized problems table",
+        help="Path(s) to table(s) to apply",
     )
     sp.set_defaults(func=apply.run)
+
+    # ------------------------------- clear -------------------------------
+    sp = subparsers.add_parser("clear", parents=[global_parser], description=clear.msg(), usage="cogs clear KEYWORD [SHEET ...]")
+    sp.set_defaults(func=clear.run)
+    sp.add_argument("keyword", help="Specify what to clear from the sheet(s)")
+    sp.add_argument("sheets", nargs="*", help="Titles of sheets to clear from", default=[])
 
     # ------------------------------- connect -------------------------------
     sp = subparsers.add_parser(
@@ -224,21 +230,6 @@ def main():
         usage="cogs status",
     )
     sp.set_defaults(func=status.run)
-
-    # -------------------------------- validate --------------------------------
-    sp = subparsers.add_parser(
-        "validate",
-        parents=[global_parser],
-        description=validate.msg(),
-        usage="cogs validate -s SHEET -r RANGE -c CONDITION -v VALUE",
-    )
-    sp.add_argument("-a", "--apply", help="Path to table of data validation rules to add")
-    sp.add_argument("-s", "--sheet", help="Sheet name to add data validation to")
-    sp.add_argument("-r", "--range", help="Range to apply data validation to")
-    sp.add_argument("-c", "--condition", help="Condition type for data validation")
-    sp.add_argument("-V", "--value", help="Allowed value(s) for data validation")
-    sp.add_argument("-C", "--clear", help="Clear all data validation from a sheet")
-    sp.set_defaults(func=validate.run)
 
     args = parser.parse_args()
     args.func(args)

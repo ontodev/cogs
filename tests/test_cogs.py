@@ -6,6 +6,7 @@ def test_modules():
     for module in [
         "add",
         "apply",
+        "clear",
         "connect",
         "delete",
         "diff",
