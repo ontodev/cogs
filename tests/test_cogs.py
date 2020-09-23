@@ -22,7 +22,6 @@ def test_modules():
         "rm",
         "share",
         "status",
-        "validate",
     ]:
         spec = importlib.util.find_spec("cogs." + module)
         if not spec:
