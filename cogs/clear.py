@@ -11,7 +11,7 @@ from cogs.helpers import (
     update_data_validation,
     update_format,
     update_note,
-    validate_cogs_project
+    validate_cogs_project,
 )
 
 

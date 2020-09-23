@@ -17,7 +17,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         sheet_id = tracked_sheets[sheet_title]["ID"]
         for cell, note in cell_to_note.items():
             row, col = gspread.utils.a1_to_rowcol(cell)
-            requests.append({
+            requests.append(
+                {
                     "updateCells": {
                         "range": {
                             "sheetId": sheet_id,
@@ -29,7 +30,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
                         "rows": [{"values": [{"note": note}]}],
                         "fields": "note",
                     }
-                })
+                }
+            )
     if not requests:
         return
     try:
@@ -37,8 +39,7 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
         logging.error(
-            f"Unable to add {len(requests)} notes to spreadsheet\n"
-            + e.response.text
+            f"Unable to add {len(requests)} notes to spreadsheet\n" + e.response.text
         )
 
 
@@ -54,7 +55,9 @@ def add_data_validation(spreadsheet, data_validation):
                 value = value_str.split(", ")
             else:
                 value = []
-            validation_rule = gf.DataValidationRule(gf.BooleanCondition(condition, value))
+            validation_rule = gf.DataValidationRule(
+                gf.BooleanCondition(condition, value)
+            )
             gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
 
 
@@ -202,7 +205,14 @@ def push(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)
