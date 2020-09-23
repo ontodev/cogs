@@ -11,8 +11,13 @@ from cogs.exceptions import CogsError
 from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 from google.oauth2.service_account import Credentials
 
-reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
-required_files = ["config.tsv", "field.tsv", "format.tsv", "note.tsv", "sheet.tsv"]
+required_files = [
+    "config.tsv",
+    "field.tsv",
+    "format.tsv",
+    "note.tsv",
+    "sheet.tsv",
+]
 optional_files = ["user.tsv", "renamed.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title"]
@@ -21,16 +26,10 @@ credential_keys = []
 
 
 def get_cached_sheets():
-    """Return a list of names of cached sheets from .cogs. These are any sheets that have been
-    downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may not be
-    tracked in sheet.tsv."""
-    cached = []
-    for f in os.listdir(".cogs"):
-        if not f.endswith("tsv"):
-            continue
-        if f not in required_files and f not in optional_files:
-            cached.append(f.split(".")[0])
-    return cached
+    """Return a list of names of cached sheets from .cogs/tracked. These are any sheets that have
+    been downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may
+    not be tracked in sheet.tsv."""
+    return [f.split(".")[0] for f in os.listdir(".cogs/tracked")]
 
 
 def get_credentials(credentials_path=None):
@@ -111,7 +110,7 @@ def get_config():
 
 def get_diff(local, remote):
     """Return the diff between a local and remote sheet as a list of lines with formatting. The
-       remote table is the 'old' version and the local table is the 'new' version."""
+    remote table is the 'old' version and the local table is the 'new' version."""
     local_data = []
     with open(local, "r") as f:
         # Local might be CSV or TSV

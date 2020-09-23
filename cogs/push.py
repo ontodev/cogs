@@ -10,55 +10,8 @@ def msg():
     return "Push local sheets to the spreadsheet"
 
 
-def add_notes(spreadsheet, sheet_notes, tracked_sheets):
-    """Batch add notes to a spreadsheet."""
-    requests = []
-    for sheet_title, cell_to_note in sheet_notes.items():
-        sheet_id = tracked_sheets[sheet_title]["ID"]
-        for cell, note in cell_to_note.items():
-            row, col = gspread.utils.a1_to_rowcol(cell)
-            requests.append({
-                    "updateCells": {
-                        "range": {
-                            "sheetId": sheet_id,
-                            "startRowIndex": row - 1,
-                            "endRowIndex": row,
-                            "startColumnIndex": col - 1,
-                            "endColumnIndex": col,
-                        },
-                        "rows": [{"values": [{"note": note}]}],
-                        "fields": "note",
-                    }
-                })
-    if not requests:
-        return
-    try:
-        logging.info(f"adding {len(requests)} notes to spreadsheet")
-        spreadsheet.batch_update({"requests": requests})
-    except gspread.exceptions.APIError as e:
-        logging.error(
-            f"Unable to add {len(requests)} notes to spreadsheet\n"
-            + e.response.text
-        )
-
-
-def push(args):
-    """Push local tables to the spreadsheet as sheets. Only the sheets in sheet.tsv will be
-    pushed. If a sheet in the Sheet does not exist in the local sheet.tsv, it will be removed
-    from the Sheet. Any sheet in sheet.tsv that does not exist in the Sheet will be created.
-    Any sheet in sheet.tsv that does exist will be updated."""
-    set_logging(args.verbose)
-    validate_cogs_project()
-    config = get_config()
-    gc = get_client_from_config(config)
-    spreadsheet = gc.open(config["Title"])
-
-    # Get tracked sheets
-    tracked_sheets = get_tracked_sheets()
-    renamed_local = get_renamed_sheets()
-
-    # Clear existing sheets (wait to delete any that were removed)
-    # If we delete first, could throw error where we try to delete the last remaining ws
+def clear_remote_sheets(spreadsheet, renamed_local):
+    """Clear all data from remote sheets and return a map of sheet title -> sheet obj."""
     remote_sheets = {}
     for sheet in spreadsheet.worksheets():
         sheet_title = sheet.title
@@ -77,29 +30,13 @@ def push(args):
             remote_sheets[new_title] = sheet
         else:
             remote_sheets[sheet_title] = sheet
+    return remote_sheets
 
-    # Get formatting and notes on the sheets
-    sheet_formats = get_sheet_formats()
-    id_to_format = get_format_dict()
-    sheet_notes = get_sheet_notes()
 
-    # Add formatting
-    for sheet_title, cell_to_format in sheet_formats.items():
-        sheet = spreadsheet.worksheet(sheet_title)
-        formats = []
-        for cell, fmt_id in cell_to_format.items():
-            fmt = id_to_format[int(fmt_id)]
-            cell_format = gf.CellFormat.from_props(fmt)
-            formats.append((cell, cell_format))
-        gf.format_cell_ranges(sheet, formats)
-
-    # Add notes
-    add_notes(spreadsheet, sheet_notes, tracked_sheets)
-
-    # Get existing fields (headers) to see if we need to add/remove fields
+def push_data(spreadsheet, tracked_sheets, remote_sheets):
+    """Push all tracked sheets to the spreadsheet.
+    Return all headers and rows to add to sheet.tsv."""
     headers = []
-
-    # Add new data to the sheets in the Sheet
     sheet_rows = []
     for sheet_title, details in tracked_sheets.items():
         sheet_path = details["Path"]
@@ -160,19 +97,96 @@ def push(args):
         sheet.freeze(frozen_row, frozen_col)
 
         # Copy this table into COGS data
-        with open(f".cogs/{sheet_title}.tsv", "w") as f:
+        with open(f".cogs/tracked/{sheet_title}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
+    return headers, sheet_rows
 
-    # Remove sheets if needed
+
+def push_formats(spreadsheet, id_to_format, sheet_formats):
+    """Batch add formats to a spreadsheet."""
+    for sheet_title, cell_to_format in sheet_formats.items():
+        sheet = spreadsheet.worksheet(sheet_title)
+        formats = []
+        for cell, fmt_id in cell_to_format.items():
+            fmt = id_to_format[int(fmt_id)]
+            cell_format = gf.CellFormat.from_props(fmt)
+            formats.append((cell, cell_format))
+        gf.format_cell_ranges(sheet, formats)
+
+
+def push_notes(spreadsheet, sheet_notes, tracked_sheets):
+    """Batch add notes to a spreadsheet."""
+    requests = []
+    for sheet_title, cell_to_note in sheet_notes.items():
+        sheet_id = tracked_sheets[sheet_title]["ID"]
+        for cell, note in cell_to_note.items():
+            row, col = gspread.utils.a1_to_rowcol(cell)
+            requests.append({
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": row - 1,
+                            "endRowIndex": row,
+                            "startColumnIndex": col - 1,
+                            "endColumnIndex": col,
+                        },
+                        "rows": [{"values": [{"note": note}]}],
+                        "fields": "note",
+                    }
+                })
+    if not requests:
+        return
+    try:
+        logging.info(f"adding {len(requests)} notes to spreadsheet")
+        spreadsheet.batch_update({"requests": requests})
+    except gspread.exceptions.APIError as e:
+        logging.error(
+            f"Unable to add {len(requests)} notes to spreadsheet\n"
+            + e.response.text
+        )
+
+
+def push(args):
+    """Push local tables to the spreadsheet as sheets. Only the sheets in sheet.tsv will be
+    pushed. If a sheet in the Sheet does not exist in the local sheet.tsv, it will be removed
+    from the Sheet. Any sheet in sheet.tsv that does not exist in the Sheet will be created.
+    Any sheet in sheet.tsv that does exist will be updated."""
+    set_logging(args.verbose)
+    validate_cogs_project()
+    config = get_config()
+    gc = get_client_from_config(config)
+    spreadsheet = gc.open(config["Title"])
+
+    # Get tracked sheets
+    tracked_sheets = get_tracked_sheets()
+    renamed_local = get_renamed_sheets()
+
+    # Clear existing sheets (wait to delete any that were removed)
+    # If we delete first, could throw error where we try to delete the last remaining ws
+    remote_sheets = clear_remote_sheets(spreadsheet, renamed_local)
+
+    # Get formatting and notes on the sheets
+    sheet_formats = get_sheet_formats()
+    id_to_format = get_format_dict()
+    sheet_notes = get_sheet_notes()
+
+    # Add formatting & notes
+    push_formats(spreadsheet, id_to_format, sheet_formats)
+    push_notes(spreadsheet, sheet_notes, tracked_sheets)
+
+    # Add new data to the sheets in the Sheet and return headers & sheets details
+    headers, sheet_rows = push_data(spreadsheet, tracked_sheets, remote_sheets)
+
+    # Remove sheets from remote if needed
     for sheet_title, sheet in remote_sheets.items():
         if sheet_title not in tracked_sheets.keys():
             logging.info(f"removing sheet '{sheet_title}'")
             # Remove remote copy
             spreadsheet.del_worksheet(sheet)
             # Remove cached copy
-            if os.path.exists(f".cogs/{sheet_title}.tsv"):
-                os.remove(f".cogs/{sheet_title}.tsv")
+            if os.path.exists(f".cogs/tracked/{sheet_title}.tsv"):
+                os.remove(f".cogs/tracked/{sheet_title}.tsv")
 
     # Maybe update fields if they have changed
     maybe_update_fields(headers)

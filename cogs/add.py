@@ -60,8 +60,6 @@ def add(args):
     else:
         # Create the sheet title from file basename
         title = ntpath.basename(path).split(".")[0]
-    if title in reserved_names:
-        raise AddError(f"sheet cannot use reserved name '{title}'")
 
     # Make sure we aren't duplicating a table
     local_sheets = get_tracked_sheets()

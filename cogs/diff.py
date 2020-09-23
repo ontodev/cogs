@@ -23,7 +23,7 @@ def get_lines(sheets):
     """Return the lines for a diff as an array of pairs (text, formatting)."""
     lines = []
     for sheet_title, details in sheets.items():
-        remote = f".cogs/{sheet_title}.tsv"
+        remote = f".cogs/tracked/{sheet_title}.tsv"
         local = details["Path"]
         if os.path.exists(local) and os.path.exists(remote):
             sheet_diff = get_diff(local, remote)
