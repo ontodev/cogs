@@ -167,14 +167,17 @@ https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
 
 As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
 
-After connecting to the existing spreadsheet, COGS will pause to ask you to transfer ownership to the service account. It will provide a link to the sheet and the service email to share with. To transfer ownership:
+After connecting to the existing spreadsheet, COGS will pause to ask you to share the Spreadsheet with the service email. It will provide a link to the sheet and the service email to share with. You can either give the service email "Editor" permissions, or transfer ownership.
+
+To give "Editor" access:
 1. Open the Google Spreadsheet in your browser
 2. Click "Share" in the upper right corner
-3. Enter in the provided service email and click "Send" (note: you may receive an email that says the email failed to send - just ignore this, since the service email is not a "real" email address)
-4. Click "Share" again and click the drop-down next to the service email and select "Make owner"
-6. Return to the terminal and press ENTER to continue
+3. Enter in the provided service email, uncheck "Nofity people", and click "Send"
+4. Return to the terminal and press ENTER to continue
 
-You can always transfer ownership back to yourself using the [`share`](#share) command, but the service account must be the sheet owner for all COGS operations.
+To transfer ownership, click "Share" again and click the drop-down next to the service email and select "Make owner"
+
+Please be aware that if you do not transfer ownership to the service account, `cogs delete` will not work. All other commands will work with just "Editor" access. If you do transfer ownership, you can always transfer ownership back to yourself using the [`share`](#share) command.
 
 ### `delete`
 
@@ -237,9 +240,9 @@ This will download all sheets in the spreadsheet to that directory as `{sheet-ti
 
 `.cogs/format.tsv` and `.cogs/note.tsv` are also updated for any cell formatting or notes on cells, respectively. Each unique format is given a numerical ID and is stored as [CellFormat JSON](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#cellformat).
 
-If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in). This path can be updated with `cogs mv`.
+If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
 
-To sync the local version of sheets with the data in `.cogs/`, run `cogs pull`.
+To sync the local version of sheets with the data in `.cogs/`, run [`cogs pull`](#pull).
 
 Note that if a sheet has been _renamed_ remotely, the old sheet title will be replaced with the new sheet title. Any changes made to the local file corresponding to the old title will not be synced with the remote spreadsheet. Instead, once you run `cogs pull`, a new sheet `{new-sheet-title}.tsv` will appear in the current working directory (the same as if a new sheet were created). It is the same as if you were to delete the old sheet remotely and create a new sheet remotely with the same contents. Use `cogs pull` to write the new path - the old local file will not be deleted.
 
@@ -342,7 +345,7 @@ There are three options:
 - `-w`/`--writer`: email of the user to give write access to
 - `-o`/`--owner`: email of the user to transfer ownership to
 
-We **do not recommend** transferring ownership of the COGS project spreadsheet, as this will prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
+Please be aware that transfering ownership of the Spreadsheet prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
 
 ### `status`
 
