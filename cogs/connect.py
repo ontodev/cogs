@@ -39,14 +39,15 @@ def connect(args):
     else:
         key = key_or_url
 
+    url = f"https://docs.google.com/spreadsheets/d/{key}"
     input(
-        f"""Please open https://docs.google.com/spreadsheets/d/{key}
-and transfer ownership of the sheet to
-    {service_email}
-1. Click "Share" and share this sheet with the service email
-2. Click "Share" again and click the drop down to the right of the service email
-3. Select "Make owner"
-Press ENTER to continue. Press CTRL + C to cancel."""
+        f"""
+You must share this sheet to continue:
+  1. Open {url}
+  2. Share with (as "Editor"): {service_email}
+  3. Uncheck "Notify people" and send
+Press ENTER to continue. Press CTRL + C to cancel.
+"""
     )
 
     # Open the newly-shared sheet

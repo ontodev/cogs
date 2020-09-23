@@ -1,3 +1,4 @@
+import datetime
 import gspread.utils
 import gspread_formatting as gf
 import sys
@@ -396,6 +397,10 @@ def fetch(args):
     update_data_validation(sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
+    sheet_paths = {
+        details["Path"]: loc_sheet_title
+        for loc_sheet_title, details in tracked_sheets.items()
+    }
     new_sheets = {
         sheet_title: sid
         for sheet_title, sid in remote_sheets.items()
@@ -410,11 +415,21 @@ def fetch(args):
             else:
                 frozen_row = 0
                 frozen_col = 0
-            logging.info(f"new sheet '{sheet_title}' added to project")
+            sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()).strip("_")
+            # Make sure the path is unique - the user can change this later
+            if sheet_path + ".tsv" in sheet_paths.keys():
+                # Append datetime if this path already exists
+                td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                sheet_path += f"_{td}.tsv"
+            else:
+                sheet_path += ".tsv"
+            logging.info(
+                f"new sheet '{sheet_title}' added to project with local path {sheet_path}"
+            )
             details = {
                 "ID": sid,
                 "Title": sheet_title,
-                "Path": f"{sheet_title}.tsv",
+                "Path": sheet_path,
                 "Description": "",
                 "Frozen Rows": frozen_row,
                 "Frozen Columns": frozen_col,
