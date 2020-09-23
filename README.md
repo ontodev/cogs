@@ -110,7 +110,7 @@ cogs add [path] -r [freeze_row] -c [freeze_column]
 
 If you specify `-r 2 -c 1`, then the first two rows and the first column will be frozen once the sheet is pushed to the remote Google Spreadsheet. If these options are not included, no rows or columns will be frozen.
 
-By default, the sheet title is created from the path (e.g. `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail. The sheet title cannot be one of the COGS reserved names: `config`, `field`, `sheet`, `renamed`, or `user`.
+By default, the sheet title is created from the path (e.g. `tables/foo.tsv` will be named `foo`). If a sheet with this title already exists in the project, the task will fail.
 
 You can also specify a sheet title that is different from the path with the `-t`/`--title` option:
 
@@ -236,7 +236,7 @@ Running `fetch` will sync the local `.cogs/` directory with all remote spreadshe
 cogs fetch
 ```
 
-This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/`, but will not overwrite the local versions specified by their path. As the sheets are downloaded, the fields are checked against existing fields in `.cogs/field.tsv` and any new fields are added with the default datatype of `cogs:text` (text string). Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
+This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/tracked/`, but will not overwrite the local versions specified by their path. As the sheets are downloaded, the fields are checked against existing fields in `.cogs/field.tsv` and any new fields are added with the default datatype of `cogs:text` (text string). Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
 
 `.cogs/format.tsv` and `.cogs/note.tsv` are also updated for any cell formatting or notes on cells, respectively. Each unique format is given a numerical ID and is stored as [CellFormat JSON](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#cellformat).
 
