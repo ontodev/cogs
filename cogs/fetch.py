@@ -2,7 +2,6 @@ import datetime
 import gspread.utils
 import sys
 
-from cogs.exceptions import FetchError
 from cogs.helpers import *
 
 
@@ -50,10 +49,6 @@ def get_remote_sheets(sheets):
     # Validate sheet titles before downloading anything
     remote_sheets = {}
     for sheet in sheets:
-        if sheet.title in ["user", "config", "sheet", "field", "renamed"]:
-            raise FetchError(
-                f"cannot export remote sheet with the reserved name '{sheet.title}'"
-            )
         remote_sheets[sheet.title] = sheet.id
     return remote_sheets
 
@@ -206,10 +201,6 @@ def fetch(args):
                     )
                     renamed_remote[local_title] = {"new": st, "path": st + ".tsv"}
             logging.info(f"Downloading remote sheet '{st}'")
-
-        if st in reserved_names:
-            # Remote sheet has reserved sheet name - exit
-            raise FetchError(f"sheet cannot use reserved name '{st}'")
 
         # Get frozen rows & columns
         sheet_frozen[st] = {
