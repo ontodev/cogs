@@ -427,7 +427,7 @@ def update_data_validation(sheet_dv_rules, removed_titles):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Condition", "Value"],
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
         )
         writer.writeheader()
         writer.writerows(dv_rows)

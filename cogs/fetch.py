@@ -72,7 +72,7 @@ def clean_data_validation_rules(dv_rules, str_to_rule):
         for cv in dv_rule.condition.values:
             values.append(cv.userEnteredValue)
         dv_rows.append(
-            {"Cell": loc, "Condition": condition, "Value": ", ".join(values)}
+            {"Range": loc, "Condition": condition, "Value": ", ".join(values)}
         )
 
     return dv_rows

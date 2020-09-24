@@ -48,7 +48,7 @@ def add_data_validation(spreadsheet, data_validation):
     for sheet_title, dv_rules in data_validation.items():
         worksheet = spreadsheet.worksheet(sheet_title)
         for dv_rule in dv_rules:
-            loc = dv_rule["Cell"]
+            loc = dv_rule["Range"]
             condition = dv_rule["Condition"]
             value_str = dv_rule["Value"]
             if value_str != "":

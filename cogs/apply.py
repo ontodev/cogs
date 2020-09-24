@@ -38,7 +38,7 @@ conditions = [
 ]
 
 # expected headers for different tables
-data_validation_headers = ["table", "cell", "condition", "value"]
+data_validation_headers = ["table", "range", "condition", "value"]
 problems_headers = [
     "ID",
     "table",
@@ -66,7 +66,7 @@ def apply_data_validation(data_valiation_tables):
             sheet_title = row["table"]
             if sheet_title not in tracked_sheets.keys():
                 raise ApplyError(f"'{sheet_title}' is not a tracked sheet")
-            rule = clean_rule(row["table"], row["cell"], row["condition"], row["value"])
+            rule = clean_rule(row["table"], row["range"], row["condition"], row["value"])
             add_rows.append(rule)
 
         for row in add_rows:
@@ -250,11 +250,14 @@ def apply(args):
         else:
             sep = "\t"
         with open(p, "r") as f:
+            # Get headers and rows
             reader = csv.DictReader(f, delimiter=sep)
-            headers = reader.fieldnames
+            headers = [x.lower() for x in reader.fieldnames]
             rows = []
             for r in reader:
-                rows.append(r)
+                rows.append({k.lower(): v for k, v in r.items()})
+
+            # Determine type of table
             if headers == problems_headers:
                 problems_tables.append(rows)
             elif headers == data_validation_headers:

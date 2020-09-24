@@ -264,7 +264,7 @@ def write_data(args, sheet):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Condition", "Value"],
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
         )
         writer.writeheader()
 
