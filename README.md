@@ -155,16 +155,16 @@ These tables must have the following headers:
 
 The data validation tables are applied to the sheets as data validation rules. These tables must have the following headers:
 * **table**: name of the table to add data validation rules to
-* **cell**: A1 format of the cell or range of cells to apply data validation rules to
+* **range**: A1 format of the cell or range of cells to apply data validation rules to
 * **condition**: the condition (see below) for the data validation rule
 * **value**: the allowed value or values (see bellow)for the data validation rule
 
 For example:
 
-| table  | cell | condition   | value         |
-| ------ | ---- | ----------- | ------------- |
-| Sheet1 | A2:A | TEXT_EQ     | foo           |
-| Sheet1 | B2:B | ONE_OF_LIST | foo, bar, baz |
+| table  | range | condition   | value         |
+| ------ | ----- | ----------- | ------------- |
+| Sheet1 | A2:A  | TEXT_EQ     | foo           |
+| Sheet1 | B2:B  | ONE_OF_LIST | foo, bar, baz |
 
 For full descriptions of each condition type, please see [Google Sheets API ConditionType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionType).
 
