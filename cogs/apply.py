@@ -40,11 +40,11 @@ conditions = [
 # expected headers for different tables
 data_validation_headers = ["table", "range", "condition", "value"]
 problems_headers = [
-    "ID",
+    "id",
     "table",
     "cell",
     "level",
-    "rule ID",
+    "rule id",
     "rule name",
     "value",
     "fix",
@@ -120,7 +120,7 @@ def apply_standardized_problems(problems_tables):
             table = os.path.splitext(os.path.basename(row["table"]))[0]
             if table not in tracked_sheets:
                 # TODO - error? warning?
-                logging.warning(f"'{table} is not a tracked table")
+                logging.warning(f"'{table}' is not a tracked sheet")
                 continue
 
             if table in sheet_to_formats:

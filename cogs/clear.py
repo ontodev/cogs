@@ -1,3 +1,4 @@
+import csv
 import logging
 import sys
 
@@ -8,9 +9,6 @@ from cogs.helpers import (
     get_sheet_notes,
     get_tracked_sheets,
     set_logging,
-    update_data_validation,
-    update_format,
-    update_note,
     validate_cogs_project,
 )
 
@@ -25,7 +23,21 @@ def clear_data_validation(sheet_title):
     logging.info(f"removing all data validation rules from '{sheet_title}'")
     if sheet_title in sheet_dv_rules:
         del sheet_dv_rules[sheet_title]
-    update_data_validation(sheet_dv_rules, [])
+
+    dv_rows = []
+    for sheet_title, dv_rules in sheet_dv_rules.items():
+        for row in dv_rules:
+            row["Sheet Title"] = sheet_title
+            dv_rows.append(row)
+    with open(".cogs/validation.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
+        )
+        writer.writeheader()
+        writer.writerows(dv_rows)
 
 
 def clear_formats(sheet_title):
@@ -34,7 +46,22 @@ def clear_formats(sheet_title):
     logging.info(f"removing all formats from '{sheet_title}'")
     if sheet_title in sheet_to_formats:
         del sheet_to_formats[sheet_title]
-    update_format(sheet_to_formats, [])
+
+    fmt_rows = []
+    for sheet_title, formats in sheet_to_formats.items():
+        for cell, fmt in formats.items():
+            fmt_rows.append(
+                {"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt}
+            )
+    with open(".cogs/format.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
+        )
+        writer.writeheader()
+        writer.writerows(fmt_rows)
 
 
 def clear_notes(sheet_title):
@@ -43,7 +70,20 @@ def clear_notes(sheet_title):
     logging.info(f"removing all notes from '{sheet_title}'")
     if sheet_title in sheet_to_notes:
         del sheet_to_notes[sheet_title]
-    update_note(sheet_to_notes, [])
+
+    note_rows = []
+    for sheet_title, notes in sheet_to_notes.items():
+        for cell, note in notes.items():
+            note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
+    with open(".cogs/note.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Note"],
+        )
+        writer.writeheader()
+        writer.writerows(note_rows)
 
 
 def clear(args):

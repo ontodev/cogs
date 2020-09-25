@@ -97,28 +97,6 @@ def push(args):
         else:
             remote_sheets[sheet_title] = sheet
 
-    # Get formatting and notes on the sheets
-    sheet_formats = get_sheet_formats()
-    id_to_format = get_format_dict()
-    sheet_notes = get_sheet_notes()
-    data_validation = get_data_validation()
-
-    # Add formatting
-    for sheet_title, cell_to_format in sheet_formats.items():
-        sheet = spreadsheet.worksheet(sheet_title)
-        formats = []
-        for cell, fmt_id in cell_to_format.items():
-            fmt = id_to_format[int(fmt_id)]
-            cell_format = gf.CellFormat.from_props(fmt)
-            formats.append((cell, cell_format))
-        gf.format_cell_ranges(sheet, formats)
-
-    # Add notes
-    add_notes(spreadsheet, sheet_notes, tracked_sheets)
-
-    # Add data validation
-    add_data_validation(spreadsheet, data_validation)
-
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
 
@@ -199,6 +177,28 @@ def push(args):
 
     # Maybe update fields if they have changed
     maybe_update_fields(headers)
+
+    # Get formatting and notes on the sheets
+    sheet_formats = get_sheet_formats()
+    id_to_format = get_format_dict()
+    sheet_notes = get_sheet_notes()
+    data_validation = get_data_validation()
+
+    # Add formatting
+    for sheet_title, cell_to_format in sheet_formats.items():
+        sheet = spreadsheet.worksheet(sheet_title)
+        formats = []
+        for cell, fmt_id in cell_to_format.items():
+            fmt = id_to_format[int(fmt_id)]
+            cell_format = gf.CellFormat.from_props(fmt)
+            formats.append((cell, cell_format))
+        gf.format_cell_ranges(sheet, formats)
+
+    # Add notes
+    add_notes(spreadsheet, sheet_notes, tracked_sheets)
+
+    # Add data validation
+    add_data_validation(spreadsheet, data_validation)
 
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
