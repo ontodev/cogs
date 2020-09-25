@@ -103,6 +103,24 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
     return headers, sheet_rows
 
 
+def push_data_validation(spreadsheet, data_validation):
+    """Add data validation rules from validation.tsv to the spreadsheet."""
+    for sheet_title, dv_rules in data_validation.items():
+        worksheet = spreadsheet.worksheet(sheet_title)
+        for dv_rule in dv_rules:
+            loc = dv_rule["Range"]
+            condition = dv_rule["Condition"]
+            value_str = dv_rule["Value"]
+            if value_str != "":
+                value = value_str.split(", ")
+            else:
+                value = []
+            validation_rule = gf.DataValidationRule(
+                gf.BooleanCondition(condition, value)
+            )
+            gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
+
+
 def push_formats(spreadsheet, id_to_format, sheet_formats):
     """Batch add formats to a spreadsheet."""
     for sheet_title, cell_to_format in sheet_formats.items():
@@ -166,15 +184,6 @@ def push(args):
     # If we delete first, could throw error where we try to delete the last remaining ws
     remote_sheets = clear_remote_sheets(spreadsheet, renamed_local)
 
-    # Get formatting and notes on the sheets
-    sheet_formats = get_sheet_formats()
-    id_to_format = get_format_dict()
-    sheet_notes = get_sheet_notes()
-
-    # Add formatting & notes
-    push_formats(spreadsheet, id_to_format, sheet_formats)
-    push_notes(spreadsheet, sheet_notes, tracked_sheets)
-
     # Add new data to the sheets in the Sheet and return headers & sheets details
     headers, sheet_rows = push_data(spreadsheet, tracked_sheets, remote_sheets)
 
@@ -191,12 +200,30 @@ def push(args):
     # Maybe update fields if they have changed
     maybe_update_fields(headers)
 
+    # Get formatting and notes on the sheets
+    sheet_formats = get_sheet_formats()
+    id_to_format = get_format_dict()
+    sheet_notes = get_sheet_notes()
+    data_validation = get_data_validation()
+
+    # Add formatting, notes, and data validation
+    push_data_validation(spreadsheet, data_validation)
+    push_formats(spreadsheet, id_to_format, sheet_formats)
+    push_notes(spreadsheet, sheet_notes, tracked_sheets)
+
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)

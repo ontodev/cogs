@@ -2,6 +2,7 @@
 
 import cogs.add as add
 import cogs.apply as apply
+import cogs.clear as clear
 import cogs.connect as connect
 import cogs.delete as delete
 import cogs.diff as diff
@@ -26,6 +27,7 @@ commands:
   add       {add.msg()}
   apply     {apply.msg()}
   connect   {connect.msg()}
+  clear     {clear.msg()}
   delete    {delete.msg()}
   diff      {diff.msg()}
   fetch     {fetch.msg()}
@@ -89,9 +91,22 @@ def main():
         "paths",
         nargs="*",
         default=None,
-        help="Path(s) to ROBOT standardized problems table",
+        help="Path(s) to table(s) to apply",
     )
     sp.set_defaults(func=apply.run)
+
+    # ------------------------------- clear -------------------------------
+    sp = subparsers.add_parser(
+        "clear",
+        parents=[global_parser],
+        description=clear.msg(),
+        usage="cogs clear KEYWORD [SHEET ...]",
+    )
+    sp.set_defaults(func=clear.run)
+    sp.add_argument("keyword", help="Specify what to clear from the sheet(s)")
+    sp.add_argument(
+        "sheets", nargs="*", help="Titles of sheets to clear from", default=[]
+    )
 
     # ------------------------------- connect -------------------------------
     sp = subparsers.add_parser(
@@ -101,9 +116,7 @@ def main():
         usage="cogs connect -k KEY [-c CREDENTIALS]",
     )
     sp.set_defaults(func=connect.run)
-    sp.add_argument(
-        "-k", "--key", help="Existing Google Sheet key to connect"
-    )
+    sp.add_argument("-k", "--key", help="Existing Google Sheet key to connect")
     sp.add_argument("-c", "--credentials", help="Path to service account credentials")
 
     # ------------------------------- delete -------------------------------
@@ -219,7 +232,7 @@ def main():
         "status",
         parents=[global_parser],
         description=status.msg(),
-        usage="cogs add status",
+        usage="cogs status",
     )
     sp.set_defaults(func=status.run)
 

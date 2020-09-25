@@ -262,10 +262,19 @@ def write_data(args, sheet):
         )
         writer.writeheader()
 
+    with open(".cogs/validation.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
+        )
+        writer.writeheader()
+
 
 def init(args):
     """Init a new .cogs configuration directory in the current working directory. If one already
-        exists, display an error message."""
+    exists, display an error message."""
     set_logging(args.verbose)
     cwd = os.getcwd()
     if os.path.exists(".cogs"):

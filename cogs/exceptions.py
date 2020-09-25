@@ -6,6 +6,14 @@ class AddError(CogsError):
     """Used to indicate an error occurred during the add step."""
 
 
+class ApplyError(CogsError):
+    """Used to indicate an error occurred during the apply step."""
+
+
+class ClearError(CogsError):
+    """Used to indicate an error occurred during the clear step."""
+
+
 class DeleteError(CogsError):
     """Used to indicate an error occurred during the delete step."""
 
