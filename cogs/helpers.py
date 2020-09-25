@@ -11,7 +11,7 @@ from cogs.exceptions import CogsError
 from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 from google.oauth2.service_account import Credentials
 
-reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
+
 required_files = [
     "config.tsv",
     "field.tsv",
@@ -28,16 +28,10 @@ credential_keys = []
 
 
 def get_cached_sheets():
-    """Return a list of names of cached sheets from .cogs. These are any sheets that have been
-    downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may not be
-    tracked in sheet.tsv."""
-    cached = []
-    for f in os.listdir(".cogs"):
-        if not f.endswith("tsv"):
-            continue
-        if f not in required_files and f not in optional_files:
-            cached.append(f.split(".")[0])
-    return cached
+    """Return a list of names of cached sheets from .cogs/tracked. These are any sheets that have
+    been downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may
+    not be tracked in sheet.tsv."""
+    return [f.split(".")[0] for f in os.listdir(".cogs/tracked")]
 
 
 def get_json_credentials(credentials_path=None):

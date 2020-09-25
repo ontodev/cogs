@@ -17,14 +17,14 @@ def pull(args):
     tracked_sheets = get_tracked_sheets()
     remove_sheets = [s for s in cached_sheets if s not in tracked_sheets.keys()]
     for sheet_title, details in tracked_sheets.items():
-        cached_sheet = f".cogs/{sheet_title}.tsv"
+        cached_sheet = f".cogs/tracked/{sheet_title}.tsv"
         local_sheet = details["Path"]
         if os.path.exists(cached_sheet):
             logging.info(f"Writing '{sheet_title}' to {local_sheet}")
             shutil.copyfile(cached_sheet, local_sheet)
     for sheet_title in remove_sheets:
         logging.info(f"Removing '{sheet_title}' from cached sheets")
-        os.remove(f".cogs/{sheet_title}.tsv")
+        os.remove(f".cogs/tracked/{sheet_title}.tsv")
 
 
 def run(args):

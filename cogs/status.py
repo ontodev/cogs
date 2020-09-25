@@ -75,7 +75,7 @@ def get_changes(tracked_sheets, renamed):
             if sheet_title in renamed:
                 sheet_title = renamed[sheet_title]["new"]
             local_path = tracked_sheets[sheet_title]["Path"]
-            remote_path = f".cogs/{sheet_title}.tsv"
+            remote_path = f".cogs/tracked/{sheet_title}.tsv"
 
             # Check which version is newer based on file modification
             local_mod = os.path.getmtime(local_path)

@@ -195,6 +195,9 @@ def get_users(args):
 
 def write_data(args, sheet):
     """Create COGS data files: config.tsv, sheet.tsv, and field.tsv."""
+    # Create the "tracked" directory
+    os.mkdir(".cogs/tracked")
+
     # Store COGS configuration
     with open(".cogs/config.tsv", "w") as f:
         writer = csv.DictWriter(

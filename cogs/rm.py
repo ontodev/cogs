@@ -62,11 +62,11 @@ def rm(args):
 
     for title, sheet in sheets.items():
         if (
-            not os.path.exists(f".cogs/{title}.tsv")
-            or os.stat(f".cogs/{title}.tsv").st_size == 0
+            not os.path.exists(f".cogs/tracked/{title}.tsv")
+            or os.stat(f".cogs/tracked/{title}.tsv").st_size == 0
         ):
             continue
-        with open(f".cogs/{title}.tsv", "r") as sheet_file:
+        with open(f".cogs/tracked/{title}.tsv", "r") as sheet_file:
             try:
                 reader = csv.DictReader(sheet_file, delimiter="\t")
             except csv.Error as e:

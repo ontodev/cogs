@@ -51,7 +51,7 @@ def mv(args):
     selected_sheet = path_to_sheet[cur_path]
     new_sheet_title = ntpath.basename(args.new_path).split(".")[0]
     if selected_sheet != new_sheet_title:
-        if os.path.exists(f".cogs/{new_sheet_title}.tsv"):
+        if os.path.exists(f".cogs/tracked/{new_sheet_title}.tsv"):
             # A cached sheet with this name already exists
             existing_path = tracked_sheets[new_sheet_title]["Path"]
             raise MvError(
@@ -59,7 +59,10 @@ def mv(args):
                 f"a tracked sheet with this title already exists ({existing_path})"
             )
         logging.info(f"Renaming '{selected_sheet}' to '{new_sheet_title}'")
-        shutil.copyfile(f".cogs/{selected_sheet}.tsv", f".cogs/{new_sheet_title}.tsv")
+        shutil.copyfile(
+            f".cogs/tracked/{selected_sheet}.tsv",
+            f".cogs/tracked/{new_sheet_title}.tsv",
+        )
         with open(".cogs/renamed.tsv", "a") as f:
             f.write(f"{selected_sheet}\t{new_sheet_title}\t{args.new_path}\n")
 

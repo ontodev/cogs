@@ -3,7 +3,6 @@ import gspread.utils
 import gspread_formatting as gf
 import sys
 
-from cogs.exceptions import FetchError
 from cogs.helpers import *
 from googleapiclient import discovery
 from googleapiclient.discovery_cache.base import Cache
@@ -141,12 +140,86 @@ def get_remote_sheets(sheets):
     # Validate sheet titles before downloading anything
     remote_sheets = {}
     for sheet in sheets:
-        if sheet.title in ["user", "config", "sheet", "field", "renamed"]:
-            raise FetchError(
-                f"cannot export remote sheet with the reserved name '{sheet.title}'"
-            )
         remote_sheets[sheet.title] = sheet.id
     return remote_sheets
+
+
+def get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen):
+    """Format details from the various dicts to create rows for sheet.tsv."""
+    all_sheets = []
+    for sheet_title, details in tracked_sheets.items():
+        if sheet_title in remote_sheets:
+            sid = remote_sheets[sheet_title]
+            details["ID"] = sid
+            if sheet_title in sheet_frozen:
+                frozen = sheet_frozen[sheet_title]
+                details["Frozen Rows"] = frozen["row"]
+                details["Frozen Columns"] = frozen["col"]
+            else:
+                details["Frozen Rows"] = 0
+                details["Frozen Columns"] = 0
+        details["Title"] = sheet_title
+        all_sheets.append(details)
+    return all_sheets
+
+
+def remove_sheets(sheets, tracked_sheets, renamed_local):
+    """Remove tracked sheets that are no longer in the remote spreadsheet.
+    Return the titles of these sheets."""
+    # Get all cached sheet titles
+    cached_sheet_titles = get_cached_sheets()
+    new_local_titles = [details["new"] for details in renamed_local.values()]
+    remote_titles = [x.title for x in sheets]
+    removed_titles = []
+    for sheet_title in cached_sheet_titles:
+        if sheet_title not in remote_titles and sheet_title not in new_local_titles:
+            # This sheet has a cached copy but does not exist in the remote version
+            # It has either been removed from remote or was newly added to cache
+            if (
+                    sheet_title in tracked_sheets
+                    and tracked_sheets[sheet_title]["ID"].strip != ""
+            ) or (sheet_title not in tracked_sheets):
+                # The sheet is in tracked sheets and has an ID (not newly added)
+                # or the sheet is not in tracked sheets
+                removed_titles.append(sheet_title)
+                logging.info(f"Removing '{sheet_title}'")
+                os.remove(f".cogs/tracked/{sheet_title}.tsv")
+    return removed_titles
+
+
+def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
+    """Get the sheet details formatted for sheet.tsv."""
+    sheet_paths = {
+        details["Path"]: loc_sheet_title
+        for loc_sheet_title, details in tracked_sheets.items()
+    }
+    if sheet_title in sheet_frozen:
+        frozen = sheet_frozen[sheet_title]
+        frozen_row = frozen["row"]
+        frozen_col = frozen["col"]
+    else:
+        frozen_row = 0
+        frozen_col = 0
+    sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()).strip("_")
+    # Make sure the path is unique - the user can change this later
+    if sheet_path + ".tsv" in sheet_paths.keys():
+        # Append datetime if this path already exists
+        td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        sheet_path += f"_{td}.tsv"
+    else:
+        sheet_path += ".tsv"
+    logging.info(
+        f"new sheet '{sheet_title}' added to project with local path {sheet_path}"
+    )
+    details = {
+        "ID": sid,
+        "Title": sheet_title,
+        "Path": sheet_path,
+        "Description": "",
+        "Frozen Rows": frozen_row,
+        "Frozen Columns": frozen_col,
+    }
+    return details
 
 
 def fetch(args):
@@ -173,7 +246,6 @@ def fetch(args):
 
     # Get details about renamed sheets
     renamed_local = get_renamed_sheets()
-    new_local_titles = [details["new"] for details in renamed_local.values()]
     renamed_remote = {}
 
     # Format ID to format for cell formatting
@@ -221,10 +293,6 @@ def fetch(args):
                     )
                     renamed_remote[local_title] = {"new": st, "path": st + ".tsv"}
             logging.info(f"Downloading remote sheet '{st}'")
-
-        if st in reserved_names:
-            # Remote sheet has reserved sheet name - exit
-            raise FetchError(f"sheet cannot use reserved name '{st}'")
 
         # Get frozen rows & columns
         sheet_frozen[st] = {
@@ -337,8 +405,8 @@ def fetch(args):
         if cell_to_note:
             sheet_notes[st] = cell_to_note
 
-        # Write values to .cogs/{sheet title}.tsv
-        with open(f".cogs/{st}.tsv", "w") as f:
+        # Write values to .cogs/tracked/{sheet title}.tsv
+        with open(f".cogs/tracked/{st}.tsv", "w") as f:
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)
@@ -352,41 +420,11 @@ def fetch(args):
     with open(".cogs/formats.json", "w") as f:
         f.write(json.dumps(id_to_format, sort_keys=True, indent=4))
 
-    # Update local sheets with new IDs
-    all_sheets = []
-    for sheet_title, details in tracked_sheets.items():
-        if sheet_title in remote_sheets:
-            sid = remote_sheets[sheet_title]
-            details["ID"] = sid
-            if sheet_title in sheet_frozen:
-                frozen = sheet_frozen[sheet_title]
-                details["Frozen Rows"] = frozen["row"]
-                details["Frozen Columns"] = frozen["col"]
-            else:
-                details["Frozen Rows"] = 0
-                details["Frozen Columns"] = 0
-        details["Title"] = sheet_title
-        all_sheets.append(details)
-
-    # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = get_cached_sheets()
+    # Update local sheets details in sheet.tsv with new IDs & details for current tracked sheets
+    all_sheets = get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen)
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
-    remote_titles = [x.title for x in sheets]
-    removed_titles = []
-    for sheet_title in cached_sheet_titles:
-        if sheet_title not in remote_titles and sheet_title not in new_local_titles:
-            # This sheet has a cached copy but does not exist in the remote version
-            # It has either been removed from remote or was newly added to cache
-            if (
-                sheet_title in tracked_sheets
-                and tracked_sheets[sheet_title]["ID"].strip != ""
-            ) or (sheet_title not in tracked_sheets):
-                # The sheet is in tracked sheets and has an ID (not newly added)
-                # or the sheet is not in tracked sheets
-                removed_titles.append(sheet_title)
-                logging.info(f"Removing '{sheet_title}'")
-                os.remove(f".cogs/{sheet_title}.tsv")
+    removed_titles = remove_sheets(sheets, tracked_sheets, renamed_local)
 
     # Rewrite format.tsv and note.tsv with current remote formats & notes
     update_format(sheet_formats, removed_titles)
@@ -397,10 +435,6 @@ def fetch(args):
     update_data_validation(sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
-    sheet_paths = {
-        details["Path"]: loc_sheet_title
-        for loc_sheet_title, details in tracked_sheets.items()
-    }
     new_sheets = {
         sheet_title: sid
         for sheet_title, sid in remote_sheets.items()
@@ -408,32 +442,7 @@ def fetch(args):
     }
     for sheet_title, sid in new_sheets.items():
         if sheet_title not in renamed_local:
-            if sheet_title in sheet_frozen:
-                frozen = sheet_frozen[sheet_title]
-                frozen_row = frozen["row"]
-                frozen_col = frozen["col"]
-            else:
-                frozen_row = 0
-                frozen_col = 0
-            sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()).strip("_")
-            # Make sure the path is unique - the user can change this later
-            if sheet_path + ".tsv" in sheet_paths.keys():
-                # Append datetime if this path already exists
-                td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                sheet_path += f"_{td}.tsv"
-            else:
-                sheet_path += ".tsv"
-            logging.info(
-                f"new sheet '{sheet_title}' added to project with local path {sheet_path}"
-            )
-            details = {
-                "ID": sid,
-                "Title": sheet_title,
-                "Path": sheet_path,
-                "Description": "",
-                "Frozen Rows": frozen_row,
-                "Frozen Columns": frozen_col,
-            }
+            details = get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets)
             all_sheets.append(details)
 
     # Then update sheet.tsv
