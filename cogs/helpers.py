@@ -12,7 +12,14 @@ from daff import Coopy, CompareFlags, PythonTableView, TableDiff
 from google.oauth2.service_account import Credentials
 
 reserved_names = ["format", "user", "config", "sheet", "field", "note", "renamed"]
-required_files = ["config.tsv", "field.tsv", "format.tsv", "note.tsv", "sheet.tsv"]
+required_files = [
+    "config.tsv",
+    "field.tsv",
+    "format.tsv",
+    "note.tsv",
+    "sheet.tsv",
+    "validation.tsv",
+]
 optional_files = ["user.tsv", "renamed.tsv"]
 
 required_keys = ["Spreadsheet ID", "Title"]
@@ -33,9 +40,8 @@ def get_cached_sheets():
     return cached
 
 
-def get_credentials(credentials_path=None):
+def get_json_credentials(credentials_path=None):
     """Get the Google credentials as a dictionary."""
-    # First get the credentials JSON
     if not credentials_path:
         # No path provided, use environment variable
         env = os.environ
@@ -55,9 +61,9 @@ def get_credentials(credentials_path=None):
     return credentials
 
 
-def get_client(credentials_path=None):
-    """Get the google.auth Client to perform Google Sheets API actions."""
-    credentials = get_credentials(credentials_path=credentials_path)
+def get_credentials(credentials_path=None):
+    """Get the credentials as a Credentials object with scopes."""
+    credentials = get_json_credentials(credentials_path=credentials_path)
 
     try:
         # Create Credentials object and add scope (spreadsheets & drive)
@@ -68,13 +74,22 @@ def get_client(credentials_path=None):
                 "https://www.googleapis.com/auth/drive",
             ]
         )
+    except ValueError as ve:
+        # credentials are missing a required key
+        raise CogsError(f"Unable to create a Client from credentials; {str(ve)}")
+    return gcred
+
+
+def get_client(credentials_path=None):
+    """Get the google.auth Client to perform Google Sheets API actions."""
+    # First get the credentials JSON
+    gcred = get_credentials(credentials_path=credentials_path)
+    try:
         # Create gspread Client & log in
         gc = gspread.Client(auth=gcred)
         gc.login()
         return gc
-    except ValueError as e:
-        # credentials are missing a required key
-        raise CogsError(f"Unable to create a Client from credentials; {str(e)}")
+
     except gspread.exceptions.APIError as e:
         raise CogsError(
             f"Unable to create a Client from credentials; {e.response.text}"
@@ -109,9 +124,26 @@ def get_config():
     return config
 
 
+def get_data_validation():
+    """Get a dict of sheet title -> data validation rules."""
+    sheet_to_dv_rules = {}
+    with open(".cogs/validation.tsv") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            sheet_title = row["Sheet Title"]
+            del row["Sheet Title"]
+            if sheet_title in sheet_to_dv_rules:
+                dv_rules = sheet_to_dv_rules[sheet_title]
+            else:
+                dv_rules = []
+            dv_rules.append(row)
+            sheet_to_dv_rules[sheet_title] = dv_rules
+    return sheet_to_dv_rules
+
+
 def get_diff(local, remote):
     """Return the diff between a local and remote sheet as a list of lines with formatting. The
-       remote table is the 'old' version and the local table is the 'new' version."""
+    remote table is the 'old' version and the local table is the 'new' version."""
     local_data = []
     with open(local, "r") as f:
         # Local might be CSV or TSV
@@ -370,6 +402,35 @@ def update_note(sheet_notes, removed_titles):
         )
         writer.writeheader()
         writer.writerows(note_rows)
+
+
+def update_data_validation(sheet_dv_rules, removed_titles):
+    """"""
+    # TODO - can we be smarter and error on overlap?
+    current_sheet_dv_rules = get_data_validation()
+    dv_rows = []
+    for sheet_title, dv_rules in sheet_dv_rules.items():
+        if sheet_title in current_sheet_dv_rules:
+            current_dv_rules = current_sheet_dv_rules[sheet_title]
+        else:
+            current_dv_rules = []
+        current_dv_rules.extend(dv_rules)
+        current_sheet_dv_rules[sheet_title] = current_dv_rules
+    for sheet_title, dv_rules in current_sheet_dv_rules.items():
+        if sheet_title in removed_titles:
+            continue
+        for row in dv_rules:
+            row["Sheet Title"] = sheet_title
+            dv_rows.append(row)
+    with open(".cogs/validation.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Range", "Condition", "Value"],
+        )
+        writer.writeheader()
+        writer.writerows(dv_rows)
 
 
 def validate_cogs_project():

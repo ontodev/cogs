@@ -17,7 +17,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         sheet_id = tracked_sheets[sheet_title]["ID"]
         for cell, note in cell_to_note.items():
             row, col = gspread.utils.a1_to_rowcol(cell)
-            requests.append({
+            requests.append(
+                {
                     "updateCells": {
                         "range": {
                             "sheetId": sheet_id,
@@ -29,7 +30,8 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
                         "rows": [{"values": [{"note": note}]}],
                         "fields": "note",
                     }
-                })
+                }
+            )
     if not requests:
         return
     try:
@@ -37,9 +39,26 @@ def add_notes(spreadsheet, sheet_notes, tracked_sheets):
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
         logging.error(
-            f"Unable to add {len(requests)} notes to spreadsheet\n"
-            + e.response.text
+            f"Unable to add {len(requests)} notes to spreadsheet\n" + e.response.text
         )
+
+
+def add_data_validation(spreadsheet, data_validation):
+    """Add data validation rules from validation.tsv to the spreadsheet."""
+    for sheet_title, dv_rules in data_validation.items():
+        worksheet = spreadsheet.worksheet(sheet_title)
+        for dv_rule in dv_rules:
+            loc = dv_rule["Range"]
+            condition = dv_rule["Condition"]
+            value_str = dv_rule["Value"]
+            if value_str != "":
+                value = value_str.split(", ")
+            else:
+                value = []
+            validation_rule = gf.DataValidationRule(
+                gf.BooleanCondition(condition, value)
+            )
+            gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
 
 
 def push(args):
@@ -77,24 +96,6 @@ def push(args):
             remote_sheets[new_title] = sheet
         else:
             remote_sheets[sheet_title] = sheet
-
-    # Get formatting and notes on the sheets
-    sheet_formats = get_sheet_formats()
-    id_to_format = get_format_dict()
-    sheet_notes = get_sheet_notes()
-
-    # Add formatting
-    for sheet_title, cell_to_format in sheet_formats.items():
-        sheet = spreadsheet.worksheet(sheet_title)
-        formats = []
-        for cell, fmt_id in cell_to_format.items():
-            fmt = id_to_format[int(fmt_id)]
-            cell_format = gf.CellFormat.from_props(fmt)
-            formats.append((cell, cell_format))
-        gf.format_cell_ranges(sheet, formats)
-
-    # Add notes
-    add_notes(spreadsheet, sheet_notes, tracked_sheets)
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
@@ -177,12 +178,41 @@ def push(args):
     # Maybe update fields if they have changed
     maybe_update_fields(headers)
 
+    # Get formatting and notes on the sheets
+    sheet_formats = get_sheet_formats()
+    id_to_format = get_format_dict()
+    sheet_notes = get_sheet_notes()
+    data_validation = get_data_validation()
+
+    # Add formatting
+    for sheet_title, cell_to_format in sheet_formats.items():
+        sheet = spreadsheet.worksheet(sheet_title)
+        formats = []
+        for cell, fmt_id in cell_to_format.items():
+            fmt = id_to_format[int(fmt_id)]
+            cell_format = gf.CellFormat.from_props(fmt)
+            formats.append((cell, cell_format))
+        gf.format_cell_ranges(sheet, formats)
+
+    # Add notes
+    add_notes(spreadsheet, sheet_notes, tracked_sheets)
+
+    # Add data validation
+    add_data_validation(spreadsheet, data_validation)
+
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+            ],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)

@@ -21,11 +21,11 @@ def connect(args):
     if args.credentials:
         # Use a credentials file
         gc = get_client(credentials_path=args.credentials)
-        credentials = get_credentials(credentials_path=args.credentials)
+        credentials = get_json_credentials(credentials_path=args.credentials)
     else:
         # Use environment vars
         gc = get_client()
-        credentials = get_credentials()
+        credentials = get_json_credentials()
     service_email = credentials["client_email"]
 
     # Maybe extract the key from a full URL

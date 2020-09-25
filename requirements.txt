@@ -1,7 +1,9 @@
+requests
 black
 daff
 flake8
 google
+google-api-python-client
 gspread
 gspread-formatting
 pytest
