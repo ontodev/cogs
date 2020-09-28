@@ -8,7 +8,7 @@ with open(here + "/README.md", "r") as fh:
 
 setup(
     name="ontodev-cogs",
-    version="0.1.0",
+    version="0.1.1",
     description="COGS Operates Google Sheets",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -27,8 +27,10 @@ setup(
     install_requires=[
         "daff",
         "google",
+        "google-api-python-client"
         "gspread",
         "gspread-formatting",
+        "requests",
         "tabulate",
         "termcolor",
     ],
