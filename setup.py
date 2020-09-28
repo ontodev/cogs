@@ -27,7 +27,7 @@ setup(
     install_requires=[
         "daff",
         "google",
-        "google-api-python-client"
+        "google-api-python-client",
         "gspread",
         "gspread-formatting",
         "requests",
