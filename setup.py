@@ -8,7 +8,7 @@ with open(here + "/README.md", "r") as fh:
 
 setup(
     name="ontodev-cogs",
-    version="0.1.1",
+    version="0.1.2",
     description="COGS Operates Google Sheets",
     long_description=long_description,
     long_description_content_type="text/markdown",
