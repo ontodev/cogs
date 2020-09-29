@@ -115,8 +115,11 @@ def push_data_validation(spreadsheet, data_validation):
                 value = value_str.split(", ")
             else:
                 value = []
+            show_ui = False
+            if condition.endswith("LIST"):
+                show_ui = True
             validation_rule = gf.DataValidationRule(
-                gf.BooleanCondition(condition, value)
+                gf.BooleanCondition(condition, value), showCustomUi=show_ui
             )
             gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
 
@@ -140,7 +143,8 @@ def push_notes(spreadsheet, sheet_notes, tracked_sheets):
         sheet_id = tracked_sheets[sheet_title]["ID"]
         for cell, note in cell_to_note.items():
             row, col = gspread.utils.a1_to_rowcol(cell)
-            requests.append({
+            requests.append(
+                {
                     "updateCells": {
                         "range": {
                             "sheetId": sheet_id,
@@ -152,7 +156,8 @@ def push_notes(spreadsheet, sheet_notes, tracked_sheets):
                         "rows": [{"values": [{"note": note}]}],
                         "fields": "note",
                     }
-                })
+                }
+            )
     if not requests:
         return
     try:
@@ -160,8 +165,7 @@ def push_notes(spreadsheet, sheet_notes, tracked_sheets):
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
         logging.error(
-            f"Unable to add {len(requests)} notes to spreadsheet\n"
-            + e.response.text
+            f"Unable to add {len(requests)} notes to spreadsheet\n" + e.response.text
         )
 
 
