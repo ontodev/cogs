@@ -112,9 +112,12 @@ def push_data_validation(spreadsheet, data_validation):
             condition = dv_rule["Condition"]
             value_str = dv_rule["Value"]
             if value_str != "":
-                value = value_str.split(", ")
+                # Split on non-escaped commas
+                value = re.compile(r"(?<!\\), ").split(value_str)
             else:
                 value = []
+            # Remove escape character
+            value = [re.sub(r"\\([^\\])", r"\1", x) for x in value]
             show_ui = False
             if condition.endswith("LIST"):
                 show_ui = True
