@@ -212,7 +212,7 @@ Dates can be supplied in whatever format you like, but we recomment `YYYY-MM-DD`
 
 * *One-of Conditions*
 
-`ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead.
+`ONE_OF_LIST` values should be supplied as a comma separated list. There should be at least two values in the list. For single values, use `TEXT_EQ` instead. If an item in your `ONE_OF_LIST` contains a comma, escape it with a backslash (e.g., `single value 1, multi-value 2\, 3` will resolve to two values in the list).
 
 | Condition      | Values |
 | -------------- | ------ |
