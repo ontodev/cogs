@@ -159,7 +159,7 @@ def apply_standardized_problems(problems_tables):
                 if current_fmt != 0:
                     cell_to_formats[cell] = 1
             elif level == "info":
-                if current_fmt > 1:
+                if current_fmt < 1:
                     cell_to_formats[cell] = 2
 
             instructions = None
