@@ -39,17 +39,7 @@ conditions = [
 
 # expected headers for different tables
 data_validation_headers = ["table", "range", "condition", "value"]
-problems_headers = [
-    "id",
-    "table",
-    "cell",
-    "level",
-    "rule id",
-    "rule name",
-    "value",
-    "fix",
-    "instructions",
-]
+message_headers = ["table", "cell", "level", "rule id", "rule", "message", "suggestion"]
 
 
 def msg():
@@ -82,8 +72,8 @@ def apply_data_validation(data_valiation_tables):
     update_data_validation(add_dv_rules, [])
 
 
-def apply_standardized_problems(problems_tables):
-    """Apply one or more problems tables (from dict reader) to the sheets as formats and notes."""
+def apply_messages(message_tables):
+    """Apply one or more message tables (from dict reader) to the sheets as formats and notes."""
     tracked_sheets = get_tracked_sheets()
     # Get existing formats
     sheet_to_formats = get_sheet_formats()
@@ -113,10 +103,10 @@ def apply_standardized_problems(problems_tables):
         sheet_to_manual_notes[sheet_title] = manual_notes
     sheet_to_notes = sheet_to_manual_notes
 
-    # Read the problems table to get the formats & notes to add
-    for problems_table in problems_tables:
+    # Read the message table to get the formats & notes to add
+    for message_table in message_tables:
 
-        for row in problems_table:
+        for row in message_table:
             table = os.path.splitext(os.path.basename(row["table"]))[0]
             if table not in tracked_sheets:
                 # TODO - error? warning?
@@ -143,15 +133,18 @@ def apply_standardized_problems(problems_tables):
             if cell in cell_to_notes:
                 current_note = cell_to_notes[cell]
                 if (
-                    not current_note.startswith("ERROR: ")
-                    and not current_note.startswith("WARN: ")
-                    and not current_note.startswith("INFO: ")
+                    not current_note.startswith("ERROR")
+                    and not current_note.startswith("WARN")
+                    and not current_note.startswith("INFO")
                 ):
                     # Not an applied note
                     current_note = None
 
             # Set formatting based on level of issue
-            level = row["level"].lower().strip()
+            if "level" in row:
+                level = row["level"].lower().strip()
+            else:
+                level = "error"
             if level == "error":
                 cell_to_formats[cell] = 0
             elif level == "warn" or level == "warning":
@@ -162,28 +155,41 @@ def apply_standardized_problems(problems_tables):
                 if current_fmt < 1:
                     cell_to_formats[cell] = 2
 
-            instructions = None
-            if "instructions" in row:
-                instructions = row["instructions"]
-                if instructions == "":
-                    instructions = None
+            message = None
+            if "message" in row:
+                message = row["message"]
+                if message == "":
+                    message = None
 
-            fix = None
-            if "fix" in row:
-                fix = row["fix"]
-                if fix == "":
-                    fix = None
+            suggest = None
+            if "suggestion" in row:
+                suggest = row["suggestion"]
+                if suggest == "":
+                    suggest = None
+
+            rule_id = None
+            if "rule id" in row:
+                rule_id = row["rule id"]
 
             # Add the note
-            rule_name = row["rule name"]
-            logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
+            rule_name = None
+            if "rule" in row:
+                rule_name = row["rule"]
+                logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
+            else:
+                logging.info(f'Adding message to {cell} as a(n) {level}')
 
             # Format the note
-            note = f"{level.upper()}: {rule_name}"
-            if instructions:
-                note += f"\nInstructions: {instructions}"
-            if fix:
-                note += f'\nSuggested Fix: "{fix}"'
+            if rule_name:
+                note = f"{level.upper()}: {rule_name}"
+            else:
+                note = level.upper()
+            if message:
+                note += f"\n{message}"
+            if suggest:
+                note += f'\nSuggested Fix: "{suggest}"'
+            if rule_id:
+                note += f"\nFor more details, see {rule_id}"
 
             # Add to dict
             if current_note:
@@ -236,13 +242,13 @@ def clean_rule(sheet_title, loc, condition, value):
 
 def apply(args):
     """Apply a table to the spreadsheet. The type of table to 'apply' is based on the headers:
-    standardized problems or data validation."""
+    standardized messages or data validation."""
     validate_cogs_project()
     set_logging(args.verbose)
 
     paths = args.paths
 
-    problems_tables = []
+    message_tables = []
     data_validation_tables = []
     for p in paths:
         if p.endswith("csv"):
@@ -258,15 +264,18 @@ def apply(args):
                 rows.append({k.lower(): v for k, v in r.items()})
 
             # Determine type of table
-            if headers == problems_headers:
-                problems_tables.append(rows)
-            elif headers == data_validation_headers:
+            if headers == data_validation_headers:
                 data_validation_tables.append(rows)
+            elif "table" in headers and "cell" in headers:
+                for h in headers:
+                    if h not in message_headers:
+                        raise ApplyError(f"The headers in table {p} are not valid for apply")
+                message_tables.append(rows)
             else:
                 raise ApplyError(f"The headers in table {p} are not valid for apply")
 
-    if problems_tables:
-        apply_standardized_problems(problems_tables)
+    if message_tables:
+        apply_messages(message_tables)
 
     if data_validation_tables:
         apply_data_validation(data_validation_tables)

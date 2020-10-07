@@ -123,17 +123,17 @@ This does not immediately change the Google Sheet -- use `cogs push` to push all
 
 ### `apply`
 
-Running `apply` applies the details of one or more [standardized problems tables](#standardized-problems-tables) or [data validation tables](#data-validation-tables) to the spreadsheet as cell formatting and notes.
+Running `apply` applies the details of one or more [message tables](#message-tables) or [data validation tables](#data-validation-tables) to the spreadsheet as cell formatting and notes.
 
 ```
 cogs apply [table1.tsv table2.tsv ...]
 ```
 
-#### Standardized Problems Tables
+#### Message Tables
 
-Standardized problems tables provide a standard table output that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of problem can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
+Message tables provide a standard table output for logging messages (info, warn, or error) that can be converted into formatting and notes in the spreadsheet using `apply`. As long as the table follows the format described below, any type of message can be applied to the sheets. One example is the errors from [ROBOT template](http://robot.obolibrary.org/template).
 
-These tables are applied to the sheets as formats and notes. The three levels of problems will be formatted with a black border and the following backgrounds:
+These tables are applied to the sheets as formats and notes. The three levels of logging will be formatted with a black border and the following backgrounds:
 * **error**: light red background
 * **warn/warning**: light yellow background
 * **info**: light blue background
@@ -141,15 +141,15 @@ These tables are applied to the sheets as formats and notes. The three levels of
 The notes and formats will be added to any existing, but will take priority over the existing notes and formats.
 
 These tables must have the following headers:
-* **ID**: local numeric identifier starting at 1 and counting up
 * **table**: name of the table that the problem occurs in
 * **cell**: A1 format of problematic cell location
-* **level**: severity of the problem; error, warn, or info - this determines the background color of the cell
-* **rule ID**: an IRI or CURIE to uniquely identify the problem
-* **rule name**: descriptive name of the problem - this is converted to the cell note
-* **value**: value of the cell causing problem
-* **fix**: can be left blank; a suggested value to replace the problematic value
-* **instructions**: can be left blank; detailed instructions on how to fix the problem
+* **level**: optional; severity of the problem; error, warn, or info - if not included, this will default to "error"
+* **rule ID**: optional; an IRI or CURIE to uniquely identify the problem
+* **rule**: optional; descriptive name of the problem - this is converted to the cell note
+* **message**: optional; detailed instructions on how to fix the problem
+* **suggestion**: optional; a suggested value to replace the problematic value
+
+The only required fields are `table` and `cell`. If no other fields are provided, the cell will be highlighted red with a note that says "ERROR". We strongly recommend using either a `rule ID` or `rule` to identify the message, and `message` text to provide more details.
 
 #### Data Valildation Tables
 
