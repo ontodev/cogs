@@ -143,11 +143,13 @@ The notes and formats will be added to any existing, but will take priority over
 These tables must have the following headers:
 * **table**: name of the table that the problem occurs in
 * **cell**: A1 format of problematic cell location
-* **level**: optional; severity of the problem; error, warn, or info - if not included, this will default to "error"
-* **rule ID**: optional; an IRI or CURIE to uniquely identify the problem
-* **rule**: optional; descriptive name of the problem - this is converted to the cell note
-* **message**: optional; detailed instructions on how to fix the problem
-* **suggestion**: optional; a suggested value to replace the problematic value
+
+The following fields are optional:
+* **level**: severity of the problem; error, warn, or info - if not included, this will default to "error"
+* **rule ID**: an IRI or CURIE to uniquely identify the problem
+* **rule**: descriptive name of the problem - this is converted to the cell note
+* **message**: detailed instructions on how to fix the problem
+* **suggestion**: a suggested value to replace the problematic value
 
 The only required fields are `table` and `cell`. If no other fields are provided, the cell will be highlighted red with a note that says "ERROR". We strongly recommend using either a `rule ID` or `rule` to identify the message, and `message` text to provide more details.
 
