@@ -8,9 +8,9 @@ def msg():
     return "Show all tracked sheets"
 
 
-def ls(args):
-    """Print a list of tracked files"""
-    set_logging(args.verbose)
+def ls(verbose=False):
+    """Return a list of [sheet, path] pairs."""
+    set_logging(verbose)
     validate_cogs_project()
 
     tracked_sheets = get_tracked_sheets()
@@ -18,13 +18,14 @@ def ls(args):
     for sheet, details in tracked_sheets.items():
         sheet_details.append([sheet, "(" + details["Path"] + ")"])
 
-    print(tabulate.tabulate(sheet_details, tablefmt="plain"))
+    return sheet_details
 
 
 def run(args):
-    """Wrapper for fetch function."""
+    """Wrapper for ls function."""
     try:
-        ls(args)
+        sheet_details = ls(verbose=args.verbose)
+        print(tabulate.tabulate(sheet_details, tablefmt="plain"))
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

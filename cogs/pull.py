@@ -8,9 +8,9 @@ def msg():
     return "Copy fetched sheets to their local paths"
 
 
-def pull(args):
+def pull(verbose=False):
     """Copy cached sheets to their local paths."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     cached_sheets = get_cached_sheets()
@@ -30,7 +30,7 @@ def pull(args):
 def run(args):
     """Wrapper for pull function."""
     try:
-        pull(args)
+        pull(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

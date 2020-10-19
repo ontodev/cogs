@@ -8,24 +8,22 @@ def msg():
     return "Remove a table (TSV or CSV) from the project"
 
 
-def rm(args):
+def rm(paths, verbose=False):
     """Remove a table (TSV or CSV) from the COGS project. 
     This updates sheet.tsv and field.tsv and delete the according cached file."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     # Make sure the sheets exist
     sheets = get_tracked_sheets()
 
-    paths = [sheet["Path"] for sheet in sheets.values()]
-    if len(set(args.paths) - set(paths)) > 0:
+    tracked_paths = [sheet["Path"] for sheet in sheets.values()]
+    if len(set(tracked_paths) - set(tracked_paths)) > 0:
         raise RmError(
-            f"unable to remove untracked file(s): {' '.join(set(args.paths)-set(paths))}."
+            f"unable to remove untracked file(s): {' '.join(set(paths)-set(tracked_paths))}."
         )
 
-    sheets_to_remove = {
-        title: sheet for title, sheet in sheets.items() if sheet["Path"] in args.paths
-    }
+    sheets_to_remove = {title: sheet for title, sheet in sheets.items() if sheet["Path"] in paths}
 
     # Make sure we are not deleting the last sheet as Google spreadsheet would refuse to do so
     if len(sheets) - len(sheets_to_remove) == 0:
@@ -41,7 +39,6 @@ def rm(args):
             raise RmError("Invalid title for sheet, cannot contain . or /")
 
     # Update sheet.tsv
-
     with open(".cogs/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
@@ -56,7 +53,6 @@ def rm(args):
                 writer.writerow(sheet)
 
     # Get the headers from all files and remove only the ones that are unique to the tracked file(s)
-
     fields_all = set()
     fields_candidates_for_removal = set()
 
@@ -66,11 +62,12 @@ def rm(args):
             or os.stat(f".cogs/tracked/{title}.tsv").st_size == 0
         ):
             continue
-        with open(f".cogs/tracked/{title}.tsv", "r") as sheet_file:
+        path = f".cogs/tracked/{title}.tsv"
+        with open(path, "r") as sheet_file:
             try:
                 reader = csv.DictReader(sheet_file, delimiter="\t")
             except csv.Error as e:
-                raise RmError(f"unable to read {args.path} as a TSV\nCAUSE:{str(e)}")
+                raise RmError(f"unable to read {path} as a TSV\nCAUSE:{str(e)}")
 
             if title in sheets_to_remove.keys():
                 fields_candidates_for_removal = fields_candidates_for_removal | set(

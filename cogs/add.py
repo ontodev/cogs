@@ -34,13 +34,12 @@ def maybe_update_fields(headers):
                 writer.writerow(items)
 
 
-def add(args):
+def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbose=False):
     """Add a table (TSV or CSV) to the COGS project. This updates sheet.tsv and field.tsv."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     # Open the provided file and make sure we can parse it as TSV or CSV
-    path = args.path
     if path.endswith(".csv"):
         delimiter = ","
         fmt = "CSV"
@@ -54,10 +53,7 @@ def add(args):
             raise AddError(f"unable to read {path} as {fmt}\nCAUSE:{str(e)}")
         headers = reader.fieldnames
 
-    if args.title:
-        # Get the title from args
-        title = args.title
-    else:
+    if not title:
         # Create the sheet title from file basename
         title = ntpath.basename(path).split(".")[0]
 
@@ -73,9 +69,8 @@ def add(args):
         raise AddError(f"Local table {path} already exists as '{other_title}'")
 
     # Maybe get a description
-    description = ""
-    if args.description:
-        description = args.description
+    if not description:
+        description = ""
 
     if headers:
         maybe_update_fields(headers)
@@ -86,14 +81,7 @@ def add(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=[
-                "ID",
-                "Title",
-                "Path",
-                "Description",
-                "Frozen Rows",
-                "Frozen Columns",
-            ],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         # ID gets filled in when we add it to the Sheet
         writer.writerow(
@@ -102,8 +90,8 @@ def add(args):
                 "Title": title,
                 "Path": path,
                 "Description": description,
-                "Frozen Rows": args.freeze_row,
-                "Frozen Columns": args.freeze_column,
+                "Frozen Rows": freeze_row,
+                "Frozen Columns": freeze_column,
             }
         )
 
@@ -113,7 +101,14 @@ def add(args):
 def run(args):
     """Wrapper for add function."""
     try:
-        add(args)
+        add(
+            args.path,
+            title=args.title,
+            description=args.description,
+            freeze_row=args.freeze_row,
+            freeze_column=args.freeze_column,
+            verbose=args.verbose,
+        )
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

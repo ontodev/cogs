@@ -63,21 +63,22 @@ def get_lines(sheets):
     return lines
 
 
-def diff(args):
+def diff(paths=None, verbose=False):
     """Start a window with dynamic response to display the diffs for all provided paths."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     sheets = get_tracked_sheets()
-    paths = [details["Path"] for details in sheets.values()]
-    if args.paths:
-        for p in args.paths:
-            if p not in paths:
+    tracked_paths = [details["Path"] for details in sheets.values()]
+    if paths:
+        # Update sheets to diff
+        for p in paths:
+            if p not in tracked_paths:
                 raise DiffError(f"sheet '{p}' is not part of the current project")
         sheets = {
             sheet_title: details
             for sheet_title, details in sheets.items()
-            if details["Path"] in args.paths
+            if details["Path"] in paths
         }
 
     # Init the curses screen
@@ -102,9 +103,7 @@ def diff(args):
     if not lines:
         # Nothing to display
         close_screen(stdscr)
-        print(
-            "Local sheets are up to date with remote sheets (nothing to push or pull).\n"
-        )
+        print("Local sheets are up to date with remote sheets (nothing to push or pull).\n")
         return
 
     try:
@@ -144,9 +143,7 @@ def diff(args):
 
             # Add a message when we hit the EOF
             if eof or rows > len(lines) - 2:
-                stdscr.addstr(
-                    rows - 1, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD
-                )
+                stdscr.addstr(rows - 1, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD)
 
             # Display current position in diff
             if max_x < cols + x:
@@ -220,7 +217,7 @@ def diff(args):
 def run(args):
     """Wrapper for diff function."""
     try:
-        diff(args)
+        diff(paths=args.paths, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

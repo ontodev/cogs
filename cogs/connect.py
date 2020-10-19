@@ -8,9 +8,9 @@ def msg():
     return "Initialize a new COGS project by connecting an existing Google Sheet"
 
 
-def connect(args):
+def connect(key_or_url, credentials=None, verbose=False):
     """Connect an existing Google Spreadsheet to a new COGS project."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     cwd = os.getcwd()
     if os.path.exists(".cogs"):
         # Do not raise CogsError, or else .cogs/ will be deleted
@@ -18,18 +18,19 @@ def connect(args):
         sys.exit(1)
 
     # Create a Client to access API
-    if args.credentials:
+    if credentials:
         # Use a credentials file
-        gc = get_client(credentials_path=args.credentials)
-        credentials = get_json_credentials(credentials_path=args.credentials)
+        gc = get_client(credentials_path=credentials)
+        credentials_obj = get_json_credentials(credentials_path=credentials)
     else:
         # Use environment vars
         gc = get_client()
-        credentials = get_json_credentials()
-    service_email = credentials["client_email"]
+        credentials_obj = get_json_credentials()
+
+    # Retrieve the service email to paste in help message
+    service_email = credentials_obj["client_email"]
 
     # Maybe extract the key from a full URL
-    key_or_url = args.key
     if "docs.google.com" in key_or_url:
         if key_or_url.startswith("http://"):
             key_or_url = key_or_url[7:]
@@ -52,18 +53,18 @@ Press ENTER to continue. Press CTRL + C to cancel.
 
     # Open the newly-shared sheet
     spreadsheet = gc.open_by_key(key)
-    args.title = spreadsheet.title
+    title = spreadsheet.title
 
     # init the COGS directory
     logging.info(f"connecting COGS project {spreadsheet.title} in {cwd}/.cogs/")
     os.mkdir(".cogs")
-    write_data(args, spreadsheet)
+    write_data(spreadsheet, title, credentials=credentials)
 
 
 def run(args):
     """Wrapper for connect function."""
     try:
-        connect(args)
+        connect(args.keyword, credentials=args.credentials, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

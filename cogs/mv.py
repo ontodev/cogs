@@ -10,20 +10,20 @@ def msg():
     return "Move a local sheet to a new path"
 
 
-def mv(args):
+def mv(path, new_path, force=False, verbose=False):
     """Move a local sheet to a new local path. If the file basename changes, the sheet title will
     also change."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
-    if not os.path.exists(args.path):
-        raise MvError(f"{args.path} does not exist")
+    if not os.path.exists(path):
+        raise MvError(f"{path} does not exist")
 
-    if os.path.exists(args.path) and os.path.exists(args.new_path):
+    if os.path.exists(path) and os.path.exists(new_path) and not force:
         # Make sure the user knows they are overwriting another file
         i = input(
-            f"{args.path} and {args.new_path} both exist - "
-            f"'mv' will overwrite the contents of {args.new_path}.\nDo you wish to proceed? [y/n]\n"
+            f"{path} and {new_path} both exist - "
+            f"'mv' will overwrite the contents of {new_path}.\nDo you wish to proceed? [y/n]\n"
         )
         if i.strip().lower() != "y":
             logging.warning("'mv' operation stopped")
@@ -37,19 +37,19 @@ def mv(args):
     }
 
     # Make sure the sheet we are moving is tracked and get its (current) title
-    cur_path = os.path.abspath(args.path)
+    cur_path = os.path.abspath(path)
     if cur_path not in path_to_sheet:
-        raise MvError(f"{args.path} is not a tracked sheet")
+        raise MvError(f"{path} is not a tracked sheet")
 
     # Move the local copy if it exists
     # If it doesn't exist, the user has already moved to the new path
-    if os.path.exists(args.path):
-        os.rename(args.path, args.new_path)
+    if os.path.exists(path):
+        os.rename(path, new_path)
 
     # See if the basename (sheet title) changed
     # If so, we need to rename the cached copy
     selected_sheet = path_to_sheet[cur_path]
-    new_sheet_title = ntpath.basename(args.new_path).split(".")[0]
+    new_sheet_title = ntpath.basename(new_path).split(".")[0]
     if selected_sheet != new_sheet_title:
         if os.path.exists(f".cogs/tracked/{new_sheet_title}.tsv"):
             # A cached sheet with this name already exists
@@ -60,18 +60,17 @@ def mv(args):
             )
         logging.info(f"Renaming '{selected_sheet}' to '{new_sheet_title}'")
         shutil.copyfile(
-            f".cogs/tracked/{selected_sheet}.tsv",
-            f".cogs/tracked/{new_sheet_title}.tsv",
+            f".cogs/tracked/{selected_sheet}.tsv", f".cogs/tracked/{new_sheet_title}.tsv",
         )
         with open(".cogs/renamed.tsv", "a") as f:
-            f.write(f"{selected_sheet}\t{new_sheet_title}\t{args.new_path}\n")
+            f.write(f"{selected_sheet}\t{new_sheet_title}\t{new_path}\n")
 
     # Get new rows of sheet.tsv to write
     rows = []
     for sheet_title, details in tracked_sheets.items():
         if sheet_title == selected_sheet:
             # Update path and title
-            details["Path"] = args.new_path
+            details["Path"] = new_path
             sheet_title = new_sheet_title
         details["Title"] = sheet_title
         rows.append(details)
@@ -91,7 +90,7 @@ def mv(args):
 def run(args):
     """Wrapper for mv function."""
     try:
-        mv(args)
+        mv(args.path, args.new_path, force=args.force, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

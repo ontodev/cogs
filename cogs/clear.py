@@ -50,15 +50,10 @@ def clear_formats(sheet_title):
     fmt_rows = []
     for sheet_title, formats in sheet_to_formats.items():
         for cell, fmt in formats.items():
-            fmt_rows.append(
-                {"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt}
-            )
+            fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
@@ -77,24 +72,23 @@ def clear_notes(sheet_title):
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(".cogs/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Note"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)
 
 
-def clear(args):
+def clear(keyword, on_sheets=None, verbose=False):
     """Remove formats, notes, and/or data validation rules from one or more sheets."""
     validate_cogs_project()
-    set_logging(args.verbose)
-    keyword = args.keyword.lower()
-    on_sheets = args.sheets
+    set_logging(verbose)
 
     # Validate sheets
     tracked_sheets = get_tracked_sheets()
+
+    if not on_sheets:
+        # If no sheet was supplied, clear from all
+        on_sheets = tracked_sheets.keys()
 
     untracked = []
     for st in on_sheets:
@@ -102,12 +96,8 @@ def clear(args):
             untracked.append(st)
     if untracked:
         raise ClearError(
-            f"The following sheet(s) are not part of this project: "
-            + ", ".join(untracked)
+            f"The following sheet(s) are not part of this project: " + ", ".join(untracked)
         )
-    if not on_sheets:
-        # If no sheet was supplied, clear from all
-        on_sheets = tracked_sheets.keys()
 
     if keyword == "formats":
         for st in on_sheets:
@@ -124,13 +114,13 @@ def clear(args):
             clear_notes(st)
             clear_data_validation(st)
     else:
-        raise ClearError("Unknown keyword: " + args.keyword)
+        raise ClearError("Unknown keyword: " + keyword)
 
 
 def run(args):
     """Wrapper for clear function."""
     try:
-        clear(args)
+        clear(args.keyword, on_sheets=args.sheets, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

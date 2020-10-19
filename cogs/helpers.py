@@ -85,14 +85,10 @@ def get_client(credentials_path=None):
         return gc
 
     except gspread.exceptions.APIError as e:
-        raise CogsError(
-            f"Unable to create a Client from credentials; {e.response.text}"
-        )
+        raise CogsError(f"Unable to create a Client from credentials; {e.response.text}")
     except google.auth.exceptions.RefreshError as e:
         if "invalid_grant" in str(e):
-            raise CogsError(
-                "Unable to create a Client; account for client_email cannot be found"
-            )
+            raise CogsError("Unable to create a Client; account for client_email cannot be found")
         else:
             raise CogsError(f"Unable to create a Client; {str(e)}")
 
@@ -205,10 +201,7 @@ def get_fields():
 
 def get_format_dict():
     """Get a dict of numerical format ID -> the format dict."""
-    if (
-        os.path.exists(".cogs/formats.json")
-        and not os.stat(".cogs/formats.json").st_size == 0
-    ):
+    if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
         with open(".cogs/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
             return {int(k): v for k, v in fmt_dict.items()}
@@ -308,9 +301,7 @@ def maybe_update_fields(headers):
     fields = get_fields()
     update_fields = False
     # Determine if fields were removed
-    new_fields = {
-        re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers
-    }
+    new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
     remove_fields = [f for f in fields.keys() if f not in new_fields.keys()]
     if remove_fields:
         update_fields = True
@@ -361,15 +352,10 @@ def update_format(sheet_formats, removed_titles):
         if sheet_title in removed_titles:
             continue
         for cell, fmt in formats.items():
-            fmt_rows.append(
-                {"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt}
-            )
+            fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
@@ -389,10 +375,7 @@ def update_note(sheet_notes, removed_titles):
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(".cogs/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Note"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)

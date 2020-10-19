@@ -138,11 +138,7 @@ def print_diff(sheet_title, path, diff):
         line = "line"
         if added_lines > 1:
             line = "lines"
-        print(
-            termcolor.colored(
-                f"\t  + {added_cols} {col}, {added_lines} {line}", "green"
-            )
-        )
+        print(termcolor.colored(f"\t  + {added_cols} {col}, {added_lines} {line}", "green"))
     elif added_lines:
         line = "line"
         if added_lines > 1:
@@ -161,11 +157,7 @@ def print_diff(sheet_title, path, diff):
         line = "line"
         if removed_lines > 1:
             line = "lines"
-        print(
-            termcolor.colored(
-                f"\t  - {removed_cols} {col}, {removed_lines} {line}", "red"
-            )
-        )
+        print(termcolor.colored(f"\t  - {removed_cols} {col}, {removed_lines} {line}", "red"))
     elif removed_cols:
         col = "column"
         if removed_cols > 1:
@@ -184,9 +176,9 @@ def print_diff(sheet_title, path, diff):
         print(termcolor.colored(f"\t  -> {changed_lines} changed {line}", "cyan"))
 
 
-def status(args):
+def status(verbose=False):
     """Print the status of local sheets vs. remote sheets."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     # Get the sets of changes
@@ -270,7 +262,7 @@ def status(args):
 def run(args):
     """Wrapper for status function."""
     try:
-        status(args)
+        status(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
