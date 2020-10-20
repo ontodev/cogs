@@ -54,7 +54,7 @@ def rm(paths, verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description"],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         for title, sheet in sheets.items():
