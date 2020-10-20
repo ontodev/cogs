@@ -1,7 +1,17 @@
-import sys
+import csv
+import os
 
 from cogs.exceptions import RmError
-from cogs.helpers import *
+from cogs.helpers import (
+    get_fields,
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+    get_sheet_formats,
+    update_format,
+    get_sheet_notes,
+    update_note,
+)
 
 
 def msg():
@@ -99,12 +109,3 @@ def rm(paths, verbose=False):
 
     sheet_notes = get_sheet_notes()
     update_note(sheet_notes, sheets_to_remove.keys())
-
-
-def run(args):
-    """Wrapper for rm function."""
-    try:
-        rm(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

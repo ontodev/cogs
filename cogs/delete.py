@@ -1,8 +1,10 @@
+import gspread
+import logging
+import os
 import shutil
-import sys
 
 from cogs.exceptions import DeleteError
-from cogs.helpers import *
+from cogs.helpers import get_client_from_config, get_config, set_logging, validate_cogs_project
 
 
 def msg():
@@ -22,7 +24,7 @@ def delete(verbose=False):
     # Delete the Sheet
     title = config["Title"]
     cwd = os.getcwd()
-    print(f"Removing COGS project '{title}' from {cwd}")
+    logging.info(f"Removing COGS project '{title}' from {cwd}")
     try:
         ssid = config["Spreadsheet ID"]
         gc.del_spreadsheet(ssid)
@@ -33,20 +35,3 @@ def delete(verbose=False):
     # Remove the COGS data
     if os.path.exists(".cogs"):
         shutil.rmtree(".cogs")
-
-
-def run(args):
-    """Wrapper for delete function."""
-    try:
-        if not args.force:
-            resp = input(
-                "WARNING: This task will permanently destroy the spreadsheet and all COGS data.\n"
-                "         Do you wish to proceed? [y/n]\n"
-            )
-            if resp.lower().strip() != "y":
-                logging.warning("'delete' operation stopped")
-                sys.exit(0)
-        delete(verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

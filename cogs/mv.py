@@ -1,6 +1,5 @@
 import ntpath
 import shutil
-import sys
 
 from cogs.exceptions import MvError
 from cogs.helpers import *
@@ -27,7 +26,7 @@ def mv(path, new_path, force=False, verbose=False):
         )
         if i.strip().lower() != "y":
             logging.warning("'mv' operation stopped")
-            sys.exit(0)
+            return
 
     # Get the tracked sheets
     tracked_sheets = get_tracked_sheets()
@@ -63,7 +62,7 @@ def mv(path, new_path, force=False, verbose=False):
             f".cogs/tracked/{selected_sheet}.tsv", f".cogs/tracked/{new_sheet_title}.tsv",
         )
         with open(".cogs/renamed.tsv", "a") as f:
-            f.write(f"{selected_sheet}\t{new_sheet_title}\t{new_path}\n")
+            f.write(f"{selected_sheet}\t{new_sheet_title}\t{new_path}\tlocal\n")
 
     # Get new rows of sheet.tsv to write
     rows = []
@@ -81,16 +80,7 @@ def mv(path, new_path, force=False, verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description"],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         writer.writerows(rows)
-
-
-def run(args):
-    """Wrapper for mv function."""
-    try:
-        mv(args.path, args.new_path, force=args.force, verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

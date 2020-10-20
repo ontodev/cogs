@@ -1,7 +1,19 @@
-import sys
+import csv
+import logging
+import os
+import re
 
 from cogs.exceptions import ApplyError
-from cogs.helpers import *
+from cogs.helpers import (
+    get_tracked_sheets,
+    update_data_validation,
+    get_sheet_formats,
+    get_sheet_notes,
+    update_note,
+    update_format,
+    validate_cogs_project,
+    set_logging,
+)
 from gspread_formatting import BooleanCondition
 
 
@@ -275,12 +287,3 @@ def apply(paths, verbose=False):
 
     if data_validation_tables:
         apply_data_validation(data_validation_tables)
-
-
-def run(args):
-    """Wrapper for apply function."""
-    try:
-        apply(args.paths, verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

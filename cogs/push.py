@@ -1,9 +1,24 @@
+import csv
 import gspread.exceptions
 import gspread.utils
 import gspread_formatting as gf
-import sys
+import logging
+import os
+import re
 
-from cogs.helpers import *
+from cogs.helpers import (
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+    get_config,
+    get_client_from_config,
+    get_renamed_sheets,
+    maybe_update_fields,
+    get_sheet_formats,
+    get_format_dict,
+    get_sheet_notes,
+    get_data_validation,
+)
 
 
 def msg():
@@ -80,6 +95,8 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
         details["ID"] = sheet.id
         sheet_rows.append(details)
 
+        logging.info(f"pushing data from {sheet_path} to remote sheet '{sheet_title}'")
+
         # Add new values to ws from local
         spreadsheet.values_update(
             f"{sheet_title}!A1", params={"valueInputOption": "RAW"}, body={"values": rows},
@@ -91,7 +108,8 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
         sheet.freeze(frozen_row, frozen_col)
 
         # Copy this table into COGS data
-        with open(f".cogs/tracked/{sheet_title}.tsv", "w") as f:
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+        with open(f".cogs/tracked/{path_name}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
     return headers, sheet_rows
@@ -215,7 +233,7 @@ def push(verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns",],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)
@@ -223,12 +241,3 @@ def push(verbose=False):
     # Remove renamed tracking
     if os.path.exists(".cogs/renamed.tsv"):
         os.remove(".cogs/renamed.tsv")
-
-
-def run(args):
-    """Wrapper for push function."""
-    try:
-        push(verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

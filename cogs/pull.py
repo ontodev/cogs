@@ -1,7 +1,9 @@
+import logging
+import os
+import re
 import shutil
-import sys
 
-from cogs.helpers import *
+from cogs.helpers import get_cached_sheets, get_renamed_sheets, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def msg():
@@ -15,9 +17,12 @@ def pull(verbose=False):
 
     cached_sheets = get_cached_sheets()
     tracked_sheets = get_tracked_sheets()
-    remove_sheets = [s for s in cached_sheets if s not in tracked_sheets.keys()]
+    tracked_cached = [re.sub(r"[^A-Za-z0-9]+", "_", x.lower()) for x in tracked_sheets.keys()]
+    remove_sheets = [s for s in cached_sheets if s not in tracked_cached]
+
     for sheet_title, details in tracked_sheets.items():
-        cached_sheet = f".cogs/tracked/{sheet_title}.tsv"
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+        cached_sheet = f".cogs/tracked/{path_name}.tsv"
         local_sheet = details["Path"]
         if os.path.exists(cached_sheet):
             logging.info(f"Writing '{sheet_title}' to {local_sheet}")
@@ -26,11 +31,10 @@ def pull(verbose=False):
         logging.info(f"Removing '{sheet_title}' from cached sheets")
         os.remove(f".cogs/tracked/{sheet_title}.tsv")
 
-
-def run(args):
-    """Wrapper for pull function."""
-    try:
-        pull(verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+    renamed_sheets = get_renamed_sheets()
+    renamed_local = {old: details for old, details in renamed_sheets.items() if details["where"] == "local"}
+    with open(".cogs/renamed.tsv", "w") as f:
+        for old_title, details in renamed_local.items():
+            new_title = details["new"]
+            path = details["path"]
+            f.write(f"{old_title}\t{new_title}\t{path}\tlocal\n")

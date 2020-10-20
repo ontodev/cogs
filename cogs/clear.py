@@ -1,8 +1,7 @@
 import csv
 import logging
-import sys
 
-from cogs.exceptions import ClearError, CogsError
+from cogs.exceptions import ClearError
 from cogs.helpers import (
     get_data_validation,
     get_sheet_formats,
@@ -115,12 +114,3 @@ def clear(keyword, on_sheets=None, verbose=False):
             clear_data_validation(st)
     else:
         raise ClearError("Unknown keyword: " + keyword)
-
-
-def run(args):
-    """Wrapper for clear function."""
-    try:
-        clear(args.keyword, on_sheets=args.sheets, verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

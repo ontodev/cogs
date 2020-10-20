@@ -9,18 +9,36 @@ def msg():
 
 
 def get_changes(tracked_sheets, renamed):
-    """Get sets of changes between local and remote sheets."""
+    """Get sets of changes between local and remote sheets. Return dict in format:
+    {"diffs": diffs built from daff (list of dicts),
+     "added local": added_local (sheet names),
+     "added remote": added_remote (sheet names),
+     "removed local": removed_local (sheet names),
+     "removed remote": removed_remote (sheet names)
+    }"""
     # Get all cached sheet titles that are not COGS defaults
     cached_sheet_titles = get_cached_sheets()
+    tracked_cached = []
 
     # Get all tracked sheet titles
     tracked_sheet_titles = list(tracked_sheets.keys())
+    for st in tracked_sheet_titles:
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", st.lower())
+        if path_name in cached_sheet_titles:
+            tracked_cached.append(path_name)
+
+    untracked_cached = [x for x in cached_sheet_titles if x not in tracked_cached]
 
     # Get tracked titles that have local copies
     local_sheet_titles = []
 
     # And tracked titles that have been pushed to remote (given ID)
     pushed_local_sheet_titles = []
+
+    renamed_remote = {
+        old: details for old, details in renamed.items() if details["where"] == "remote"
+    }
+    new_remote = [details["new"] for details in renamed_remote.values()]
 
     for sheet_title, details in tracked_sheets.items():
         local_sheet = details["Path"]
@@ -36,11 +54,11 @@ def get_changes(tracked_sheets, renamed):
     added_remote = []
     diffs = {}
 
-    all_sheets = set(local_sheet_titles + tracked_sheet_titles + cached_sheet_titles)
+    all_sheets = set(tracked_sheet_titles + untracked_cached)
     for sheet_title in all_sheets:
         # Is the sheet cached in .cogs?
         cached = False
-        if sheet_title in cached_sheet_titles:
+        if re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()) in cached_sheet_titles:
             cached = True
 
         # Is the sheet tracked in sheet.tsv?
@@ -67,7 +85,7 @@ def get_changes(tracked_sheets, renamed):
         elif not tracked and not local and cached and sheet_title not in renamed:
             # Removed locally and not yet pushed
             removed_local.append(sheet_title)
-        elif tracked and not local and cached:
+        elif tracked and not local and cached and sheet_title not in new_remote:
             # Added remotely and not yet pulled
             added_remote.append(sheet_title)
         else:
@@ -75,7 +93,12 @@ def get_changes(tracked_sheets, renamed):
             if sheet_title in renamed:
                 sheet_title = renamed[sheet_title]["new"]
             local_path = tracked_sheets[sheet_title]["Path"]
-            remote_path = f".cogs/tracked/{sheet_title}.tsv"
+            path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+            remote_path = f".cogs/tracked/{path_name}.tsv"
+
+            if not os.path.exists(local_path) or not os.path.exists(remote_path):
+                # Subject to a rename
+                continue
 
             # Check which version is newer based on file modification
             local_mod = os.path.getmtime(local_path)
@@ -118,7 +141,13 @@ def get_changes(tracked_sheets, renamed):
                     "changed_lines": changed_lines,
                 }
 
-    return diffs, added_local, added_remote, removed_local, removed_remote
+    return {
+        "diffs": diffs,
+        "added local": added_local,
+        "added remote": added_remote,
+        "removed local": removed_local,
+        "removed remote": removed_remote,
+    }
 
 
 def print_diff(sheet_title, path, diff):
@@ -176,31 +205,33 @@ def print_diff(sheet_title, path, diff):
         print(termcolor.colored(f"\t  -> {changed_lines} changed {line}", "cyan"))
 
 
-def status(verbose=False):
-    """Print the status of local sheets vs. remote sheets."""
-    set_logging(verbose)
-    validate_cogs_project()
+def print_status(changes, renamed, tracked_sheets):
+    """Using a dict of changes, print the status of the changed sheets in the project."""
+    diffs = changes["diffs"]
+    added_local = changes["added local"]
+    added_remote = changes["added remote"]
+    removed_local = changes["removed local"]
+    removed_remote = changes["removed remote"]
 
-    # Get the sets of changes
-    tracked_sheets = get_tracked_sheets()
-    renamed = get_renamed_sheets()
-    diffs, added_local, added_remote, removed_local, removed_remote = get_changes(
-        tracked_sheets, renamed
-    )
-
-    # Check to see if we have any changes
-    all_changes = set(
-        list(diffs.keys()) + added_local + added_remote + removed_local + removed_remote
-    )
-
-    if len(all_changes) == 0 and len(renamed) == 0:
-        print("Local sheets are up to date with remote spreadsheet.")
-        return
+    renamed_local = {
+        old: details for old, details in renamed.items() if details["where"] == "local"
+    }
+    renamed_remote = {
+        old: details for old, details in renamed.items() if details["where"] == "remote"
+    }
 
     # Print various changes
-    if len(renamed) > 0:
-        print(termcolor.colored("\nRenamed:", attrs=["bold"]))
+    if len(renamed_local) > 0:
+        print(termcolor.colored("\nRenamed locally:", attrs=["bold"]))
         print("  (use `cogs push` to update in remote spreadsheet)")
+        for old, details in renamed.items():
+            new = details["new"]
+            path = details["path"]
+            print(termcolor.colored(f"\t{old} -> {new} ({path})", "cyan"))
+
+    if len(renamed_remote) > 0:
+        print(termcolor.colored("\nRenamed remotely:", attrs=["bold"]))
+        print("  (use `cogs pull` to sync local with remote version)")
         for old, details in renamed.items():
             new = details["new"]
             path = details["path"]
@@ -259,10 +290,34 @@ def status(verbose=False):
     print("")
 
 
-def run(args):
-    """Wrapper for status function."""
-    try:
-        status(verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+def status(use_screen=True, verbose=False):
+    """Return a dict containing:
+    - changes (dict of new_version, added_cols, removed_cols, added_lines, removed_lines,
+      changed_lines built from daff)
+    - added local (sheet names)
+    - removed local (sheet names)
+    - added remote (sheet names)
+    - removed remote (sheet names)
+    If use_screen, print the status of local sheets vs. remote sheets."""
+    set_logging(verbose)
+    validate_cogs_project()
+
+    # Get the sets of changes
+    tracked_sheets = get_tracked_sheets()
+    renamed = get_renamed_sheets()
+    changes = get_changes(tracked_sheets, renamed)
+
+    # Get a count of all changes
+    change_count = set(
+        list(changes["diffs"].keys())
+        + changes["added local"]
+        + changes["added remote"]
+        + changes["removed local"]
+        + changes["removed remote"]
+    )
+    if len(change_count) == 0 and len(renamed) == 0:
+        return None
+
+    if use_screen:
+        print_status(changes, renamed, tracked_sheets)
+    return changes

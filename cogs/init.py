@@ -1,4 +1,3 @@
-import sys
 import warnings
 
 from cogs.exceptions import InitError
@@ -202,13 +201,14 @@ def write_data(sheet, title, credentials=None):
 
 def init(title, user=None, role=None, users_file=None, credentials=None, verbose=False):
     """Init a new .cogs configuration directory in the current working directory. If one already
-    exists, display an error message."""
+    exists, display an error message. Return True if project was created. Return False if a COGS
+    project already exists in the directory."""
     set_logging(verbose)
     cwd = os.getcwd()
     if os.path.exists(".cogs"):
         # Do not raise CogsError, or else .cogs/ will be deleted
         logging.critical(f"COGS project already exists in {cwd}/.cogs/")
-        sys.exit(1)
+        return False
 
     logging.info(f"initializing COGS project '{title}' in {cwd}/.cogs/")
     os.mkdir(".cogs")
@@ -241,21 +241,4 @@ def init(title, user=None, role=None, users_file=None, credentials=None, verbose
 
     # Write data to COGS directory
     write_data(spreadsheet, title, credentials=credentials)
-
-
-def run(args):
-    """Wrapper for init function."""
-    try:
-        init(
-            args.title,
-            user=args.user,
-            role=args.role,
-            users_file=args.users,
-            credentials=args.credentials,
-            verbose=args.verbose,
-        )
-    except CogsError as e:
-        logging.critical(str(e))
-        if os.path.exists(".cogs"):
-            os.rmdir(".cogs")
-        sys.exit(1)
+    return True

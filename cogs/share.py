@@ -1,6 +1,7 @@
-import sys
+import gspread.exceptions
+import logging
 
-from cogs.helpers import *
+from cogs.helpers import get_client_from_config, get_config, set_logging, validate_cogs_project
 
 
 def msg():
@@ -35,27 +36,3 @@ def share(email, role, verbose=False):
         share_spreadsheet(title, spreadsheet, email, "writer")
     else:
         raise RuntimeError("Unknown role passed to `share`: " + str(role))
-
-
-def run(args):
-    """Wrapper for share function."""
-    try:
-        if args.owner:
-            transfer = True
-            if not args.force:
-                resp = input(
-                    f"WARNING: Transferring ownership to {args.owner} will prevent COGS from "
-                    f"performing admin actions on the Spreadsheet. Do you wish to proceed? [y/n]\n"
-                )
-                if resp.lower().strip() != "y":
-                    print(f"Ownership of Spreadsheet will not be transferred.")
-                    transfer = False
-            if transfer:
-                share(args.owner, "owner", verbose=args.verbose)
-        if args.writer:
-            share(args.writer, "writer", verbose=args.verbose)
-        if args.reader:
-            share(args.reader, "reader", verbose=args.verbose)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

@@ -1,7 +1,4 @@
-import sys
-import tabulate
-
-from cogs.helpers import *
+from cogs.helpers import get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def msg():
@@ -19,13 +16,3 @@ def ls(verbose=False):
         sheet_details.append([sheet, "(" + details["Path"] + ")"])
 
     return sheet_details
-
-
-def run(args):
-    """Wrapper for ls function."""
-    try:
-        sheet_details = ls(verbose=args.verbose)
-        print(tabulate.tabulate(sheet_details, tablefmt="plain"))
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

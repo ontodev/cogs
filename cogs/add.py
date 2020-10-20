@@ -1,8 +1,10 @@
+import csv
+import logging
 import ntpath
-import sys
+import re
 
-from cogs.helpers import *
-from cogs.exceptions import CogsError, AddError
+from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_cogs_project
+from cogs.exceptions import AddError
 
 
 def msg():
@@ -96,19 +98,3 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
         )
 
     logging.info(f"{title} successfully added to project")
-
-
-def run(args):
-    """Wrapper for add function."""
-    try:
-        add(
-            args.path,
-            title=args.title,
-            description=args.description,
-            freeze_row=args.freeze_row,
-            freeze_column=args.freeze_column,
-            verbose=args.verbose,
-        )
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

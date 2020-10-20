@@ -132,8 +132,14 @@ def get_data_validation():
 
 
 def get_diff(local, remote):
-    """Return the diff between a local and remote sheet as a list of lines with formatting. The
-    remote table is the 'old' version and the local table is the 'new' version."""
+    """Return the diff between a local and remote sheet as a list of lines (list of cell values)
+    with daff 'highlighter' formatting. The 'highlight' is appended to the beginning of the line as:
+    - '+++' for added lines
+    - '->' for changed lines
+    - '...' for omitted rows
+    - '---' for removed lines
+    - '' for unchanged lines
+    The remote table is the 'old' version and the local table is the 'new' version."""
     local_data = []
     with open(local, "r") as f:
         # Local might be CSV or TSV
@@ -244,6 +250,15 @@ def get_sheet_notes():
     return sheet_to_notes
 
 
+def get_sheet_url(config=None):
+    """Return the URL of the spreadsheet."""
+    if not config:
+        validate_cogs_project()
+        config = get_config()
+    spreadsheet_id = config["Spreadsheet ID"]
+    return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+
+
 def get_renamed_sheets():
     """Get a set of renamed sheets from renamed.tsv as a dict of old name -> new name & path."""
     renamed = {}
@@ -251,10 +266,7 @@ def get_renamed_sheets():
         with open(".cogs/renamed.tsv", "r") as f:
             reader = csv.reader(f, delimiter="\t")
             for row in reader:
-                old = row[0]
-                new = row[1]
-                path = row[2]
-                renamed[old] = {"new": new, "path": path}
+                renamed[row[0]] = {"new": row[1], "path": row[2], "where": row[3]}
     return renamed
 
 
@@ -408,6 +420,20 @@ def update_data_validation(sheet_dv_rules, removed_titles):
         )
         writer.writeheader()
         writer.writerows(dv_rows)
+
+
+def update_sheet(sheet_details, removed_titles):
+    """"""
+    rows = [details for details in sheet_details if details["Title"] not in removed_titles]
+    with open(".cogs/sheet.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def validate_cogs_project():
