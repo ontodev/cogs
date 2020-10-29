@@ -5,10 +5,6 @@ from cogs.helpers import get_client, get_json_credentials, set_logging
 from cogs.init import write_data
 
 
-def msg():
-    return "Initialize a new COGS project by connecting an existing Google Sheet"
-
-
 def connect(key_or_url, credentials=None, force=False, verbose=False):
     """Connect an existing Google Spreadsheet to a new COGS project. Return True if project was
     created. Return False if a COGS project already exists in the directory."""

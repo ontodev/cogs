@@ -21,10 +21,6 @@ from cogs.helpers import (
 )
 
 
-def msg():
-    return "Push local sheets to the spreadsheet"
-
-
 def clear_remote_sheets(spreadsheet, renamed_local):
     """Clear all data from remote sheets and return a map of sheet title -> sheet obj."""
     remote_sheets = {}

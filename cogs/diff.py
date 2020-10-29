@@ -7,10 +7,6 @@ from cogs.exceptions import DiffError
 from cogs.helpers import get_diff, get_tracked_sheets, set_logging, validate_cogs_project
 
 
-def msg():
-    return "Show detailed changes between local & remote sheets"
-
-
 def close_screen(stdscr):
     """Reset curses options and end window."""
     # Clean up window

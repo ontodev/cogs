@@ -7,10 +7,6 @@ from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_c
 from cogs.exceptions import AddError
 
 
-def msg():
-    return "Add a table (TSV or CSV) to the project"
-
-
 def maybe_update_fields(headers):
     """Check fieldnames in headers and add to field.tsv if they do not exist."""
     fields = get_fields()

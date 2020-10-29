@@ -12,10 +12,6 @@ from cogs.helpers import (
 )
 
 
-def msg():
-    return "Clear formatting, notes, or data validation rules from one or more sheets"
-
-
 def clear_data_validation(sheet_title):
     """Remove all data validation rules from a sheet."""
     sheet_dv_rules = get_data_validation()

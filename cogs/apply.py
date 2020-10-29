@@ -54,10 +54,6 @@ data_validation_headers = ["table", "range", "condition", "value"]
 message_headers = ["table", "cell", "level", "rule id", "rule", "message", "suggestion"]
 
 
-def msg():
-    return "Apply a table to the spreadsheet"
-
-
 def apply_data_validation(data_valiation_tables):
     """Apply one or more data validation rules to the sheets."""
     tracked_sheets = get_tracked_sheets()

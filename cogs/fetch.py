@@ -41,10 +41,6 @@ class MemoryCache(Cache):
         MemoryCache._CACHE[url] = content
 
 
-def msg():
-    return "Fetch remote versions of sheets"
-
-
 def clean_data_validation_rules(dv_rules, str_to_rule):
     """Clean up the data validation rules retrieved from the sheets and format them to store in
     validiation.tsv. This also aggregates the rules by ranges."""
@@ -309,7 +305,10 @@ def fetch(verbose=False):
                         f"\n  - {old_path} will not be updated when running `cogs pull` "
                         f"\n  - changes to {old_path} will not be pushed to the remote spreadsheet"
                     )
-                    renamed_remote[local_title] = {"new": st, "path": re.sub(r"[^A-Za-z0-9]+", "_", st.lower()) + ".tsv"}
+                    renamed_remote[local_title] = {
+                        "new": st,
+                        "path": re.sub(r"[^A-Za-z0-9]+", "_", st.lower()) + ".tsv",
+                    }
             logging.info(f"Downloading remote sheet '{st}'")
 
         # Get frozen rows & columns

@@ -7,10 +7,6 @@ from cogs.exceptions import DeleteError
 from cogs.helpers import get_client_from_config, get_config, set_logging, validate_cogs_project
 
 
-def msg():
-    return "Delete the Google spreadsheet and COGS configuration"
-
-
 def delete(verbose=False):
     """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
     Remove .cogs directory."""

@@ -78,10 +78,6 @@ default_formats = {
 }
 
 
-def msg():
-    return "Init a new COGS project"
-
-
 def get_users(user=None, users_file=None, role=None):
     """Return a dict of user emails to their roles."""
     users = {}

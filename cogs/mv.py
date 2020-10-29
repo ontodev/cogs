@@ -5,10 +5,6 @@ from cogs.exceptions import MvError
 from cogs.helpers import *
 
 
-def msg():
-    return "Move a local sheet to a new path"
-
-
 def mv(path, new_path, force=False, verbose=False):
     """Move a local sheet to a new local path. If the file basename changes, the sheet title will
     also change."""

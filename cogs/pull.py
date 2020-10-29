@@ -3,11 +3,13 @@ import os
 import re
 import shutil
 
-from cogs.helpers import get_cached_sheets, get_renamed_sheets, get_tracked_sheets, set_logging, validate_cogs_project
-
-
-def msg():
-    return "Copy fetched sheets to their local paths"
+from cogs.helpers import (
+    get_cached_sheets,
+    get_renamed_sheets,
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+)
 
 
 def pull(verbose=False):
@@ -32,7 +34,9 @@ def pull(verbose=False):
         os.remove(f".cogs/tracked/{sheet_title}.tsv")
 
     renamed_sheets = get_renamed_sheets()
-    renamed_local = {old: details for old, details in renamed_sheets.items() if details["where"] == "local"}
+    renamed_local = {
+        old: details for old, details in renamed_sheets.items() if details["where"] == "local"
+    }
     with open(".cogs/renamed.tsv", "w") as f:
         for old_title, details in renamed_local.items():
             new_title = details["new"]
