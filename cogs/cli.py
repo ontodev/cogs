@@ -233,7 +233,7 @@ def main():
 def run_add(args):
     """Wrapper for add function."""
     try:
-        add.add(
+        add(
             args.path,
             title=args.title,
             description=args.description,
@@ -249,7 +249,7 @@ def run_add(args):
 def run_apply(args):
     """Wrapper for apply function."""
     try:
-        apply.apply(args.paths, verbose=args.verbose)
+        apply(args.paths, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -258,7 +258,7 @@ def run_apply(args):
 def run_clear(args):
     """Wrapper for clear function."""
     try:
-        clear.clear(args.keyword, on_sheets=args.sheets, verbose=args.verbose)
+        clear(args.keyword, on_sheets=args.sheets, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -267,7 +267,7 @@ def run_clear(args):
 def run_connect(args):
     """Wrapper for connect function."""
     try:
-        success = connect.connect(
+        success = connect(
             args.keyword, credentials=args.credentials, force=args.force, verbose=args.verbose
         )
         if not success:
@@ -290,7 +290,7 @@ def run_delete(args):
             if resp.lower().strip() != "y":
                 logging.warning("'delete' operation stopped")
                 sys.exit(0)
-        delete.delete(verbose=args.verbose)
+        delete(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -299,7 +299,7 @@ def run_delete(args):
 def run_diff(args):
     """Wrapper for diff function."""
     try:
-        has_diff = diff.diff(paths=args.paths, verbose=args.verbose)
+        has_diff = diff(paths=args.paths, verbose=args.verbose)
         if not has_diff:
             print("Local sheets are up to date with remote sheets (nothing to push or pull).\n")
     except CogsError as e:
@@ -310,7 +310,7 @@ def run_diff(args):
 def run_fetch(args):
     """Wrapper for fetch function."""
     try:
-        fetch.fetch(verbose=args.verbose)
+        fetch(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -319,7 +319,7 @@ def run_fetch(args):
 def run_init(args):
     """Wrapper for init function."""
     try:
-        success = init.init(
+        success = init(
             args.title,
             user=args.user,
             role=args.role,
@@ -341,7 +341,7 @@ def run_init(args):
 def run_ls(args):
     """Wrapper for ls function."""
     try:
-        sheet_details = ls.ls(verbose=args.verbose)
+        sheet_details = ls(verbose=args.verbose)
         print(tabulate.tabulate(sheet_details, tablefmt="plain"))
     except CogsError as e:
         logging.critical(str(e))
@@ -351,7 +351,7 @@ def run_ls(args):
 def run_mv(args):
     """Wrapper for mv function."""
     try:
-        mv.mv(args.path, args.new_path, force=args.force, verbose=args.verbose)
+        mv(args.path, args.new_path, force=args.force, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -368,7 +368,7 @@ def run_open(args):
 def run_pull(args):
     """Wrapper for pull function."""
     try:
-        pull.pull(verbose=args.verbose)
+        pull(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -377,7 +377,7 @@ def run_pull(args):
 def run_push(args):
     """Wrapper for push function."""
     try:
-        push.push(verbose=args.verbose)
+        push(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -386,7 +386,7 @@ def run_push(args):
 def run_rm(args):
     """Wrapper for rm function."""
     try:
-        rm.rm(args.paths, verbose=args.verbose)
+        rm(args.paths, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -406,11 +406,11 @@ def run_share(args):
                     print(f"Ownership of Spreadsheet will not be transferred.")
                     transfer = False
             if transfer:
-                share.share(args.owner, "owner", verbose=args.verbose)
+                share(args.owner, "owner", verbose=args.verbose)
         if args.writer:
-            share.share(args.writer, "writer", verbose=args.verbose)
+            share(args.writer, "writer", verbose=args.verbose)
         if args.reader:
-            share.share(args.reader, "reader", verbose=args.verbose)
+            share(args.reader, "reader", verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -419,7 +419,7 @@ def run_share(args):
 def run_status(args):
     """Wrapper for status function."""
     try:
-        changes = status.status(verbose=args.verbose)
+        changes = status(verbose=args.verbose)
         if not changes:
             print("Local sheets are up to date with remote sheets (nothing to push or pull).\n")
     except CogsError as e:
