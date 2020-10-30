@@ -181,7 +181,7 @@ def push(args):
     validate_cogs_project()
     config = get_config()
     gc = get_client_from_config(config)
-    spreadsheet = gc.open(config["Title"])
+    spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
 
     # Get tracked sheets
     tracked_sheets = get_tracked_sheets()

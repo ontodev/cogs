@@ -229,8 +229,7 @@ def fetch(args):
 
     config = get_config()
     gc = get_client_from_config(config)
-    title = config["Title"]
-    spreadsheet = gc.open(title)
+    spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
 
     # Get existing fields (headers) to see if we need to add/remove fields
     headers = []
