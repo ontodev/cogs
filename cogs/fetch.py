@@ -1,9 +1,29 @@
+import csv
 import datetime
+import json
+import logging
+import os
+import re
+
 import gspread.utils
 import gspread_formatting as gf
-import sys
 
-from cogs.helpers import *
+from cogs.helpers import (
+    get_credentials,
+    get_config,
+    get_format_dict,
+    get_renamed_sheets,
+    get_tracked_sheets,
+    get_cached_sheets,
+    set_logging,
+    validate_cogs_project,
+    get_client_from_config,
+    maybe_update_fields,
+    update_data_validation,
+    update_format,
+    update_note,
+    update_sheet,
+)
 from googleapiclient import discovery
 from googleapiclient.discovery_cache.base import Cache
 
@@ -11,6 +31,7 @@ from googleapiclient.discovery_cache.base import Cache
 class MemoryCache(Cache):
     """Workaround from https://github.com/googleapis/google-api-python-client/issues/325 -
     google-api-python-client is not compatible with oauth2client >= 4.0.0"""
+
     _CACHE = {}
 
     def get(self, url):
@@ -18,10 +39,6 @@ class MemoryCache(Cache):
 
     def set(self, url, content):
         MemoryCache._CACHE[url] = content
-
-
-def msg():
-    return "Fetch remote versions of sheets"
 
 
 def clean_data_validation_rules(dv_rules, str_to_rule):
@@ -70,9 +87,7 @@ def clean_data_validation_rules(dv_rules, str_to_rule):
         values = []
         for cv in dv_rule.condition.values:
             values.append(cv.userEnteredValue)
-        dv_rows.append(
-            {"Range": loc, "Condition": condition, "Value": ", ".join(values)}
-        )
+        dv_rows.append({"Range": loc, "Condition": condition, "Value": ", ".join(values)})
 
     return dv_rows
 
@@ -94,9 +109,7 @@ def get_cell_data(sheet):
     # Build service to send request & execute
     service = discovery.build("sheets", "v4", credentials=credentials, cache=MemoryCache())
     request = service.spreadsheets().get(
-        spreadsheetId=spreadsheet_id,
-        ranges=sheet_name,
-        fields="sheets(data(rowData(values(*))))",
+        spreadsheetId=spreadsheet_id, ranges=sheet_name, fields="sheets(data(rowData(values(*))))",
     )
     resp = request.execute()
 
@@ -163,35 +176,43 @@ def get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen):
     return all_sheets
 
 
-def remove_sheets(sheets, tracked_sheets, renamed_local):
+def remove_sheets(sheets, tracked_sheets, renamed_local, renamed_remote):
     """Remove tracked sheets that are no longer in the remote spreadsheet.
     Return the titles of these sheets."""
     # Get all cached sheet titles
     cached_sheet_titles = get_cached_sheets()
-    new_local_titles = [details["new"] for details in renamed_local.values()]
-    remote_titles = [x.title for x in sheets]
-    removed_titles = []
+    new_local_titles = {
+        re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()): details["new"]
+        for details in renamed_local.values()
+    }
+    new_remote_titles = {
+        re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()): details["new"]
+        for details in renamed_remote.values()
+    }
+    remote_titles = {re.sub(r"[^A-Za-z0-9]+", "_", x.title.lower()): x.title for x in sheets}
     for sheet_title in cached_sheet_titles:
-        if sheet_title not in remote_titles and sheet_title not in new_local_titles:
+        if (
+            sheet_title not in remote_titles
+            and sheet_title not in new_local_titles
+            and sheet_title not in new_remote_titles
+        ):
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
             if (
-                    sheet_title in tracked_sheets
-                    and tracked_sheets[sheet_title]["ID"].strip != ""
+                sheet_title in tracked_sheets and str(tracked_sheets[sheet_title]["ID"]).strip != ""
             ) or (sheet_title not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
-                removed_titles.append(sheet_title)
-                logging.info(f"Removing '{sheet_title}'")
-                os.remove(f".cogs/tracked/{sheet_title}.tsv")
-    return removed_titles
+                logging.info(f"Removing untracked '{sheet_title}'")
+                if os.path.exists(f".cogs/tracked/{sheet_title}.tsv"):
+                    os.remove(f".cogs/tracked/{sheet_title}.tsv")
+    return list(renamed_remote.keys())
 
 
 def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
     """Get the sheet details formatted for sheet.tsv."""
     sheet_paths = {
-        details["Path"]: loc_sheet_title
-        for loc_sheet_title, details in tracked_sheets.items()
+        details["Path"]: loc_sheet_title for loc_sheet_title, details in tracked_sheets.items()
     }
     if sheet_title in sheet_frozen:
         frozen = sheet_frozen[sheet_title]
@@ -208,9 +229,7 @@ def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
         sheet_path += f"_{td}.tsv"
     else:
         sheet_path += ".tsv"
-    logging.info(
-        f"new sheet '{sheet_title}' added to project with local path {sheet_path}"
-    )
+    logging.info(f"new sheet '{sheet_title}' added to project with local path {sheet_path}")
     details = {
         "ID": sid,
         "Title": sheet_title,
@@ -222,9 +241,9 @@ def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
     return details
 
 
-def fetch(args):
+def fetch(verbose=False):
     """Fetch all sheets from project spreadsheet to .cogs/ directory."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     config = get_config()
@@ -239,8 +258,7 @@ def fetch(args):
     remote_sheets = get_remote_sheets(sheets)
     tracked_sheets = get_tracked_sheets(include_no_id=False)
     id_to_title = {
-        int(details["ID"]): sheet_title
-        for sheet_title, details in tracked_sheets.items()
+        int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
     }
 
     # Get details about renamed sheets
@@ -251,9 +269,7 @@ def fetch(args):
     id_to_format = get_format_dict()
     if id_to_format:
         # Format to format ID
-        format_to_id = {
-            json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()
-        }
+        format_to_id = {json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()}
         # Next ID for new formats
         format_ids = list(id_to_format.keys())
         format_ids.sort()
@@ -273,9 +289,7 @@ def fetch(args):
         # Download the sheet as the renamed sheet if necessary
         if remote_title in renamed_local:
             st = renamed_local[remote_title]["new"]
-            logging.info(
-                f"Downloading remote sheet '{remote_title}' as {st} (renamed locally)"
-            )
+            logging.info(f"Downloading remote sheet '{remote_title}' as {st} (renamed locally)")
         else:
             st = remote_title
             if sheet.id in id_to_title:
@@ -290,7 +304,10 @@ def fetch(args):
                         f"\n  - {old_path} will not be updated when running `cogs pull` "
                         f"\n  - changes to {old_path} will not be pushed to the remote spreadsheet"
                     )
-                    renamed_remote[local_title] = {"new": st, "path": st + ".tsv"}
+                    renamed_remote[local_title] = {
+                        "new": st,
+                        "path": re.sub(r"[^A-Za-z0-9]+", "_", st.lower()) + ".tsv",
+                    }
             logging.info(f"Downloading remote sheet '{st}'")
 
         # Get frozen rows & columns
@@ -339,9 +356,7 @@ def fetch(args):
                 max_col = col
 
         # Cell label to format dict
-        cell_to_format = {
-            cell: data["format"] for cell, data in cells.items() if "format" in data
-        }
+        cell_to_format = {cell: data["format"] for cell, data in cells.items() if "format" in data}
 
         # Create a cell to format ID dict based on the format dict for each cell
         cell_to_format_id = {}
@@ -354,9 +369,7 @@ def fetch(args):
                     if not cell_range_end or cell_range_start == cell_range_end:
                         cell_to_format_id[cell_range_start] = last_fmt
                     else:
-                        cell_to_format_id[
-                            f"{cell_range_start}:{cell_range_end}"
-                        ] = last_fmt
+                        cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = last_fmt
                 last_fmt = None
                 cell_range_start = None
                 cell_range_end = None
@@ -398,14 +411,13 @@ def fetch(args):
             sheet_formats[st] = cell_to_format_id
 
         # Add the cell to note
-        cell_to_note = {
-            cell: data["note"] for cell, data in cells.items() if "note" in data
-        }
+        cell_to_note = {cell: data["note"] for cell, data in cells.items() if "note" in data}
         if cell_to_note:
             sheet_notes[st] = cell_to_note
 
         # Write values to .cogs/tracked/{sheet title}.tsv
-        with open(f".cogs/tracked/{st}.tsv", "w") as f:
+        sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", st.lower()).strip("_")
+        with open(f".cogs/tracked/{sheet_path}.tsv", "w") as f:
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)
@@ -423,7 +435,14 @@ def fetch(args):
     all_sheets = get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen)
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
-    removed_titles = remove_sheets(sheets, tracked_sheets, renamed_local)
+    removed_titles = remove_sheets(sheets, tracked_sheets, renamed_local, renamed_remote)
+
+    # Add renamed-remote
+    for old_title, details in renamed_remote.items():
+        with open(".cogs/renamed.tsv", "a") as f:
+            new_title = details["new"]
+            new_path = details["path"]
+            f.write(f"{old_title}\t{new_title}\t{new_path}\tremote\n")
 
     # Rewrite format.tsv and note.tsv with current remote formats & notes
     update_format(sheet_formats, removed_titles)
@@ -445,28 +464,4 @@ def fetch(args):
             all_sheets.append(details)
 
     # Then update sheet.tsv
-    with open(".cogs/sheet.tsv", "w") as f:
-        writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=[
-                "ID",
-                "Title",
-                "Path",
-                "Description",
-                "Frozen Rows",
-                "Frozen Columns",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(all_sheets)
-
-
-def run(args):
-    """Wrapper for fetch function."""
-    try:
-        fetch(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+    update_sheet(all_sheets, removed_titles)

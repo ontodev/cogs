@@ -85,14 +85,10 @@ def get_client(credentials_path=None):
         return gc
 
     except gspread.exceptions.APIError as e:
-        raise CogsError(
-            f"Unable to create a Client from credentials; {e.response.text}"
-        )
+        raise CogsError(f"Unable to create a Client from credentials; {e.response.text}")
     except google.auth.exceptions.RefreshError as e:
         if "invalid_grant" in str(e):
-            raise CogsError(
-                "Unable to create a Client; account for client_email cannot be found"
-            )
+            raise CogsError("Unable to create a Client; account for client_email cannot be found")
         else:
             raise CogsError(f"Unable to create a Client; {str(e)}")
 
@@ -136,8 +132,14 @@ def get_data_validation():
 
 
 def get_diff(local, remote):
-    """Return the diff between a local and remote sheet as a list of lines with formatting. The
-    remote table is the 'old' version and the local table is the 'new' version."""
+    """Return the diff between a local and remote sheet as a list of lines (list of cell values)
+    with daff 'highlighter' formatting. The 'highlight' is appended to the beginning of the line as:
+    - '+++' for added lines
+    - '->' for changed lines
+    - '...' for omitted rows
+    - '---' for removed lines
+    - '' for unchanged lines
+    The remote table is the 'old' version and the local table is the 'new' version."""
     local_data = []
     with open(local, "r") as f:
         # Local might be CSV or TSV
@@ -205,10 +207,7 @@ def get_fields():
 
 def get_format_dict():
     """Get a dict of numerical format ID -> the format dict."""
-    if (
-        os.path.exists(".cogs/formats.json")
-        and not os.stat(".cogs/formats.json").st_size == 0
-    ):
+    if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
         with open(".cogs/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
             return {int(k): v for k, v in fmt_dict.items()}
@@ -251,6 +250,15 @@ def get_sheet_notes():
     return sheet_to_notes
 
 
+def get_sheet_url(config=None):
+    """Return the URL of the spreadsheet."""
+    if not config:
+        validate_cogs_project()
+        config = get_config()
+    spreadsheet_id = config["Spreadsheet ID"]
+    return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+
+
 def get_renamed_sheets():
     """Get a set of renamed sheets from renamed.tsv as a dict of old name -> new name & path."""
     renamed = {}
@@ -258,10 +266,7 @@ def get_renamed_sheets():
         with open(".cogs/renamed.tsv", "r") as f:
             reader = csv.reader(f, delimiter="\t")
             for row in reader:
-                old = row[0]
-                new = row[1]
-                path = row[2]
-                renamed[old] = {"new": new, "path": path}
+                renamed[row[0]] = {"new": row[1], "path": row[2], "where": row[3]}
     return renamed
 
 
@@ -308,9 +313,7 @@ def maybe_update_fields(headers):
     fields = get_fields()
     update_fields = False
     # Determine if fields were removed
-    new_fields = {
-        re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers
-    }
+    new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
     remove_fields = [f for f in fields.keys() if f not in new_fields.keys()]
     if remove_fields:
         update_fields = True
@@ -361,15 +364,10 @@ def update_format(sheet_formats, removed_titles):
         if sheet_title in removed_titles:
             continue
         for cell, fmt in formats.items():
-            fmt_rows.append(
-                {"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt}
-            )
+            fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
@@ -389,10 +387,7 @@ def update_note(sheet_notes, removed_titles):
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(".cogs/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Note"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)
@@ -425,6 +420,20 @@ def update_data_validation(sheet_dv_rules, removed_titles):
         )
         writer.writeheader()
         writer.writerows(dv_rows)
+
+
+def update_sheet(sheet_details, removed_titles):
+    """"""
+    rows = [details for details in sheet_details if details["Title"] not in removed_titles]
+    with open(".cogs/sheet.tsv", "w") as f:
+        writer = csv.DictWriter(
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def validate_cogs_project():

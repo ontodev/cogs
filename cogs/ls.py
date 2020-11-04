@@ -1,16 +1,9 @@
-import sys
-import tabulate
-
-from cogs.helpers import *
+from cogs.helpers import get_tracked_sheets, set_logging, validate_cogs_project
 
 
-def msg():
-    return "Show all tracked sheets"
-
-
-def ls(args):
-    """Print a list of tracked files"""
-    set_logging(args.verbose)
+def ls(verbose=False):
+    """Return a list of [sheet, path] pairs."""
+    set_logging(verbose)
     validate_cogs_project()
 
     tracked_sheets = get_tracked_sheets()
@@ -18,13 +11,4 @@ def ls(args):
     for sheet, details in tracked_sheets.items():
         sheet_details.append([sheet, "(" + details["Path"] + ")"])
 
-    print(tabulate.tabulate(sheet_details, tablefmt="plain"))
-
-
-def run(args):
-    """Wrapper for fetch function."""
-    try:
-        ls(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+    return sheet_details

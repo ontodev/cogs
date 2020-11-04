@@ -1,7 +1,19 @@
-import sys
+import csv
+import logging
+import os
+import re
 
 from cogs.exceptions import ApplyError
-from cogs.helpers import *
+from cogs.helpers import (
+    get_tracked_sheets,
+    update_data_validation,
+    get_sheet_formats,
+    get_sheet_notes,
+    update_note,
+    update_format,
+    validate_cogs_project,
+    set_logging,
+)
 from gspread_formatting import BooleanCondition
 
 
@@ -40,10 +52,6 @@ conditions = [
 # expected headers for different tables
 data_validation_headers = ["table", "range", "condition", "value"]
 message_headers = ["table", "cell", "level", "rule id", "rule", "message", "suggestion"]
-
-
-def msg():
-    return "Apply a table to the spreadsheet"
 
 
 def apply_data_validation(data_valiation_tables):
@@ -177,7 +185,7 @@ def apply_messages(message_tables):
                 rule_name = row["rule"]
                 logging.info(f'Adding "{rule_name}" to {cell} as a(n) {level}')
             else:
-                logging.info(f'Adding message to {cell} as a(n) {level}')
+                logging.info(f"Adding message to {cell} as a(n) {level}")
 
             # Format the note
             if rule_name:
@@ -228,9 +236,7 @@ def clean_rule(sheet_title, loc, condition, value):
                 f"'{value}' has inappropriate length/content for condition type '{condition}'"
             )
         else:
-            raise ApplyError(
-                f"A value or values is required for condition type '{condition}'"
-            )
+            raise ApplyError(f"A value or values is required for condition type '{condition}'")
 
     return {
         "Sheet Title": sheet_title,
@@ -240,13 +246,11 @@ def clean_rule(sheet_title, loc, condition, value):
     }
 
 
-def apply(args):
+def apply(paths, verbose=False):
     """Apply a table to the spreadsheet. The type of table to 'apply' is based on the headers:
     standardized messages or data validation."""
     validate_cogs_project()
-    set_logging(args.verbose)
-
-    paths = args.paths
+    set_logging(verbose)
 
     message_tables = []
     data_validation_tables = []
@@ -279,12 +283,3 @@ def apply(args):
 
     if data_validation_tables:
         apply_data_validation(data_validation_tables)
-
-
-def run(args):
-    """Wrapper for apply function."""
-    try:
-        apply(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

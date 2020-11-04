@@ -1,10 +1,7 @@
-import sys
+import gspread.exceptions
+import logging
 
-from cogs.helpers import *
-
-
-def msg():
-    return "Share the spreadsheet with a user"
+from cogs.helpers import get_client_from_config, get_config, set_logging, validate_cogs_project
 
 
 def share_spreadsheet(title, spreadsheet, user, role):
@@ -16,9 +13,9 @@ def share_spreadsheet(title, spreadsheet, user, role):
         logging.error(f"Unable to share spreadsheet '{title}'\n" + e.response.text)
 
 
-def share(args):
+def share(email, role, verbose=False):
     """Share the project spreadsheet with email addresses as reader, writer, or owner."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
 
     config = get_config()
@@ -27,27 +24,11 @@ def share(args):
     spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
     title = spreadsheet.title
 
-    if args.owner:
-        resp = input(
-            f"WARNING: Transferring ownership to {args.owner} will prevent COGS from performing "
-            f"administrative actions on spreadsheet '{title}'. Do you wish to proceed? [y/n]\n"
-        )
-        if resp.lower().strip() == "y":
-            share_spreadsheet(title, spreadsheet, args.owner, "owner")
-        else:
-            print(f"Ownership of spreadsheet '{title}' will not be transferred.")
-
-    if args.reader:
-        share_spreadsheet(title, spreadsheet, args.reader, "reader")
-
-    if args.writer:
-        share_spreadsheet(title, spreadsheet, args.writer, "writer")
-
-
-def run(args):
-    """Wrapper for share function."""
-    try:
-        share(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+    if role == "owner":
+        share_spreadsheet(title, spreadsheet, email, "owner")
+    elif role == "reader":
+        share_spreadsheet(title, spreadsheet, email, "reader")
+    elif role == "writer":
+        share_spreadsheet(title, spreadsheet, email, "writer")
+    else:
+        raise RuntimeError("Unknown role passed to `share`: " + str(role))

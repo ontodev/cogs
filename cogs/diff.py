@@ -1,13 +1,10 @@
 import curses
-import sys
+import os
+import re
 import tabulate
 
 from cogs.exceptions import DiffError
-from cogs.helpers import *
-
-
-def msg():
-    return "Show detailed changes between local & remote sheets"
+from cogs.helpers import get_diff, get_tracked_sheets, set_logging, validate_cogs_project
 
 
 def close_screen(stdscr):
@@ -19,67 +16,52 @@ def close_screen(stdscr):
     curses.endwin()
 
 
-def get_lines(sheets):
+def get_diff_lines(diffs, sheet_details):
     """Return the lines for a diff as an array of pairs (text, formatting)."""
     lines = []
-    for sheet_title, details in sheets.items():
-        remote = f".cogs/tracked/{sheet_title}.tsv"
+    for sheet_title, sheet_diff in diffs.items():
+        details = sheet_details[sheet_title]
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+        remote = f".cogs/tracked/{path_name}.tsv"
         local = details["Path"]
-        if os.path.exists(local) and os.path.exists(remote):
-            sheet_diff = get_diff(local, remote)
-            if len(sheet_diff) > 1:
-                lines.append(("", None))
-                lines.append((f"--- {remote} (remote)", curses.A_BOLD))
-                lines.append((f"+++ {local} (local)", curses.A_BOLD))
-                has_col_changes = True
-                for c in set(sheet_diff[1]):
-                    if c != "+++" and c != "---":
-                        has_col_changes = False
-                        break
-                if has_col_changes:
-                    hs1 = sheet_diff.pop(0)
-                    hs2 = sheet_diff.pop(0)
-                    headers = []
-                    for idx in range(0, len(hs1)):
-                        h1 = hs1[idx]
-                        if h1 == "!":
-                            headers.append("")
-                        else:
-                            h2 = hs2[idx]
-                            headers.append(f"{h1}\n{h2}")
-                else:
-                    headers = sheet_diff.pop(0)
-                    headers[0] = ""
-                tab = tabulate.tabulate(sheet_diff, headers=headers)
-                for t in tab.split("\n"):
-                    if t.startswith("+++"):
-                        lines.append((t, curses.color_pair(2)))
-                    elif t.startswith("---") and not t.endswith("---"):
-                        lines.append((t, curses.color_pair(1)))
-                    elif t.startswith("->"):
-                        lines.append((t, curses.color_pair(3)))
+        if len(sheet_diff) > 1:
+            lines.append(("", None))
+            lines.append((f"--- {remote} (remote)", curses.A_BOLD))
+            lines.append((f"+++ {local} (local)", curses.A_BOLD))
+            has_col_changes = True
+            for c in set(sheet_diff[1]):
+                if c != "+++" and c != "---":
+                    has_col_changes = False
+                    break
+            if has_col_changes:
+                hs1 = sheet_diff.pop(0)
+                hs2 = sheet_diff.pop(0)
+                headers = []
+                for idx in range(0, len(hs1)):
+                    h1 = hs1[idx]
+                    if h1 == "!":
+                        headers.append("")
                     else:
-                        lines.append((t, None))
+                        h2 = hs2[idx]
+                        headers.append(f"{h1}\n{h2}")
+            else:
+                headers = sheet_diff.pop(0)
+                headers[0] = ""
+            tab = tabulate.tabulate(sheet_diff, headers=headers)
+            for t in tab.split("\n"):
+                if t.startswith("+++"):
+                    lines.append((t, curses.color_pair(2)))
+                elif t.startswith("---") and not t.endswith("---"):
+                    lines.append((t, curses.color_pair(1)))
+                elif t.startswith("->"):
+                    lines.append((t, curses.color_pair(3)))
+                else:
+                    lines.append((t, None))
     return lines
 
 
-def diff(args):
-    """Start a window with dynamic response to display the diffs for all provided paths."""
-    set_logging(args.verbose)
-    validate_cogs_project()
-
-    sheets = get_tracked_sheets()
-    paths = [details["Path"] for details in sheets.values()]
-    if args.paths:
-        for p in args.paths:
-            if p not in paths:
-                raise DiffError(f"sheet '{p}' is not part of the current project")
-        sheets = {
-            sheet_title: details
-            for sheet_title, details in sheets.items()
-            if details["Path"] in args.paths
-        }
-
+def display_diff(diffs, sheets):
+    """Display an interactive curses screen with the formatted daff diff lines."""
     # Init the curses screen
     stdscr = curses.initscr()
 
@@ -97,15 +79,13 @@ def diff(args):
     curses.init_pair(2, curses.COLOR_GREEN, -1)
     curses.init_pair(3, curses.COLOR_CYAN, -1)
 
-    # Get lines for the diff display
-    lines = get_lines(sheets)
+    # Get the lines to display
+    lines = get_diff_lines(diffs, sheets)
+
     if not lines:
         # Nothing to display
         close_screen(stdscr)
-        print(
-            "Local sheets are up to date with remote sheets (nothing to push or pull).\n"
-        )
-        return
+        return None
 
     try:
         stdscr.clear()
@@ -144,9 +124,7 @@ def diff(args):
 
             # Add a message when we hit the EOF
             if eof or rows > len(lines) - 2:
-                stdscr.addstr(
-                    rows - 1, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD
-                )
+                stdscr.addstr(rows - 1, 0, "~ end of diff", curses.color_pair(3) | curses.A_BOLD)
 
             # Display current position in diff
             if max_x < cols + x:
@@ -169,7 +147,7 @@ def diff(args):
             k = stdscr.getch()
             if k == ord("q"):
                 # Exit
-                return
+                return diffs
             elif k == ord("l"):
                 # Leftmost
                 x = 0
@@ -212,15 +190,43 @@ def diff(args):
                 if x > 0:
                     x -= 20
                 continue
-
     finally:
         close_screen(stdscr)
+    return diffs
 
 
-def run(args):
-    """Wrapper for diff function."""
-    try:
-        diff(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
+def diff(paths=None, use_screen=True, verbose=False):
+    """Return a dict of sheet title to daff diff lines. If no paths are provided, diff over all
+    sheets in the project. If use_screen, display an interactive curses screen with the diffs."""
+    set_logging(verbose)
+    validate_cogs_project()
+
+    sheets = get_tracked_sheets()
+    tracked_paths = [details["Path"] for details in sheets.values()]
+    if paths:
+        # Update sheets to diff
+        for p in paths:
+            if p not in tracked_paths:
+                raise DiffError(f"sheet '{p}' is not part of the current project")
+        sheets = {
+            sheet_title: details
+            for sheet_title, details in sheets.items()
+            if details["Path"] in paths
+        }
+
+    diffs = {}
+    for sheet_title, details in sheets.items():
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+        remote = f".cogs/tracked/{path_name}.tsv"
+        local = details["Path"]
+        if os.path.exists(local) and os.path.exists(remote):
+            sheet_diff = get_diff(local, remote)
+            diffs[sheet_title] = sheet_diff
+
+    if not diffs:
+        return None
+
+    if use_screen:
+        return display_diff(diffs, sheets)
+
+    return diffs

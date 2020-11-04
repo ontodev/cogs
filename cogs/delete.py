@@ -1,29 +1,18 @@
+import gspread
+import logging
+import os
 import shutil
-import sys
 
 from cogs.exceptions import DeleteError
-from cogs.helpers import *
+from cogs.helpers import get_client_from_config, get_config, set_logging, validate_cogs_project
 
 
-def msg():
-    return "Delete the Google spreadsheet and COGS configuration"
-
-
-def delete(args):
+def delete(verbose=False):
     """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
     Remove .cogs directory."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
     config = get_config()
-
-    if not args.force:
-        resp = input(
-            "WARNING: This task will permanently destroy the spreadsheet and all COGS data.\n"
-            "         Do you wish to proceed? [y/n]\n"
-        )
-        if resp.lower().strip() != "y":
-            logging.warning("'delete' operation stopped")
-            sys.exit(0)
 
     # Get a client to perform Sheet actions
     gc = get_client_from_config(config)
@@ -31,25 +20,14 @@ def delete(args):
     # Delete the Sheet
     title = config["Title"]
     cwd = os.getcwd()
-    print(f"Removing COGS project '{title}' from {cwd}")
+    logging.info(f"Removing COGS project '{title}' from {cwd}")
     try:
         ssid = config["Spreadsheet ID"]
         gc.del_spreadsheet(ssid)
     except gspread.exceptions.APIError as e:
-        raise DeleteError(
-            f"Unable to delete spreadsheet '{title}'\n" f"CAUSE: {e.response.text}"
-        )
+        raise DeleteError(f"Unable to delete spreadsheet '{title}'\n" f"CAUSE: {e.response.text}")
     logging.info(f"successfully deleted Google Sheet '{title}' ({ssid})")
 
     # Remove the COGS data
     if os.path.exists(".cogs"):
         shutil.rmtree(".cogs")
-
-
-def run(args):
-    """Wrapper for delete function."""
-    try:
-        delete(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)

@@ -1,13 +1,24 @@
+import csv
 import gspread.exceptions
 import gspread.utils
 import gspread_formatting as gf
-import sys
+import logging
+import os
+import re
 
-from cogs.helpers import *
-
-
-def msg():
-    return "Push local sheets to the spreadsheet"
+from cogs.helpers import (
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+    get_config,
+    get_client_from_config,
+    get_renamed_sheets,
+    maybe_update_fields,
+    get_sheet_formats,
+    get_format_dict,
+    get_sheet_notes,
+    get_data_validation,
+)
 
 
 def clear_remote_sheets(spreadsheet, renamed_local):
@@ -15,11 +26,7 @@ def clear_remote_sheets(spreadsheet, renamed_local):
     remote_sheets = {}
     for sheet in spreadsheet.worksheets():
         sheet_title = sheet.title
-        requests = {
-            "requests": [
-                {"updateCells": {"range": {"sheetId": sheet.id}, "fields": "*"}}
-            ]
-        }
+        requests = {"requests": [{"updateCells": {"range": {"sheetId": sheet.id}, "fields": "*"}}]}
         spreadsheet.batch_update(requests)
 
         if sheet_title in renamed_local:
@@ -84,11 +91,11 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
         details["ID"] = sheet.id
         sheet_rows.append(details)
 
+        logging.info(f"pushing data from {sheet_path} to remote sheet '{sheet_title}'")
+
         # Add new values to ws from local
         spreadsheet.values_update(
-            f"{sheet_title}!A1",
-            params={"valueInputOption": "RAW"},
-            body={"values": rows},
+            f"{sheet_title}!A1", params={"valueInputOption": "RAW"}, body={"values": rows},
         )
 
         # Add frozen rows & cols
@@ -97,7 +104,8 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
         sheet.freeze(frozen_row, frozen_col)
 
         # Copy this table into COGS data
-        with open(f".cogs/tracked/{sheet_title}.tsv", "w") as f:
+        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+        with open(f".cogs/tracked/{path_name}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
     return headers, sheet_rows
@@ -167,17 +175,15 @@ def push_notes(spreadsheet, sheet_notes, tracked_sheets):
         logging.info(f"adding {len(requests)} notes to spreadsheet")
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
-        logging.error(
-            f"Unable to add {len(requests)} notes to spreadsheet\n" + e.response.text
-        )
+        logging.error(f"Unable to add {len(requests)} notes to spreadsheet\n" + e.response.text)
 
 
-def push(args):
+def push(verbose=False):
     """Push local tables to the spreadsheet as sheets. Only the sheets in sheet.tsv will be
     pushed. If a sheet in the Sheet does not exist in the local sheet.tsv, it will be removed
     from the Sheet. Any sheet in sheet.tsv that does not exist in the Sheet will be created.
     Any sheet in sheet.tsv that does exist will be updated."""
-    set_logging(args.verbose)
+    set_logging(verbose)
     validate_cogs_project()
     config = get_config()
     gc = get_client_from_config(config)
@@ -223,14 +229,7 @@ def push(args):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=[
-                "ID",
-                "Title",
-                "Path",
-                "Description",
-                "Frozen Rows",
-                "Frozen Columns",
-            ],
+            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)
@@ -238,12 +237,3 @@ def push(args):
     # Remove renamed tracking
     if os.path.exists(".cogs/renamed.tsv"):
         os.remove(".cogs/renamed.tsv")
-
-
-def run(args):
-    """Wrapper for push function."""
-    try:
-        push(args)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
