@@ -21,8 +21,8 @@ def share(email, role, verbose=False):
     config = get_config()
     gc = get_client_from_config(config)
 
-    title = config["Title"]
-    spreadsheet = gc.open(title)
+    spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
+    title = spreadsheet.title
 
     if role == "owner":
         share_spreadsheet(title, spreadsheet, email, "owner")
