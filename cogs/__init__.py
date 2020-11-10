@@ -14,6 +14,7 @@ from cogs.push import push
 from cogs.rm import rm
 from cogs.share import share
 from cogs.status import status
+from cogs.helpers import get_sheet_url
 
 # Version of COGS
 __version__ = "0.0.1"
