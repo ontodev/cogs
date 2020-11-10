@@ -18,10 +18,10 @@ def rm(paths, verbose=False):
     """Remove a table (TSV or CSV) from the COGS project. 
     This updates sheet.tsv and field.tsv and delete the according cached file."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
     # Make sure the sheets exist
-    sheets = get_tracked_sheets()
+    sheets = get_tracked_sheets(cogs_dir)
 
     tracked_paths = [sheet["Path"] for sheet in sheets.values()]
     if len(set(tracked_paths) - set(tracked_paths)) > 0:
@@ -45,7 +45,7 @@ def rm(paths, verbose=False):
             raise RmError("Invalid title for sheet, cannot contain . or /")
 
     # Update sheet.tsv
-    with open(".cogs/sheet.tsv", "w") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
@@ -64,11 +64,11 @@ def rm(paths, verbose=False):
 
     for title, sheet in sheets.items():
         if (
-            not os.path.exists(f".cogs/tracked/{title}.tsv")
-            or os.stat(f".cogs/tracked/{title}.tsv").st_size == 0
+            not os.path.exists(f"{cogs_dir}/tracked/{title}.tsv")
+            or os.stat(f"{cogs_dir}/tracked/{title}.tsv").st_size == 0
         ):
             continue
-        path = f".cogs/tracked/{title}.tsv"
+        path = f"{cogs_dir}/tracked/{title}.tsv"
         with open(path, "r") as sheet_file:
             try:
                 reader = csv.DictReader(sheet_file, delimiter="\t")
@@ -84,9 +84,9 @@ def rm(paths, verbose=False):
 
     fields_to_remove = fields_candidates_for_removal - fields_all
 
-    original_fields = get_fields()
+    original_fields = get_fields(cogs_dir)
 
-    with open(".cogs/field.tsv", "w") as f:
+    with open(f"{cogs_dir}/field.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
@@ -100,8 +100,8 @@ def rm(paths, verbose=False):
                 writer.writerow(items)
 
     # Update formats and notes
-    sheet_formats = get_sheet_formats()
-    update_format(sheet_formats, sheets_to_remove.keys())
+    sheet_formats = get_sheet_formats(cogs_dir)
+    update_format(cogs_dir, sheet_formats, sheets_to_remove.keys())
 
-    sheet_notes = get_sheet_notes()
-    update_note(sheet_notes, sheets_to_remove.keys())
+    sheet_notes = get_sheet_notes(cogs_dir)
+    update_note(cogs_dir, sheet_notes, sheets_to_remove.keys())

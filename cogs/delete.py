@@ -11,8 +11,8 @@ def delete(verbose=False):
     """Read COGS configuration and delete the spreadsheet corresponding to the spreadsheet ID.
     Remove .cogs directory."""
     set_logging(verbose)
-    validate_cogs_project()
-    config = get_config()
+    cogs_dir = validate_cogs_project()
+    config = get_config(cogs_dir)
 
     # Get a client to perform Sheet actions
     gc = get_client_from_config(config)
@@ -29,5 +29,5 @@ def delete(verbose=False):
     logging.info(f"successfully deleted Google Sheet '{title}' ({ssid})")
 
     # Remove the COGS data
-    if os.path.exists(".cogs"):
-        shutil.rmtree(".cogs")
+    if os.path.exists(cogs_dir):
+        shutil.rmtree(cogs_dir)

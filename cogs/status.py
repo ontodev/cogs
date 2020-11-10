@@ -12,7 +12,7 @@ from cogs.helpers import (
 )
 
 
-def get_changes(tracked_sheets, renamed):
+def get_changes(cogs_dir, tracked_sheets, renamed):
     """Get sets of changes between local and remote sheets. Return dict in format:
     {"diffs": diffs built from daff (list of dicts),
      "added local": added_local (sheet names),
@@ -21,7 +21,7 @@ def get_changes(tracked_sheets, renamed):
      "removed remote": removed_remote (sheet names)
     }"""
     # Get all cached sheet titles that are not COGS defaults
-    cached_sheet_titles = get_cached_sheets()
+    cached_sheet_titles = get_cached_sheets(cogs_dir)
     tracked_cached = []
 
     # Get all tracked sheet titles
@@ -98,7 +98,7 @@ def get_changes(tracked_sheets, renamed):
                 sheet_title = renamed[sheet_title]["new"]
             local_path = tracked_sheets[sheet_title]["Path"]
             path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-            remote_path = f".cogs/tracked/{path_name}.tsv"
+            remote_path = f"{cogs_dir}/tracked/{path_name}.tsv"
 
             if not os.path.exists(local_path) or not os.path.exists(remote_path):
                 # Subject to a rename
@@ -304,12 +304,12 @@ def status(use_screen=True, verbose=False):
     - removed remote (sheet names)
     If use_screen, print the status of local sheets vs. remote sheets."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
     # Get the sets of changes
-    tracked_sheets = get_tracked_sheets()
-    renamed = get_renamed_sheets()
-    changes = get_changes(tracked_sheets, renamed)
+    tracked_sheets = get_tracked_sheets(cogs_dir)
+    renamed = get_renamed_sheets(cogs_dir)
+    changes = get_changes(cogs_dir, tracked_sheets, renamed)
 
     # Get a count of all changes
     change_count = set(

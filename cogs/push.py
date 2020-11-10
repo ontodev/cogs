@@ -184,14 +184,14 @@ def push(verbose=False):
     from the Sheet. Any sheet in sheet.tsv that does not exist in the Sheet will be created.
     Any sheet in sheet.tsv that does exist will be updated."""
     set_logging(verbose)
-    validate_cogs_project()
-    config = get_config()
+    cogs_dir = validate_cogs_project()
+    config = get_config(cogs_dir)
     gc = get_client_from_config(config)
     spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
 
     # Get tracked sheets
-    tracked_sheets = get_tracked_sheets()
-    renamed_local = get_renamed_sheets()
+    tracked_sheets = get_tracked_sheets(cogs_dir)
+    renamed_local = get_renamed_sheets(cogs_dir)
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws
@@ -207,17 +207,17 @@ def push(verbose=False):
             # Remove remote copy
             spreadsheet.del_worksheet(sheet)
             # Remove cached copy
-            if os.path.exists(f".cogs/tracked/{sheet_title}.tsv"):
-                os.remove(f".cogs/tracked/{sheet_title}.tsv")
+            if os.path.exists(f"{cogs_dir}/tracked/{sheet_title}.tsv"):
+                os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
 
     # Maybe update fields if they have changed
-    maybe_update_fields(headers)
+    maybe_update_fields(cogs_dir, headers)
 
     # Get formatting and notes on the sheets
-    sheet_formats = get_sheet_formats()
-    id_to_format = get_format_dict()
-    sheet_notes = get_sheet_notes()
-    data_validation = get_data_validation()
+    sheet_formats = get_sheet_formats(cogs_dir)
+    id_to_format = get_format_dict(cogs_dir)
+    sheet_notes = get_sheet_notes(cogs_dir)
+    data_validation = get_data_validation(cogs_dir)
 
     # Add formatting, notes, and data validation
     push_data_validation(spreadsheet, data_validation)
@@ -235,5 +235,5 @@ def push(verbose=False):
         writer.writerows(sheet_rows)
 
     # Remove renamed tracking
-    if os.path.exists(".cogs/renamed.tsv"):
-        os.remove(".cogs/renamed.tsv")
+    if os.path.exists(f"{cogs_dir}/renamed.tsv"):
+        os.remove(f"{cogs_dir}/renamed.tsv")
