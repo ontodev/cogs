@@ -31,7 +31,7 @@ def pull(verbose=False):
             shutil.copyfile(cached_sheet, local_sheet)
     for sheet_title in remove_sheets:
         logging.info(f"Removing '{sheet_title}' from cached sheets")
-        os.remove(f".cogs/tracked/{sheet_title}.tsv")
+        os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
 
     renamed_sheets = get_renamed_sheets(cogs_dir)
     renamed_local = {

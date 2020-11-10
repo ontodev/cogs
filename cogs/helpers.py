@@ -440,7 +440,8 @@ def update_sheet(cogs_dir, sheet_details, removed_titles):
 
 
 def validate_cogs_project():
-    """Validate that there is a valid COGS project in this directory. If not, raise an error."""
+    """Validate that there is a valid COGS project in this or the parents of this directory. If not,
+    raise an error. Return the absolute path of the .cogs directory."""
     cur_dir = os.getcwd()
     cogs_dir = None
     while cur_dir != "/":

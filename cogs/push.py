@@ -40,7 +40,7 @@ def clear_remote_sheets(spreadsheet, renamed_local):
     return remote_sheets
 
 
-def push_data(spreadsheet, tracked_sheets, remote_sheets):
+def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
     """Push all tracked sheets to the spreadsheet.
     Return all headers and rows to add to sheet.tsv."""
     headers = []
@@ -105,7 +105,7 @@ def push_data(spreadsheet, tracked_sheets, remote_sheets):
 
         # Copy this table into COGS data
         path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        with open(f".cogs/tracked/{path_name}.tsv", "w") as f:
+        with open(f"{cogs_dir}/tracked/{path_name}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
     return headers, sheet_rows
@@ -198,7 +198,7 @@ def push(verbose=False):
     remote_sheets = clear_remote_sheets(spreadsheet, renamed_local)
 
     # Add new data to the sheets in the Sheet and return headers & sheets details
-    headers, sheet_rows = push_data(spreadsheet, tracked_sheets, remote_sheets)
+    headers, sheet_rows = push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets)
 
     # Remove sheets from remote if needed
     for sheet_title, sheet in remote_sheets.items():
@@ -224,7 +224,7 @@ def push(verbose=False):
     push_formats(spreadsheet, id_to_format, sheet_formats)
     push_notes(spreadsheet, sheet_notes, tracked_sheets)
 
-    with open(".cogs/sheet.tsv", "w") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
