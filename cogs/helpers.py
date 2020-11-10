@@ -209,7 +209,7 @@ def get_format_dict(cogs_dir):
     """Get a dict of numerical format ID -> the format dict."""
     if (
         os.path.exists(f"{cogs_dir}/formats.json")
-        and not os.stat(".cogs/formats.json").st_size == 0
+        and not os.stat(f"{cogs_dir}/formats.json").st_size == 0
     ):
         with open(f"{cogs_dir}/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
