@@ -92,7 +92,7 @@ def clean_data_validation_rules(dv_rules, str_to_rule):
     return dv_rows
 
 
-def get_cell_data(sheet):
+def get_cell_data(cogs_dir, sheet):
     """Get cell data from a remote sheet. Cell data includes formatting and notes.
     Return as a map of cell location (e.g., B2) to {"format": dict, "note": str}."""
     # Label is the range of cells in a sheet (e.g., foo!A1:B2)
@@ -100,7 +100,7 @@ def get_cell_data(sheet):
     sheet_name = sheet.title
 
     # Retrieve the credentials object to send request
-    config = get_config()
+    config = get_config(cogs_dir)
     if "Credentials" in config:
         credentials = get_credentials(config["Credentials"])
     else:
@@ -176,11 +176,11 @@ def get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen):
     return all_sheets
 
 
-def remove_sheets(sheets, tracked_sheets, renamed_local, renamed_remote):
+def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remote):
     """Remove tracked sheets that are no longer in the remote spreadsheet.
     Return the titles of these sheets."""
     # Get all cached sheet titles
-    cached_sheet_titles = get_cached_sheets()
+    cached_sheet_titles = get_cached_sheets(cogs_dir)
     new_local_titles = {
         re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()): details["new"]
         for details in renamed_local.values()
@@ -204,8 +204,8 @@ def remove_sheets(sheets, tracked_sheets, renamed_local, renamed_remote):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
                 logging.info(f"Removing untracked '{sheet_title}'")
-                if os.path.exists(f".cogs/tracked/{sheet_title}.tsv"):
-                    os.remove(f".cogs/tracked/{sheet_title}.tsv")
+                if os.path.exists(f"{cogs_dir}/tracked/{sheet_title}.tsv"):
+                    os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
     return list(renamed_remote.keys())
 
 
@@ -244,9 +244,9 @@ def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
 def fetch(verbose=False):
     """Fetch all sheets from project spreadsheet to .cogs/ directory."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
-    config = get_config()
+    config = get_config(cogs_dir)
     gc = get_client_from_config(config)
     spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
 
@@ -256,17 +256,17 @@ def fetch(verbose=False):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_tracked_sheets(include_no_id=False)
+    tracked_sheets = get_tracked_sheets(cogs_dir, include_no_id=False)
     id_to_title = {
         int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
     }
 
     # Get details about renamed sheets
-    renamed_local = get_renamed_sheets()
+    renamed_local = get_renamed_sheets(cogs_dir)
     renamed_remote = {}
 
     # Format ID to format for cell formatting
-    id_to_format = get_format_dict()
+    id_to_format = get_format_dict(cogs_dir)
     if id_to_format:
         # Format to format ID
         format_to_id = {json.dumps(v, sort_keys=True): k for k, v in id_to_format.items()}
@@ -317,7 +317,7 @@ def fetch(verbose=False):
         }
 
         # Get the cells with format, value, and note from remote sheet
-        cells = get_cell_data(sheet)
+        cells = get_cell_data(cogs_dir, sheet)
 
         # Create a map of rule -> locs for data validation
         dv_rules = {}
@@ -417,7 +417,7 @@ def fetch(verbose=False):
 
         # Write values to .cogs/tracked/{sheet title}.tsv
         sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", st.lower()).strip("_")
-        with open(f".cogs/tracked/{sheet_path}.tsv", "w") as f:
+        with open(f"{cogs_dir}/tracked/{sheet_path}.tsv", "w") as f:
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)
@@ -425,32 +425,32 @@ def fetch(verbose=False):
                 headers.extend(lines[0])
 
     # Maybe update fields if they have changed
-    maybe_update_fields(headers)
+    maybe_update_fields(cogs_dir, headers)
 
     # Write or rewrite formats JSON with new dict
-    with open(".cogs/formats.json", "w") as f:
+    with open(f"{cogs_dir}/formats.json", "w") as f:
         f.write(json.dumps(id_to_format, sort_keys=True, indent=4))
 
     # Update local sheets details in sheet.tsv with new IDs & details for current tracked sheets
     all_sheets = get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen)
 
     # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
-    removed_titles = remove_sheets(sheets, tracked_sheets, renamed_local, renamed_remote)
+    removed_titles = remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remote)
 
     # Add renamed-remote
     for old_title, details in renamed_remote.items():
-        with open(".cogs/renamed.tsv", "a") as f:
+        with open(f"{cogs_dir}/renamed.tsv", "a") as f:
             new_title = details["new"]
             new_path = details["path"]
             f.write(f"{old_title}\t{new_title}\t{new_path}\tremote\n")
 
     # Rewrite format.tsv and note.tsv with current remote formats & notes
-    update_format(sheet_formats, removed_titles)
-    update_note(sheet_notes, removed_titles)
+    update_format(cogs_dir, sheet_formats, removed_titles)
+    update_note(cogs_dir, sheet_notes, removed_titles)
     # Remove old data validation rules and rewrite with new
-    with open(".cogs/validation.tsv", "w") as f:
+    with open(f"{cogs_dir}/validation.tsv", "w") as f:
         f.write("Sheet\tRange\tCondition\tValue\n")
-    update_data_validation(sheet_dv_rules, removed_titles)
+    update_data_validation(cogs_dir, sheet_dv_rules, removed_titles)
 
     # Get just the remote sheets that are not in local sheets
     new_sheets = {
@@ -464,4 +464,4 @@ def fetch(verbose=False):
             all_sheets.append(details)
 
     # Then update sheet.tsv
-    update_sheet(all_sheets, removed_titles)
+    update_sheet(cogs_dir, all_sheets, removed_titles)

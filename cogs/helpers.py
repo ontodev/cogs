@@ -27,11 +27,11 @@ required_keys = ["Spreadsheet ID", "Title"]
 credential_keys = []
 
 
-def get_cached_sheets():
+def get_cached_sheets(cogs_dir):
     """Return a list of names of cached sheets from .cogs/tracked. These are any sheets that have
     been downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may
     not be tracked in sheet.tsv."""
-    return [f.split(".")[0] for f in os.listdir(".cogs/tracked")]
+    return [f.split(".")[0] for f in os.listdir(f"{cogs_dir}/tracked")]
 
 
 def get_json_credentials(credentials_path=None):
@@ -101,10 +101,10 @@ def get_client_from_config(config):
         return get_client()
 
 
-def get_config():
+def get_config(cogs_dir):
     """Get the configuration for this project as a dict."""
     config = {}
-    with open(".cogs/config.tsv", "r") as f:
+    with open(f"{cogs_dir}/config.tsv", "r") as f:
         reader = csv.reader(f, delimiter="\t", lineterminator="\n")
         for row in reader:
             config[row[0]] = row[1]
@@ -114,10 +114,10 @@ def get_config():
     return config
 
 
-def get_data_validation():
+def get_data_validation(cogs_dir):
     """Get a dict of sheet title -> data validation rules."""
     sheet_to_dv_rules = {}
-    with open(".cogs/validation.tsv") as f:
+    with open(f"{cogs_dir}/validation.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
@@ -193,10 +193,10 @@ def get_diff(local, remote):
     return data_diff
 
 
-def get_fields():
+def get_fields(cogs_dir):
     """Get the current fields in this project from field.tsv as a dict of field name -> details."""
     fields = {}
-    with open(".cogs/field.tsv", "r") as f:
+    with open(f"{cogs_dir}/field.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             field = row["Field"]
@@ -205,19 +205,22 @@ def get_fields():
     return fields
 
 
-def get_format_dict():
+def get_format_dict(cogs_dir):
     """Get a dict of numerical format ID -> the format dict."""
-    if os.path.exists(".cogs/formats.json") and not os.stat(".cogs/formats.json").st_size == 0:
-        with open(".cogs/formats.json", "r") as f:
+    if (
+        os.path.exists(f"{cogs_dir}/formats.json")
+        and not os.stat(f"{cogs_dir}/formats.json").st_size == 0
+    ):
+        with open(f"{cogs_dir}/formats.json", "r") as f:
             fmt_dict = json.loads(f.read())
             return {int(k): v for k, v in fmt_dict.items()}
     return {}
 
 
-def get_sheet_formats():
+def get_sheet_formats(cogs_dir):
     """Get a dict of sheet ID -> formatted cells."""
     sheet_to_formats = {}
-    with open(".cogs/format.tsv") as f:
+    with open(f"{cogs_dir}/format.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
@@ -232,10 +235,10 @@ def get_sheet_formats():
     return sheet_to_formats
 
 
-def get_sheet_notes():
+def get_sheet_notes(cogs_dir):
     """Get a dict of sheet ID -> notes on cells."""
     sheet_to_notes = {}
-    with open(".cogs/note.tsv") as f:
+    with open(f"{cogs_dir}/note.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
@@ -253,28 +256,28 @@ def get_sheet_notes():
 def get_sheet_url(config=None):
     """Return the URL of the spreadsheet."""
     if not config:
-        validate_cogs_project()
-        config = get_config()
+        cogs_dir = validate_cogs_project()
+        config = get_config(cogs_dir)
     spreadsheet_id = config["Spreadsheet ID"]
     return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
 
 
-def get_renamed_sheets():
+def get_renamed_sheets(cogs_dir):
     """Get a set of renamed sheets from renamed.tsv as a dict of old name -> new name & path."""
     renamed = {}
-    if os.path.exists(".cogs/renamed.tsv"):
-        with open(".cogs/renamed.tsv", "r") as f:
+    if os.path.exists(f"{cogs_dir}/renamed.tsv"):
+        with open(f"{cogs_dir}/renamed.tsv", "r") as f:
             reader = csv.reader(f, delimiter="\t")
             for row in reader:
                 renamed[row[0]] = {"new": row[1], "path": row[2], "where": row[3]}
     return renamed
 
 
-def get_tracked_sheets(include_no_id=True):
+def get_tracked_sheets(cogs_dir, include_no_id=True):
     """Get the current tracked sheets in this project from sheet.tsv as a dict of sheet title ->
     path & ID. They may or may not have corresponding cached/local sheets."""
     sheets = {}
-    with open(".cogs/sheet.tsv", "r") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "r") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             title = row["Title"]
@@ -307,10 +310,10 @@ def is_valid_role(role):
     return role in ["writer", "reader"]
 
 
-def maybe_update_fields(headers):
+def maybe_update_fields(cogs_dir, headers):
     """Given a list of headers, check if any fields were added or removed and update the field.tsv
     if necessary."""
-    fields = get_fields()
+    fields = get_fields(cogs_dir)
     update_fields = False
     # Determine if fields were removed
     new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
@@ -332,7 +335,7 @@ def maybe_update_fields(headers):
 
     # Update the field file if fields were added or removed
     if update_fields:
-        with open(".cogs/field.tsv", "w") as f:
+        with open(f"{cogs_dir}/field.tsv", "w") as f:
             writer = csv.DictWriter(
                 f,
                 delimiter="\t",
@@ -353,10 +356,10 @@ def set_logging(verbose):
         logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
-def update_format(sheet_formats, removed_titles):
+def update_format(cogs_dir, sheet_formats, removed_titles):
     """Update format.tsv with current remote formatting.
     Remove any lines with a Sheet ID in removed_ids."""
-    current_sheet_formats = get_sheet_formats()
+    current_sheet_formats = get_sheet_formats(cogs_dir)
     fmt_rows = []
     for sheet_title, formats in sheet_formats.items():
         current_sheet_formats[sheet_title] = formats
@@ -365,7 +368,7 @@ def update_format(sheet_formats, removed_titles):
             continue
         for cell, fmt in formats.items():
             fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
-    with open(".cogs/format.tsv", "w") as f:
+    with open(f"{cogs_dir}/format.tsv", "w") as f:
         writer = csv.DictWriter(
             f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
@@ -373,10 +376,10 @@ def update_format(sheet_formats, removed_titles):
         writer.writerows(fmt_rows)
 
 
-def update_note(sheet_notes, removed_titles):
+def update_note(cogs_dir, sheet_notes, removed_titles):
     """Update note.tsv with current remote notes.
     Remove any lines with a Sheet ID in removed_ids."""
-    current_sheet_notes = get_sheet_notes()
+    current_sheet_notes = get_sheet_notes(cogs_dir)
     note_rows = []
     for sheet_title, notes in sheet_notes.items():
         current_sheet_notes[sheet_title] = notes
@@ -385,7 +388,7 @@ def update_note(sheet_notes, removed_titles):
             continue
         for cell, note in notes.items():
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
-    with open(".cogs/note.tsv", "w") as f:
+    with open(f"{cogs_dir}/note.tsv", "w") as f:
         writer = csv.DictWriter(
             f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
         )
@@ -393,10 +396,10 @@ def update_note(sheet_notes, removed_titles):
         writer.writerows(note_rows)
 
 
-def update_data_validation(sheet_dv_rules, removed_titles):
+def update_data_validation(cogs_dir, sheet_dv_rules, removed_titles):
     """"""
     # TODO - can we be smarter and error on overlap?
-    current_sheet_dv_rules = get_data_validation()
+    current_sheet_dv_rules = get_data_validation(cogs_dir)
     dv_rows = []
     for sheet_title, dv_rules in sheet_dv_rules.items():
         if sheet_title in current_sheet_dv_rules:
@@ -411,7 +414,7 @@ def update_data_validation(sheet_dv_rules, removed_titles):
         for row in dv_rules:
             row["Sheet Title"] = sheet_title
             dv_rows.append(row)
-    with open(".cogs/validation.tsv", "w") as f:
+    with open(f"{cogs_dir}/validation.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
@@ -422,10 +425,10 @@ def update_data_validation(sheet_dv_rules, removed_titles):
         writer.writerows(dv_rows)
 
 
-def update_sheet(sheet_details, removed_titles):
+def update_sheet(cogs_dir, sheet_details, removed_titles):
     """"""
     rows = [details for details in sheet_details if details["Title"] not in removed_titles]
-    with open(".cogs/sheet.tsv", "w") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
@@ -437,9 +440,19 @@ def update_sheet(sheet_details, removed_titles):
 
 
 def validate_cogs_project():
-    """Validate that there is a valid COGS project in this directory. If not, raise an error."""
-    if not os.path.exists(".cogs/") or not os.path.isdir(".cogs/"):
-        raise CogsError("A COGS project has not been initialized!")
+    """Validate that there is a valid COGS project in this or the parents of this directory. If not,
+    raise an error. Return the absolute path of the .cogs directory."""
+    cur_dir = os.getcwd()
+    cogs_dir = None
+    while cur_dir != "/":
+        if ".cogs" in os.listdir(cur_dir):
+            cogs_dir = os.path.join(cur_dir, ".cogs")
+        cur_dir = os.path.abspath(os.path.join(cur_dir, ".."))
+
+    if not cogs_dir:
+        raise CogsError("A COGS project has not been initialized in this or parent directories!")
     for r in required_files:
-        if not os.path.exists(f".cogs/{r}") or os.stat(f".cogs/{r}").st_size == 0:
-            raise CogsError(f"COGS directory is missing {r}")
+        if not os.path.exists(f"{cogs_dir}/{r}") or os.stat(f"{cogs_dir}/{r}").st_size == 0:
+            raise CogsError(f"COGS directory '{cogs_dir}' is missing {r}")
+
+    return cogs_dir
