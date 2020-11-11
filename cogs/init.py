@@ -78,16 +78,15 @@ default_formats = {
 }
 
 
-def get_users(user=None, users_file=None, role=None):
+def get_users(user=None, users_file=None, role="writer"):
     """Return a dict of user emails to their roles."""
     users = {}
 
     # Single user specified
     if user:
         if not role:
-            raise RuntimeError(
-                f"When passing a 'user', a 'role' must also be passed to `get_users`"
-            )
+            raise RuntimeError("'role' cannot be None'")
+
         # Validate the email
         if not is_email(user):
             raise InitError(f"{user} is not a valid email")
@@ -195,7 +194,7 @@ def write_data(sheet, title, credentials=None):
         writer.writeheader()
 
 
-def init(title, user=None, role=None, users_file=None, credentials=None, verbose=False):
+def init(title, user=None, role="writer", users_file=None, credentials=None, verbose=False):
     """Init a new .cogs configuration directory in the current working directory. If one already
     exists, display an error message. Return True if project was created. Return False if a COGS
     project already exists in the directory."""
