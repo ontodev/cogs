@@ -16,9 +16,9 @@ def share_spreadsheet(title, spreadsheet, user, role):
 def share(email, role, verbose=False):
     """Share the project spreadsheet with email addresses as reader, writer, or owner."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
-    config = get_config()
+    config = get_config(cogs_dir)
     gc = get_client_from_config(config)
 
     spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
