@@ -84,9 +84,6 @@ def get_users(user=None, users_file=None, role="writer"):
 
     # Single user specified
     if user:
-        if not role:
-            raise RuntimeError("'role' cannot be None'")
-
         # Validate the email
         if not is_email(user):
             raise InitError(f"{user} is not a valid email")
