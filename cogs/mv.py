@@ -9,7 +9,7 @@ def mv(path, new_path, force=False, verbose=False):
     """Move a local sheet to a new local path. If the file basename changes, the sheet title will
     also change."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
     if not os.path.exists(path):
         raise MvError(f"{path} does not exist")
@@ -25,7 +25,7 @@ def mv(path, new_path, force=False, verbose=False):
             return
 
     # Get the tracked sheets
-    tracked_sheets = get_tracked_sheets()
+    tracked_sheets = get_tracked_sheets(cogs_dir)
     path_to_sheet = {
         os.path.abspath(details["Path"]): sheet_title
         for sheet_title, details in tracked_sheets.items()
@@ -46,7 +46,7 @@ def mv(path, new_path, force=False, verbose=False):
     selected_sheet = path_to_sheet[cur_path]
     new_sheet_title = ntpath.basename(new_path).split(".")[0]
     if selected_sheet != new_sheet_title:
-        if os.path.exists(f".cogs/tracked/{new_sheet_title}.tsv"):
+        if os.path.exists(f"{cogs_dir}/tracked/{new_sheet_title}.tsv"):
             # A cached sheet with this name already exists
             existing_path = tracked_sheets[new_sheet_title]["Path"]
             raise MvError(
@@ -55,9 +55,9 @@ def mv(path, new_path, force=False, verbose=False):
             )
         logging.info(f"Renaming '{selected_sheet}' to '{new_sheet_title}'")
         shutil.copyfile(
-            f".cogs/tracked/{selected_sheet}.tsv", f".cogs/tracked/{new_sheet_title}.tsv",
+            f"{cogs_dir}/tracked/{selected_sheet}.tsv", f"{cogs_dir}/tracked/{new_sheet_title}.tsv",
         )
-        with open(".cogs/renamed.tsv", "a") as f:
+        with open(f"{cogs_dir}/renamed.tsv", "a") as f:
             f.write(f"{selected_sheet}\t{new_sheet_title}\t{new_path}\tlocal\n")
 
     # Get new rows of sheet.tsv to write
@@ -71,7 +71,7 @@ def mv(path, new_path, force=False, verbose=False):
         rows.append(details)
 
     # Rewrite sheet.tsv
-    with open(".cogs/sheet.tsv", "w") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "w") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",

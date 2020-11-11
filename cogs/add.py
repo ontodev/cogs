@@ -7,9 +7,9 @@ from cogs.helpers import get_fields, get_tracked_sheets, set_logging, validate_c
 from cogs.exceptions import AddError
 
 
-def maybe_update_fields(headers):
+def maybe_update_fields(cogs_dir, headers):
     """Check fieldnames in headers and add to field.tsv if they do not exist."""
-    fields = get_fields()
+    fields = get_fields(cogs_dir)
     update_fields = False
     for h in headers:
         field = re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_")
@@ -19,7 +19,7 @@ def maybe_update_fields(headers):
 
     # Update field.tsv if we need to
     if update_fields:
-        with open(".cogs/field.tsv", "w") as f:
+        with open(f"{cogs_dir}/field.tsv", "w") as f:
             writer = csv.DictWriter(
                 f,
                 delimiter="\t",
@@ -35,7 +35,7 @@ def maybe_update_fields(headers):
 def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbose=False):
     """Add a table (TSV or CSV) to the COGS project. This updates sheet.tsv and field.tsv."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
     # Open the provided file and make sure we can parse it as TSV or CSV
     if path.endswith(".csv"):
@@ -56,7 +56,7 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
         title = ntpath.basename(path).split(".")[0]
 
     # Make sure we aren't duplicating a table
-    local_sheets = get_tracked_sheets()
+    local_sheets = get_tracked_sheets(cogs_dir)
     if title in local_sheets:
         raise AddError(f"'{title}' sheet already exists in this project")
 
@@ -71,10 +71,10 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
         description = ""
 
     if headers:
-        maybe_update_fields(headers)
+        maybe_update_fields(cogs_dir, headers)
 
     # Finally, add this TSV to sheet.tsv
-    with open(".cogs/sheet.tsv", "a") as f:
+    with open(f"{cogs_dir}/sheet.tsv", "a") as f:
         writer = csv.DictWriter(
             f,
             delimiter="\t",

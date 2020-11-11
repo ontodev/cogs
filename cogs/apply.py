@@ -54,9 +54,9 @@ data_validation_headers = ["table", "range", "condition", "value"]
 message_headers = ["table", "cell", "level", "rule id", "rule", "message", "suggestion"]
 
 
-def apply_data_validation(data_valiation_tables):
+def apply_data_validation(cogs_dir, data_valiation_tables):
     """Apply one or more data validation rules to the sheets."""
-    tracked_sheets = get_tracked_sheets()
+    tracked_sheets = get_tracked_sheets(cogs_dir)
     add_dv_rules = {}
     for data_validation_table in data_valiation_tables:
         add_rows = []
@@ -77,14 +77,14 @@ def apply_data_validation(data_valiation_tables):
             dv_rules.append(row)
             add_dv_rules[sheet_title] = dv_rules
 
-    update_data_validation(add_dv_rules, [])
+    update_data_validation(cogs_dir, add_dv_rules, [])
 
 
-def apply_messages(message_tables):
+def apply_messages(cogs_dir, message_tables):
     """Apply one or more message tables (from dict reader) to the sheets as formats and notes."""
-    tracked_sheets = get_tracked_sheets()
+    tracked_sheets = get_tracked_sheets(cogs_dir)
     # Get existing formats
-    sheet_to_formats = get_sheet_formats()
+    sheet_to_formats = get_sheet_formats(cogs_dir)
 
     # Remove any formats that are "applied" (format ID 0, 1, or 2)
     sheet_to_manual_formats = {}
@@ -97,7 +97,7 @@ def apply_messages(message_tables):
     sheet_to_formats = sheet_to_manual_formats
 
     # Remove any notes that are "applied" (starts with ERROR, WARN, or INFO)
-    sheet_to_notes = get_sheet_notes()
+    sheet_to_notes = get_sheet_notes(cogs_dir)
     sheet_to_manual_notes = {}
     for sheet_title, cell_to_notes in sheet_to_notes.items():
         manual_notes = {}
@@ -209,8 +209,8 @@ def apply_messages(message_tables):
             sheet_to_notes[table] = cell_to_notes
 
     # Update formats & notes TSVs
-    update_note(sheet_to_notes, [])
-    update_format(sheet_to_formats, [])
+    update_note(cogs_dir, sheet_to_notes, [])
+    update_format(cogs_dir, sheet_to_formats, [])
 
 
 def clean_rule(sheet_title, loc, condition, value):
@@ -249,7 +249,7 @@ def clean_rule(sheet_title, loc, condition, value):
 def apply(paths, verbose=False):
     """Apply a table to the spreadsheet. The type of table to 'apply' is based on the headers:
     standardized messages or data validation."""
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
     set_logging(verbose)
 
     message_tables = []
@@ -279,7 +279,7 @@ def apply(paths, verbose=False):
                 raise ApplyError(f"The headers in table {p} are not valid for apply")
 
     if message_tables:
-        apply_messages(message_tables)
+        apply_messages(cogs_dir, message_tables)
 
     if data_validation_tables:
-        apply_data_validation(data_validation_tables)
+        apply_data_validation(cogs_dir, data_validation_tables)

@@ -16,13 +16,13 @@ def close_screen(stdscr):
     curses.endwin()
 
 
-def get_diff_lines(diffs, sheet_details):
+def get_diff_lines(cogs_dir, diffs, sheet_details):
     """Return the lines for a diff as an array of pairs (text, formatting)."""
     lines = []
     for sheet_title, sheet_diff in diffs.items():
         details = sheet_details[sheet_title]
         path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        remote = f".cogs/tracked/{path_name}.tsv"
+        remote = f"{cogs_dir}/tracked/{path_name}.tsv"
         local = details["Path"]
         if len(sheet_diff) > 1:
             lines.append(("", None))
@@ -60,7 +60,7 @@ def get_diff_lines(diffs, sheet_details):
     return lines
 
 
-def display_diff(diffs, sheets):
+def display_diff(cogs_dir, diffs, sheets):
     """Display an interactive curses screen with the formatted daff diff lines."""
     # Init the curses screen
     stdscr = curses.initscr()
@@ -80,7 +80,7 @@ def display_diff(diffs, sheets):
     curses.init_pair(3, curses.COLOR_CYAN, -1)
 
     # Get the lines to display
-    lines = get_diff_lines(diffs, sheets)
+    lines = get_diff_lines(cogs_dir, diffs, sheets)
 
     if not lines:
         # Nothing to display
@@ -199,9 +199,9 @@ def diff(paths=None, use_screen=True, verbose=False):
     """Return a dict of sheet title to daff diff lines. If no paths are provided, diff over all
     sheets in the project. If use_screen, display an interactive curses screen with the diffs."""
     set_logging(verbose)
-    validate_cogs_project()
+    cogs_dir = validate_cogs_project()
 
-    sheets = get_tracked_sheets()
+    sheets = get_tracked_sheets(cogs_dir)
     tracked_paths = [details["Path"] for details in sheets.values()]
     if paths:
         # Update sheets to diff
@@ -217,7 +217,7 @@ def diff(paths=None, use_screen=True, verbose=False):
     diffs = {}
     for sheet_title, details in sheets.items():
         path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        remote = f".cogs/tracked/{path_name}.tsv"
+        remote = f"{cogs_dir}/tracked/{path_name}.tsv"
         local = details["Path"]
         if os.path.exists(local) and os.path.exists(remote):
             sheet_diff = get_diff(local, remote)
@@ -227,6 +227,6 @@ def diff(paths=None, use_screen=True, verbose=False):
         return None
 
     if use_screen:
-        return display_diff(diffs, sheets)
+        return display_diff(cogs_dir, diffs, sheets)
 
     return diffs
