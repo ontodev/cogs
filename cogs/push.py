@@ -111,40 +111,68 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
     return headers, sheet_rows
 
 
-def push_data_validation(spreadsheet, data_validation):
+def push_data_validation(spreadsheet, data_validation, tracked_sheets):
     """Add data validation rules from validation.tsv to the spreadsheet."""
+    requests = []
     for sheet_title, dv_rules in data_validation.items():
-        worksheet = spreadsheet.worksheet(sheet_title)
+        sheet_id = tracked_sheets[sheet_title]["ID"]
         for dv_rule in dv_rules:
-            loc = dv_rule["Range"]
+            dv_range = dv_rule["Range"]
+            if ":" in dv_range:
+                start = dv_range.split(":")[0]
+                end = dv_range.split(":")[1]
+            else:
+                start = dv_range
+                end = dv_range
+            start_row, start_col = gspread.utils.a1_to_rowcol(start)
+            end_row, end_col = gspread.utils.a1_to_rowcol(end)
             condition = dv_rule["Condition"]
             value_str = dv_rule["Value"]
+            values = []
             if value_str != "":
-                # Split on non-escaped commas
-                value = re.compile(r"(?<!\\), ").split(value_str)
-            else:
-                value = []
-            # Remove escape character
-            value = [re.sub(r"\\([^\\])", r"\1", x) for x in value]
+                values = re.compile(r"(?<!\\), ").split(value_str)
+            values = [re.sub(r"\\([^\\])", r"\1", x) for x in values]
+            value_obj = []
+            for v in values:
+                value_obj.append({"userEnteredValue": v})
             show_ui = False
             if condition.endswith("LIST"):
                 show_ui = True
-            validation_rule = gf.DataValidationRule(
-                gf.BooleanCondition(condition, value), showCustomUi=show_ui
-            )
-            gf.set_data_validation_for_cell_range(worksheet, loc, validation_rule)
+            requests.append({"updateCells": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": start_row - 1,
+                    "endRowIndex": end_row,
+                    "startColumnIndex": start_col - 1,
+                    "endColumnIndex": end_col,
+                },
+                "rows": [
+                    {"values":
+                         {"dataValidation":
+                              {"condition": {"type": condition, "values": value_obj},
+                               "showCustomUi": show_ui}}}],
+                "fields": "dataValidation",
+            }})
+    if not requests:
+        return
+    try:
+        logging.info(f"adding {len(requests)} data validation rules to spreadsheet")
+        spreadsheet.batch_update({"requests": requests})
+    except gspread.exceptions.APIError as e:
+        logging.error(f"Unable to add {len(requests)} data validation rules to spreadsheet\n" + e.response.text)
 
 
 def push_formats(spreadsheet, id_to_format, sheet_formats):
     """Batch add formats to a spreadsheet."""
     for sheet_title, cell_to_format in sheet_formats.items():
-        sheet = spreadsheet.worksheet(sheet_title)
-        formats = []
+        worksheet = spreadsheet.worksheet(sheet_title)
+        requests = []
         for cell, fmt_id in cell_to_format.items():
             fmt = id_to_format[int(fmt_id)]
             cell_format = gf.CellFormat.from_props(fmt)
-            formats.append((cell, cell_format))
-        gf.format_cell_ranges(sheet, formats)
+            requests.append((cell, cell_format))
+        logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
+        gf.format_cell_ranges(worksheet, requests)
 
 
 def push_notes(spreadsheet, sheet_notes, tracked_sheets):
@@ -220,7 +248,7 @@ def push(verbose=False):
     data_validation = get_data_validation(cogs_dir)
 
     # Add formatting, notes, and data validation
-    push_data_validation(spreadsheet, data_validation)
+    push_data_validation(spreadsheet, data_validation, tracked_sheets)
     push_formats(spreadsheet, id_to_format, sheet_formats)
     push_notes(spreadsheet, sheet_notes, tracked_sheets)
 
