@@ -113,8 +113,13 @@ def apply_messages(cogs_dir, message_tables):
 
     # Read the message table to get the formats & notes to add
     for message_table in message_tables:
-
         for row in message_table:
+            # Check for cell location - skip if none
+            cell = row.get("cell")
+            if not cell or cell.strip() == "":
+                continue
+            cell = cell.upper()
+
             table = os.path.splitext(os.path.basename(row["table"]))[0]
             if table not in tracked_sheets:
                 # TODO - error? warning?
@@ -130,8 +135,6 @@ def apply_messages(cogs_dir, message_tables):
                 cell_to_notes = sheet_to_notes[table]
             else:
                 cell_to_notes = {}
-
-            cell = row["cell"].upper()
 
             # Check for current applied formats and/or notes
             current_fmt = -1
