@@ -50,6 +50,8 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
         except csv.Error as e:
             raise AddError(f"unable to read {path} as {fmt}\nCAUSE:{str(e)}")
         headers = reader.fieldnames
+        if not headers:
+            raise AddError(f"First row of {path} must contain headers")
 
     if not title:
         # Create the sheet title from file basename
