@@ -268,7 +268,7 @@ def run_connect(args):
     """Wrapper for connect function."""
     try:
         success = connect(
-            args.keyword, credentials=args.credentials, force=args.force, verbose=args.verbose
+            args.key, credentials=args.credentials, force=args.force, verbose=args.verbose
         )
         if not success:
             # Exit with error status without deleting COGS directory
