@@ -6,6 +6,7 @@ import logging
 import os
 import re
 
+from cogs.exceptions import PushError
 from cogs.helpers import (
     get_tracked_sheets,
     set_logging,
@@ -60,8 +61,11 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
             try:
                 header = next(reader)
             except StopIteration:
-                # No contents in file
-                header = None
+                # No contents in file, go to next
+                continue
+            if not header:
+                # Missing headers
+                raise PushError(f"First row of {sheet_path} must contain headers")
             if header:
                 rows.append(header)
                 headers.extend(header)

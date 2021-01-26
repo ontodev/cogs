@@ -34,5 +34,9 @@ class MvError(CogsError):
     """Used to indicate an error occurred during the mv step."""
 
 
+class PushError(CogsError):
+    """Used to indicate an error occurred during the push step."""
+
+
 class RmError(CogsError):
     """Used to indicate an error occurred during the rm step."""
