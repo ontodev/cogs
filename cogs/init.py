@@ -128,7 +128,8 @@ def get_users(user=None, users_file=None, role="writer"):
 
 
 def write_data(sheet, title, credentials=None):
-    """Create COGS data files: config.tsv, sheet.tsv, and field.tsv."""
+    """Create COGS data files in COGS directory: config.tsv, sheet.tsv, format.tsv, formats.json,
+    note.tsv, and validation.tsv."""
     # Create the "tracked" directory
     os.mkdir(".cogs/tracked")
 
@@ -152,17 +153,6 @@ def write_data(sheet, title, credentials=None):
             fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns",],
         )
         writer.writeheader()
-
-    # field.tsv contains the field headers used in the sheets
-    with open(".cogs/field.tsv", "w") as f:
-        writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Field", "Label", "Datatype", "Description"],
-        )
-        writer.writeheader()
-        writer.writerows(default_fields)
 
     # format.tsv contains all cells with formats -> format IDs
     with open(".cogs/format.tsv", "w") as f:

@@ -97,7 +97,7 @@ Otherwise, most commands succeed silently.
 
 ### `add`
 
-Running `add` will begin tracking a local TSV or CSV table. The table details (path, name/title, and description) get added to `.cogs/sheet.tsv` and all headers are added to `.cogs/field.tsv`, if they do not already exist with the default datatype of `cogs:text` (text string).
+Running `add` will begin tracking a local TSV or CSV table. The table details (path, name/title, and description) get added to `.cogs/sheet.tsv`.
 
 ```
 cogs add [path] -d "[description]"
@@ -332,7 +332,7 @@ Running `fetch` will sync the local `.cogs/` directory with all remote spreadshe
 cogs fetch
 ```
 
-This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/tracked/`, but will not overwrite the local versions specified by their path. As the sheets are downloaded, the fields are checked against existing fields in `.cogs/field.tsv` and any new fields are added with the default datatype of `cogs:text` (text string). Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
+This will download all sheets in the spreadsheet to that directory as `{sheet-title}.tsv` - this will overwrite the existing sheets in `.cogs/tracked/`, but will not overwrite the local versions specified by their path. Any sheets that have been added with `add` and then pushed to the remote sheet with `push` will be given their IDs in `.cogs/sheet.tsv`.
 
 `.cogs/format.tsv` and `.cogs/note.tsv` are also updated for any cell formatting or notes on cells, respectively. Each unique format is given a numerical ID and is stored as [CellFormat JSON](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#cellformat).
 
@@ -363,12 +363,12 @@ Options:
 - `-r`/`--role`: role of the user specified by `--user`: `writer` or `reader`
 - `-U`/`--users`: path to TSV containing emails and roles for multiple users (header optional)
 
-Three files are created in the `.cogs/` directory when running `init`:
+The following files are created in the `.cogs/` directory when running `init`:
 - `config.tsv`: COGS configuration, including the spreadsheet details 
-- `field.tsv`: Field names used in sheets (contains default COGS fields)
 - `format.tsv`: Sheet ID, cell location or range, and format IDs (the format for each format ID is stored as a JSON dictionary in `.cogs/formats.json`)
 - `note.tsv`: Sheet ID, cell location, and note for all notes
 - `sheet.tsv`: Sheet names in spreadsheet and details (empty) - the sheets correspond to local tables
+- `validation.tsv`: Data validation conditions
 
 All other tasks will fail if a COGS project has not been initialized in the working directory.
 
@@ -422,7 +422,7 @@ We recommend running `cogs push` after `cogs mv` to keep the remote spreadsheet 
 
 ### `rm`
 
-Running `rm` will stop tracking one or more local sheets. They are removed from `.cogs/sheet.tsv`, and the `.cogs/field.tsv` is updated to remove the fields that were unique to those sheets. Additionally, this does not delete any local copies of sheets specified by their paths.
+Running `rm` will stop tracking one or more local sheets. This does not delete any local copies of sheets specified by their paths.
 ```
 cogs rm [paths]
 ```

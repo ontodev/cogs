@@ -13,7 +13,6 @@ from cogs.helpers import (
     get_config,
     get_client_from_config,
     get_renamed_sheets,
-    maybe_update_fields,
     get_sheet_formats,
     get_format_dict,
     get_sheet_notes,
@@ -41,9 +40,7 @@ def clear_remote_sheets(spreadsheet, renamed_local):
 
 
 def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
-    """Push all tracked sheets to the spreadsheet.
-    Return all headers and rows to add to sheet.tsv."""
-    headers = []
+    """Push all tracked sheets to the spreadsheet. Return updated rows for sheet.tsv."""
     sheet_rows = []
     for sheet_title, details in tracked_sheets.items():
         sheet_path = details["Path"]
@@ -57,19 +54,11 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
             continue
         with open(sheet_path, "r") as f:
             reader = csv.reader(f, delimiter=delimiter)
-            try:
-                header = next(reader)
-            except StopIteration:
-                # No contents in file
-                header = None
-            if header:
-                rows.append(header)
-                headers.extend(header)
-                for row in reader:
-                    row_len = len(row)
-                    if row_len > cols:
-                        cols = row_len
-                    rows.append(row)
+            for row in reader:
+                row_len = len(row)
+                if row_len > cols:
+                    cols = row_len
+                rows.append(row)
 
         # Set sheet size
         if len(rows) < 500:
@@ -108,7 +97,7 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
         with open(f"{cogs_dir}/tracked/{path_name}.tsv", "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
-    return headers, sheet_rows
+    return sheet_rows
 
 
 def push_data_validation(spreadsheet, data_validation, tracked_sheets):
@@ -226,7 +215,7 @@ def push(verbose=False):
     remote_sheets = clear_remote_sheets(spreadsheet, renamed_local)
 
     # Add new data to the sheets in the Sheet and return headers & sheets details
-    headers, sheet_rows = push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets)
+    sheet_rows = push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets)
 
     # Remove sheets from remote if needed
     for sheet_title, sheet in remote_sheets.items():
@@ -237,9 +226,6 @@ def push(verbose=False):
             # Remove cached copy
             if os.path.exists(f"{cogs_dir}/tracked/{sheet_title}.tsv"):
                 os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
-
-    # Maybe update fields if they have changed
-    maybe_update_fields(cogs_dir, headers)
 
     # Get formatting and notes on the sheets
     sheet_formats = get_sheet_formats(cogs_dir)
