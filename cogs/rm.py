@@ -14,7 +14,7 @@ from cogs.helpers import (
 
 def rm(paths, verbose=False):
     """Remove a table (TSV or CSV) from the COGS project. 
-    This updates sheet.tsv and field.tsv and delete the according cached file."""
+    This updates sheet.tsv and deletes the corresponding cached file."""
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
 
