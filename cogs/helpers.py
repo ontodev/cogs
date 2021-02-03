@@ -14,7 +14,6 @@ from google.oauth2.service_account import Credentials
 
 required_files = [
     "config.tsv",
-    "field.tsv",
     "format.tsv",
     "note.tsv",
     "sheet.tsv",
@@ -193,18 +192,6 @@ def get_diff(local, remote):
     return data_diff
 
 
-def get_fields(cogs_dir):
-    """Get the current fields in this project from field.tsv as a dict of field name -> details."""
-    fields = {}
-    with open(f"{cogs_dir}/field.tsv", "r") as f:
-        reader = csv.DictReader(f, delimiter="\t")
-        for row in reader:
-            field = row["Field"]
-            del row["Field"]
-            fields[field] = row
-    return fields
-
-
 def get_format_dict(cogs_dir):
     """Get a dict of numerical format ID -> the format dict."""
     if (
@@ -308,44 +295,6 @@ def is_email(email):
 def is_valid_role(role):
     """Check if a string is a valid role for use with gspread."""
     return role in ["writer", "reader"]
-
-
-def maybe_update_fields(cogs_dir, headers):
-    """Given a list of headers, check if any fields were added or removed and update the field.tsv
-    if necessary."""
-    fields = get_fields(cogs_dir)
-    update_fields = False
-    # Determine if fields were removed
-    new_fields = {re.sub(r"[^A-Za-z0-9]+", "_", h.lower()).strip("_"): h for h in headers}
-    remove_fields = [f for f in fields.keys() if f not in new_fields.keys()]
-    if remove_fields:
-        update_fields = True
-        for rf in remove_fields:
-            del fields[rf]
-
-    # Determine if fields were added
-    for f, h in new_fields.items():
-        if f not in fields:
-            update_fields = True
-            fields[f] = {
-                "Label": h,
-                "Datatype": "cogs:text",
-                "Description": "",
-            }
-
-    # Update the field file if fields were added or removed
-    if update_fields:
-        with open(f"{cogs_dir}/field.tsv", "w") as f:
-            writer = csv.DictWriter(
-                f,
-                delimiter="\t",
-                lineterminator="\n",
-                fieldnames=["Field", "Label", "Datatype", "Description"],
-            )
-            writer.writeheader()
-            for field, items in fields.items():
-                items["Field"] = field
-                writer.writerow(items)
 
 
 def set_logging(verbose):

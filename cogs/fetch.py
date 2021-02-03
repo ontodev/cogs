@@ -18,7 +18,6 @@ from cogs.helpers import (
     set_logging,
     validate_cogs_project,
     get_client_from_config,
-    maybe_update_fields,
     update_data_validation,
     update_format,
     update_note,
@@ -250,9 +249,6 @@ def fetch(verbose=False):
     gc = get_client_from_config(config)
     spreadsheet = gc.open_by_key(config["Spreadsheet ID"])
 
-    # Get existing fields (headers) to see if we need to add/remove fields
-    headers = []
-
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
@@ -278,7 +274,7 @@ def fetch(verbose=False):
         format_to_id = {}
         next_fmt_id = 1
 
-    # Export the sheets as TSV to .cogs/ (while checking the fieldnames)
+    # Export the sheets as TSV to .cogs/
     # We also collect the formatting and note data for each sheet during this step
     sheet_formats = {}
     sheet_notes = {}
@@ -421,11 +417,6 @@ def fetch(verbose=False):
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)
-            if lines:
-                headers.extend(lines[0])
-
-    # Maybe update fields if they have changed
-    maybe_update_fields(cogs_dir, headers)
 
     # Write or rewrite formats JSON with new dict
     with open(f"{cogs_dir}/formats.json", "w") as f:
