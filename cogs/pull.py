@@ -1,3 +1,4 @@
+import csv
 import logging
 import os
 import re
@@ -10,6 +11,14 @@ from cogs.helpers import (
     set_logging,
     validate_cogs_project,
 )
+
+
+def copy_to_csv(cached_sheet, local_sheet):
+    """Copy a cached sheet (TSV) to its local CSV path as CSV."""
+    with open(local_sheet, "w") as fw:
+        writer = csv.writer(fw, lineterminator="\n")
+        with open(cached_sheet, "r") as fr:
+            writer.writerows(csv.reader(fr, delimiter="\t"))
 
 
 def pull(verbose=False):
@@ -28,7 +37,10 @@ def pull(verbose=False):
         local_sheet = details["Path"]
         if os.path.exists(cached_sheet):
             logging.info(f"Writing '{sheet_title}' to {local_sheet}")
-            shutil.copyfile(cached_sheet, local_sheet)
+            if local_sheet.endswith(".csv"):
+                copy_to_csv(cached_sheet, local_sheet)
+            else:
+                shutil.copyfile(cached_sheet, local_sheet)
     for sheet_title in remove_sheets:
         logging.info(f"Removing '{sheet_title}' from cached sheets")
         os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
