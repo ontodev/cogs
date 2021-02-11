@@ -70,7 +70,7 @@ def main():
     parser = ArgumentParser(usage=usage())
     global_parser = ArgumentParser(add_help=False)
     global_parser.add_argument("-v", "--verbose", help="Print logging", action="store_true")
-    subparsers = parser.add_subparsers(required=True, dest="cmd")
+    subparsers = parser.add_subparsers(dest="cmd")
 
     sp = subparsers.add_parser("version", parents=[global_parser])
     sp.set_defaults(func=version)
@@ -227,6 +227,10 @@ def main():
     sp.set_defaults(func=run_status)
 
     args = parser.parse_args()
+    if not hasattr(args, "func"):
+        print(usage())
+        print("ERROR: a command is required")
+        sys.exit(1)
     args.func(args)
 
 
