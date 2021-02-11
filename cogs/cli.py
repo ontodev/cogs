@@ -54,6 +54,7 @@ commands:
   delete    {delete_msg}
   diff      {diff_msg}
   fetch     {fetch_msg}
+  help      Print this message
   init      {init_msg}
   ls        {ls_msg}
   mv        {mv_msg}
@@ -72,6 +73,8 @@ def main():
     global_parser.add_argument("-v", "--verbose", help="Print logging", action="store_true")
     subparsers = parser.add_subparsers(dest="cmd")
 
+    sp = subparsers.add_parser("help", parents=[global_parser])
+    sp.set_defaults(func=run_help)
     sp = subparsers.add_parser("version", parents=[global_parser])
     sp.set_defaults(func=version)
 
@@ -318,6 +321,10 @@ def run_fetch(args):
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
+
+
+def run_help(args):
+    print(usage())
 
 
 def run_init(args):

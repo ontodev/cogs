@@ -33,3 +33,6 @@ jobs:
     - name: Unit Test
       run: |
         pytest
+    - name: Command Line Test
+      run: |
+        cogs help
