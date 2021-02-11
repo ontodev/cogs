@@ -15,14 +15,10 @@ from cogs.helpers import (
 
 def copy_to_csv(cached_sheet, local_sheet):
     """Copy a cached sheet (TSV) to its local CSV path as CSV."""
-    rows = []
-    with open(cached_sheet, "r") as f:
-        reader = csv.reader(f, delimiter="\t")
-        for row in reader:
-            rows.append(row)
-    with open(local_sheet, "w") as f:
-        writer = csv.writer(f, lineterminator="\n")
-        writer.writerows(rows)
+    with open(local_sheet, "w") as fw:
+        writer = csv.writer(fw, lineterminator="\n")
+        with open(cached_sheet, "r") as fr:
+            writer.writerows(csv.reader(fr, delimiter="\t"))
 
 
 def pull(verbose=False):
