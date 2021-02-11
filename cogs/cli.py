@@ -324,6 +324,7 @@ def run_fetch(args):
 
 
 def run_help(args):
+    """Wrapper for help function."""
     print(usage())
 
 
@@ -369,6 +370,7 @@ def run_mv(args):
 
 
 def run_open(args):
+    """Wrapper for open function."""
     try:
         print(helpers.get_sheet_url())
     except CogsError as e:
