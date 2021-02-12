@@ -49,7 +49,8 @@ we try to follow the familiar `git` interface and workflow:
 - [`cogs ls`](#ls) shows a list of currently-tracked sheet names and their local names
 - [`cogs status`](#status) summarizes the differences between tracked files and their copies in `.cogs/`
 - [`cogs diff`](#diff) shows detailed differences between local files and the spreadsheet
-- [`cogs pull`](#pull) overwrites local files with the data from the spreadsheet, if they have changed
+- [`cogs merge`](#merge) overwrites local files with the data from the spreadsheet, if they have changed
+- [`cogs pull`](#pull) combines fetch and merge
 
 There are some other commands that do not correspond to any `git` actions:
 
@@ -67,7 +68,6 @@ We recommend running `cogs push` after updating a local tracked sheet to keep th
 
 When updating a remote sheet, we recommend the following to keep the local sheets in sync:
 ```
-cogs fetch
 cogs pull
 ```
 
@@ -338,9 +338,9 @@ This will download all sheets in the spreadsheet to that directory as `{sheet-ti
 
 If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
 
-To sync the local version of sheets with the data in `.cogs/`, run [`cogs pull`](#pull).
+To sync the local version of sheets with the data in `.cogs/`, run [`cogs merge`](#merge).
 
-Note that if a sheet has been _renamed_ remotely, the old sheet title will be replaced with the new sheet title. Any changes made to the local file corresponding to the old title will not be synced with the remote spreadsheet. Instead, once you run `cogs pull`, a new sheet `{new-sheet-title}.tsv` will appear in the current working directory (the same as if a new sheet were created). It is the same as if you were to delete the old sheet remotely and create a new sheet remotely with the same contents. Use `cogs pull` to write the new path - the old local file will not be deleted.
+Note that if a sheet has been _renamed_ remotely, the old sheet title will be replaced with the new sheet title. Any changes made to the local file corresponding to the old title will not be synced with the remote spreadsheet. Instead, once you run `cogs merge`, a new sheet `{new-sheet-title}.tsv` will appear in the current working directory (the same as if a new sheet were created). It is the same as if you were to delete the old sheet remotely and create a new sheet remotely with the same contents. Use `cogs merge` to write the new path - the old local file will not be deleted.
 
 ### `init`
 
@@ -390,13 +390,13 @@ cogs open
 
 ### `pull`
 
-Running `pull` will sync local sheets with remote sheets after running `cogs fetch`.
+Running `pull` will sync local sheets with remote sheets. This combines `cogs fetch` and `cogs merge` into one step.
 
 ```
 cogs pull
 ```
 
-Note that if you make changes to a local sheet without running `cogs push`, then run `cogs fetch` and `cogs pull`, the local changes **will be overwritten**.
+Note that if you make changes to a local sheet without running `cogs push`, then run `cogs pull`, the local changes **will be overwritten**.
 
 ### `push`
 
@@ -407,6 +407,16 @@ cogs push
 ```
 
 This will also push all notes and formatting from `.cogs/format.tsv` and `.cogs/note.tsv`.
+
+### `merge`
+
+Running `merge` will sync local sheets with remote sheets after running `cogs fetch`.
+
+```
+cogs merge
+```
+
+Note that if you make changes to a local sheet without running `cogs push`, then run `cogs fetch && cogs merge`, the local changes **will be overwritten**.
 
 ### `mv`
 
