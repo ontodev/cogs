@@ -16,7 +16,7 @@ import cogs.helpers as helpers
 import cogs.init as init
 import cogs.ls as ls
 import cogs.mv as mv
-import cogs.pull as pull
+import cogs.merge as merge
 import cogs.push as push
 import cogs.rm as rm
 import cogs.share as share
@@ -35,9 +35,10 @@ diff_msg = "Show detailed changes between local & remote sheets"
 fetch_msg = "Fetch remote versions of sheets"
 init_msg = "Init a new COGS project"
 ls_msg = "Show all tracked sheets"
+merge_msg = "Copy fetched sheets to their local paths"
 mv_msg = "Move a local sheet to a new path"
 open_msg = "Display the Spreadsheet URL"
-pull_msg = "Copy fetched sheets to their local paths"
+pull_msg = "Fetch and merge tracked sheets"
 push_msg = "Push local sheets to the spreadsheet"
 rm_msg = "Remove a table (TSV or CSV) from the project"
 share_msg = "Share the spreadsheet with a user"
@@ -57,6 +58,7 @@ commands:
   help      Print this message
   init      {init_msg}
   ls        {ls_msg}
+  merge     {merge_msg}
   mv        {mv_msg}
   open      {open_msg}
   pull      {pull_msg}
@@ -168,6 +170,12 @@ def main():
     # ------------------------------- ls -------------------------------
     sp = subparsers.add_parser("ls", parents=[global_parser], description=ls_msg, usage="cogs ls")
     sp.set_defaults(func=run_ls)
+
+    # ------------------------------- merge -------------------------------
+    sp = subparsers.add_parser(
+        "merge", parents=[global_parser], description=pull_msg, usage="cogs merge"
+    )
+    sp.set_defaults(func=run_merge)
 
     # ------------------------------- mv -------------------------------
     sp = subparsers.add_parser(
@@ -360,6 +368,15 @@ def run_ls(args):
         sys.exit(1)
 
 
+def run_merge(args):
+    """Wrapper for merge function."""
+    try:
+        merge(verbose=args.verbose)
+    except CogsError as e:
+        logging.critical(str(e))
+        sys.exit(1)
+
+
 def run_mv(args):
     """Wrapper for mv function."""
     try:
@@ -381,7 +398,8 @@ def run_open(args):
 def run_pull(args):
     """Wrapper for pull function."""
     try:
-        pull(verbose=args.verbose)
+        fetch(verbose=args.verbose)
+        merge(verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

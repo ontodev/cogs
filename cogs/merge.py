@@ -21,7 +21,7 @@ def copy_to_csv(cached_sheet, local_sheet):
             writer.writerows(csv.reader(fr, delimiter="\t"))
 
 
-def pull(verbose=False):
+def merge(verbose=False):
     """Copy cached sheets to their local paths."""
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
