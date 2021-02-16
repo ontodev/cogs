@@ -36,6 +36,11 @@ def mv(path, new_path, force=False, verbose=False):
     if cur_path not in path_to_sheet:
         raise MvError(f"{path} is not a tracked sheet")
 
+    # Make sure the sheet we are moving is not ignored
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+    if path_to_sheet[cur_path] in ignore:
+        raise MvError(f"{path} is an ignored sheet and cannot be moved")
+
     # Move the local copy if it exists
     # If it doesn't exist, the user has already moved to the new path
     if os.path.exists(path):

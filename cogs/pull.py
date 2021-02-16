@@ -31,7 +31,12 @@ def pull(verbose=False):
     tracked_cached = [re.sub(r"[^A-Za-z0-9]+", "_", x.lower()) for x in tracked_sheets.keys()]
     remove_sheets = [s for s in cached_sheets if s not in tracked_cached]
 
+    # Get the list of ignored sheet titles
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+
     for sheet_title, details in tracked_sheets.items():
+        if sheet_title in ignore:
+            continue
         path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
         cached_sheet = f"{cogs_dir}/tracked/{path_name}.tsv"
         local_sheet = details["Path"]

@@ -1,4 +1,5 @@
 import csv
+import datetime
 import google.auth.exceptions
 import gspread
 import json
@@ -116,10 +117,14 @@ def get_config(cogs_dir):
 def get_data_validation(cogs_dir):
     """Get a dict of sheet title -> data validation rules."""
     sheet_to_dv_rules = {}
+    tracked_sheets = get_tracked_sheets(cogs_dir)
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
     with open(f"{cogs_dir}/validation.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
+            if sheet_title in ignore:
+                continue
             del row["Sheet Title"]
             if sheet_title in sheet_to_dv_rules:
                 dv_rules = sheet_to_dv_rules[sheet_title]
@@ -204,13 +209,33 @@ def get_format_dict(cogs_dir):
     return {}
 
 
+def get_new_path(tracked_sheets, sheet):
+    """Create a distinct sheet path for a sheet."""
+    sheet_paths = {
+        details["Path"]: loc_sheet_title for loc_sheet_title, details in tracked_sheets.items()
+    }
+    sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet.lower()).strip("_")
+    # Make sure the path is unique - the user can change this later
+    if sheet_path + ".tsv" in sheet_paths.keys():
+        # Append datetime if this path already exists
+        td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        sheet_path += f"_{td}.tsv"
+    else:
+        sheet_path += ".tsv"
+    return sheet_path
+
+
 def get_sheet_formats(cogs_dir):
     """Get a dict of sheet ID -> formatted cells."""
     sheet_to_formats = {}
+    tracked_sheets = get_tracked_sheets(cogs_dir)
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
     with open(f"{cogs_dir}/format.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
+            if sheet_title in ignore:
+                continue
             cell = row["Cell"]
             fmt = int(row["Format ID"])
             if sheet_title in sheet_to_formats:
@@ -225,10 +250,14 @@ def get_sheet_formats(cogs_dir):
 def get_sheet_notes(cogs_dir):
     """Get a dict of sheet ID -> notes on cells."""
     sheet_to_notes = {}
+    tracked_sheets = get_tracked_sheets(cogs_dir)
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
     with open(f"{cogs_dir}/note.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             sheet_title = row["Sheet Title"]
+            if sheet_title in ignore:
+                continue
             cell = row["Cell"]
             note = row["Note"]
             if sheet_title in sheet_to_notes:
@@ -382,7 +411,15 @@ def update_sheet(cogs_dir, sheet_details, removed_titles):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         writer.writeheader()
         writer.writerows(rows)

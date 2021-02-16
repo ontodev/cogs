@@ -13,6 +13,7 @@ def test_modules():
         "exceptions",
         "fetch",
         "helpers",
+        "ignore",
         "init",
         "ls",
         "mv",

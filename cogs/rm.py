@@ -1,4 +1,5 @@
 import csv
+import os
 
 from cogs.exceptions import RmError
 from cogs.helpers import (
@@ -20,12 +21,23 @@ def rm(paths, verbose=False):
 
     # Make sure the sheets exist
     sheets = get_tracked_sheets(cogs_dir)
+    path_to_sheet = {
+        os.path.abspath(details["Path"]): sheet_title for sheet_title, details in sheets.items()
+    }
 
-    tracked_paths = [sheet["Path"] for sheet in sheets.values()]
-    if len(set(tracked_paths) - set(tracked_paths)) > 0:
-        raise RmError(
-            f"unable to remove untracked file(s): {' '.join(set(paths)-set(tracked_paths))}."
-        )
+    # Check for either untracked or ignored sheets in provided paths
+    ignore = [x for x, y in sheets.items() if y.get("Ignore") == "True"]
+    untracked = []
+    ignored = []
+    for p in paths:
+        if p not in path_to_sheet:
+            untracked.append(p)
+        elif path_to_sheet[p] in ignore:
+            ignored.append(p)
+    if untracked:
+        raise RmError(f"unable to remove untracked file(s): {', '.join(untracked)}.")
+    if ignored:
+        raise RmError(f"unable to remove ignored file(s): {', '.join(ignored)}")
 
     sheets_to_remove = {title: sheet for title, sheet in sheets.items() if sheet["Path"] in paths}
 
@@ -48,7 +60,15 @@ def rm(paths, verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         writer.writeheader()
         for title, sheet in sheets.items():

@@ -1,5 +1,4 @@
 import csv
-import datetime
 import json
 import logging
 import os
@@ -9,15 +8,16 @@ import gspread.utils
 import gspread_formatting as gf
 
 from cogs.helpers import (
+    get_cached_sheets,
+    get_client_from_config,
     get_credentials,
     get_config,
     get_format_dict,
+    get_new_path,
     get_renamed_sheets,
     get_tracked_sheets,
-    get_cached_sheets,
     set_logging,
     validate_cogs_project,
-    get_client_from_config,
     update_data_validation,
     update_format,
     update_note,
@@ -210,9 +210,7 @@ def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remot
 
 def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
     """Get the sheet details formatted for sheet.tsv."""
-    sheet_paths = {
-        details["Path"]: loc_sheet_title for loc_sheet_title, details in tracked_sheets.items()
-    }
+
     if sheet_title in sheet_frozen:
         frozen = sheet_frozen[sheet_title]
         frozen_row = frozen["row"]
@@ -220,14 +218,7 @@ def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
     else:
         frozen_row = 0
         frozen_col = 0
-    sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()).strip("_")
-    # Make sure the path is unique - the user can change this later
-    if sheet_path + ".tsv" in sheet_paths.keys():
-        # Append datetime if this path already exists
-        td = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        sheet_path += f"_{td}.tsv"
-    else:
-        sheet_path += ".tsv"
+    sheet_path = get_new_path(tracked_sheets, sheet_title)
     logging.info(f"new sheet '{sheet_title}' added to project with local path {sheet_path}")
     details = {
         "ID": sid,
@@ -252,9 +243,11 @@ def fetch(verbose=False):
     # Get the remote sheets from spreadsheet
     sheets = spreadsheet.worksheets()
     remote_sheets = get_remote_sheets(sheets)
-    tracked_sheets = get_tracked_sheets(cogs_dir, include_no_id=False)
+    tracked_sheets = get_tracked_sheets(cogs_dir, include_no_id=True)
     id_to_title = {
-        int(details["ID"]): sheet_title for sheet_title, details in tracked_sheets.items()
+        int(details["ID"]): sheet_title
+        for sheet_title, details in tracked_sheets.items()
+        if details.get("ID")
     }
 
     # Get details about renamed sheets
@@ -280,8 +273,13 @@ def fetch(verbose=False):
     sheet_notes = {}
     sheet_dv_rules = {}
     sheet_frozen = {}
+
     for sheet in sheets:
         remote_title = sheet.title
+        if tracked_sheets[remote_title].get("Ignore", "False") == "True":
+            logging.info(f"Skipping ignored sheet '{remote_title}'...")
+            continue
+
         # Download the sheet as the renamed sheet if necessary
         if remote_title in renamed_local:
             st = renamed_local[remote_title]["new"]

@@ -20,11 +20,15 @@ from cogs.helpers import (
 )
 
 
-def clear_remote_sheets(spreadsheet, renamed_local):
+def clear_remote_sheets(spreadsheet, tracked_sheets, renamed_local):
     """Clear all data from remote sheets and return a map of sheet title -> sheet obj."""
     remote_sheets = {}
     for sheet in spreadsheet.worksheets():
         sheet_title = sheet.title
+        if sheet_title in tracked_sheets and tracked_sheets[sheet_title].get("Ignore") == "True":
+            remote_sheets[sheet_title] = sheet
+            continue
+
         requests = {"requests": [{"updateCells": {"range": {"sheetId": sheet.id}, "fields": "*"}}]}
         spreadsheet.batch_update(requests)
 
@@ -43,6 +47,11 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
     """Push all tracked sheets to the spreadsheet. Return updated rows for sheet.tsv."""
     sheet_rows = []
     for sheet_title, details in tracked_sheets.items():
+        if details.get("Ignore", "False") == "True":
+            logging.info(f"Skipping ignored sheet '{sheet_title}'")
+            details["Title"] = sheet_title
+            sheet_rows.append(details)
+            continue
         sheet_path = details["Path"]
         delimiter = "\t"
         if sheet_path.endswith(".csv"):
@@ -127,28 +136,40 @@ def push_data_validation(spreadsheet, data_validation, tracked_sheets):
             show_ui = False
             if condition.endswith("LIST"):
                 show_ui = True
-            requests.append({"updateCells": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": start_row - 1,
-                    "endRowIndex": end_row,
-                    "startColumnIndex": start_col - 1,
-                    "endColumnIndex": end_col,
-                },
-                "rows": [
-                    {"values":
-                         {"dataValidation":
-                              {"condition": {"type": condition, "values": value_obj},
-                               "showCustomUi": show_ui}}}],
-                "fields": "dataValidation",
-            }})
+            requests.append(
+                {
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": start_row - 1,
+                            "endRowIndex": end_row,
+                            "startColumnIndex": start_col - 1,
+                            "endColumnIndex": end_col,
+                        },
+                        "rows": [
+                            {
+                                "values": {
+                                    "dataValidation": {
+                                        "condition": {"type": condition, "values": value_obj},
+                                        "showCustomUi": show_ui,
+                                    }
+                                }
+                            }
+                        ],
+                        "fields": "dataValidation",
+                    }
+                }
+            )
     if not requests:
         return
     try:
         logging.info(f"adding {len(requests)} data validation rules to spreadsheet")
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
-        logging.error(f"Unable to add {len(requests)} data validation rules to spreadsheet\n" + e.response.text)
+        logging.error(
+            f"Unable to add {len(requests)} data validation rules to spreadsheet\n"
+            + e.response.text
+        )
 
 
 def push_formats(spreadsheet, id_to_format, sheet_formats):
@@ -212,7 +233,7 @@ def push(verbose=False):
 
     # Clear existing sheets (wait to delete any that were removed)
     # If we delete first, could throw error where we try to delete the last remaining ws
-    remote_sheets = clear_remote_sheets(spreadsheet, renamed_local)
+    remote_sheets = clear_remote_sheets(spreadsheet, tracked_sheets, renamed_local)
 
     # Add new data to the sheets in the Sheet and return headers & sheets details
     sheet_rows = push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets)
@@ -243,7 +264,15 @@ def push(verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         writer.writeheader()
         writer.writerows(sheet_rows)

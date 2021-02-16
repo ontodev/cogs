@@ -80,15 +80,19 @@ def clear(keyword, on_sheets=None, verbose=False):
 
     # Validate sheets
     tracked_sheets = get_tracked_sheets(cogs_dir)
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
 
     if not on_sheets:
         # If no sheet was supplied, clear from all
-        on_sheets = tracked_sheets.keys()
+        on_sheets = [x for x in tracked_sheets.keys() if x not in ignore]
 
     untracked = []
     for st in on_sheets:
         if st not in tracked_sheets.keys():
             untracked.append(st)
+        if st in ignore:
+            logging.error(f"Cannot clear from ignored sheet '{st}' - this will be ignored")
+            on_sheets.remove(st)
     if untracked:
         raise ClearError(
             f"The following sheet(s) are not part of this project: " + ", ".join(untracked)

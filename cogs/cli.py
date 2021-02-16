@@ -13,6 +13,7 @@ import cogs.delete as delete
 import cogs.diff as diff
 import cogs.fetch as fetch
 import cogs.helpers as helpers
+import cogs.ignore as ignore
 import cogs.init as init
 import cogs.ls as ls
 import cogs.mv as mv
@@ -33,6 +34,7 @@ connect_msg = "Initialize a new COGS project by connecting an existing Google Sh
 delete_msg = "Delete the Google spreadsheet and COGS configuration"
 diff_msg = "Show detailed changes between local & remote sheets"
 fetch_msg = "Fetch remote versions of sheets"
+ignore_msg = "Ignore a sheet"
 init_msg = "Init a new COGS project"
 ls_msg = "Show all tracked sheets"
 mv_msg = "Move a local sheet to a new path"
@@ -55,6 +57,7 @@ commands:
   diff      {diff_msg}
   fetch     {fetch_msg}
   help      Print this message
+  ignore    {ignore_msg}
   init      {init_msg}
   ls        {ls_msg}
   mv        {mv_msg}
@@ -148,6 +151,16 @@ def main():
         "fetch", parents=[global_parser], description=fetch_msg, usage="cogs fetch"
     )
     sp.set_defaults(func=run_fetch)
+
+    # ------------------------------- ignore -------------------------------
+    sp = subparsers.add_parser(
+        "ignore", parents=[global_parser], description=ignore_msg, usage="cogs ignore [TITLE]"
+    )
+    sp.add_argument("title", help="Title of sheet to ignore")
+    sp.add_argument(
+        "-r", "--revert", help="Revert an ignored sheet to be tracked", action="store_true"
+    )
+    sp.set_defaults(func=run_ignore)
 
     # ------------------------------- init -------------------------------
     sp = subparsers.add_parser(
@@ -326,6 +339,15 @@ def run_fetch(args):
 def run_help(args):
     """Wrapper for help function."""
     print(usage())
+
+
+def run_ignore(args):
+    """Wrapper for ignore function."""
+    try:
+        ignore(args.title, revert=args.revert, verbose=args.verbose)
+    except CogsError as e:
+        logging.critical(str(e))
+        sys.exit(1)
 
 
 def run_init(args):

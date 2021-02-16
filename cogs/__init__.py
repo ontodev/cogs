@@ -6,6 +6,7 @@ from cogs.connect import connect
 from cogs.delete import delete
 from cogs.diff import diff
 from cogs.fetch import fetch
+from cogs.ignore import ignore
 from cogs.init import init
 from cogs.ls import ls
 from cogs.mv import mv

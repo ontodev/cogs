@@ -7,8 +7,16 @@ def ls(verbose=False):
     cogs_dir = validate_cogs_project()
 
     tracked_sheets = get_tracked_sheets(cogs_dir)
-    sheet_details = []
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+    sheet_details = [["Tracked:"]]
     for sheet, details in tracked_sheets.items():
-        sheet_details.append([sheet, "(" + details["Path"] + ")"])
+        if sheet in ignore:
+            continue
+        sheet_details.append([" - " + sheet, "(" + details["Path"] + ")"])
+    if ignore:
+        sheet_details.append([])
+        sheet_details.append(["Ignored:"])
+        for i in ignore:
+            sheet_details.append([" - " + i])
 
     return sheet_details

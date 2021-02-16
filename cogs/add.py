@@ -11,14 +11,6 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
 
-    # Open the provided file and make sure we can parse it as TSV or CSV
-    if path.endswith(".csv"):
-        delimiter = ","
-        fmt = "CSV"
-    else:
-        delimiter = "\t"
-        fmt = "TSV"
-
     if not title:
         # Create the sheet title from file basename
         title = ntpath.basename(path).split(".")[0]
@@ -44,7 +36,15 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         # ID gets filled in when we add it to the Sheet
         writer.writerow(
@@ -55,6 +55,7 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
                 "Description": description,
                 "Frozen Rows": freeze_row,
                 "Frozen Columns": freeze_column,
+                "Ignore": False,
             }
         )
 

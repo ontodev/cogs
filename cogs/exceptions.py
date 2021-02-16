@@ -26,6 +26,10 @@ class FetchError(CogsError):
     """Used to indicate an error occurred during the fetch step."""
 
 
+class IgnoreError(CogsError):
+    """Used to indicate an error occurred during the ignore step."""
+
+
 class InitError(CogsError):
     """Used to indicate an error occurred during the init step."""
 
