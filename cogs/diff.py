@@ -220,7 +220,8 @@ def diff(paths=None, use_screen=True, verbose=False):
         remote = f"{cogs_dir}/tracked/{path_name}.tsv"
         local = details["Path"]
         if os.path.exists(local) and os.path.exists(remote):
-            sheet_diff = get_diff(local, remote)
+            # Consider "remote" the old version to diff off of
+            sheet_diff = get_diff(remote, local)
             diffs[sheet_title] = sheet_diff
 
     if not diffs:

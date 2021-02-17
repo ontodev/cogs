@@ -130,19 +130,18 @@ def get_data_validation(cogs_dir):
     return sheet_to_dv_rules
 
 
-def get_diff(local, remote):
-    """Return the diff between a local and remote sheet as a list of lines (list of cell values)
-    with daff 'highlighter' formatting. The 'highlight' is appended to the beginning of the line as:
+def get_diff(left, right):
+    """Return the diff between a left (old) and right (new) sheet as a list of lines (list of cell
+    values) with daff 'highlighter' formatting. The 'highlight' is appended to the beginning of the
+    line as:
     - '+++' for added lines
     - '->' for changed lines
     - '...' for omitted rows
     - '---' for removed lines
-    - '' for unchanged lines
-    The remote table is the 'old' version and the local table is the 'new' version."""
-    local_data = []
-    with open(local, "r") as f:
-        # Local might be CSV or TSV
-        if local.endswith("csv"):
+    - '' for unchanged lines"""
+    left_data = []
+    with open(left, "r") as f:
+        if left.endswith("csv"):
             reader = csv.reader(f)
         else:
             reader = csv.reader(f, delimiter="\t")
@@ -152,36 +151,38 @@ def get_diff(local, remote):
             # No data
             header = None
         if header:
-            local_data.append(header)
+            left_data.append(header)
             for row in reader:
                 if len(row) < len(header):
                     add = [""] * (len(header) - len(row))
                     row.extend(add)
-                local_data.append(row)
+                left_data.append(row)
 
-    remote_data = []
-    with open(remote, "r") as f:
-        # Remote is always TSV
-        reader = csv.reader(f, delimiter="\t")
+    right_data = []
+    with open(right, "r") as f:
+        if right.endswith("csv"):
+            reader = csv.reader(f)
+        else:
+            reader = csv.reader(f, delimiter="\t")
         try:
             header = next(reader)
         except StopIteration:
             # No data
             header = None
         if header:
-            remote_data.append(header)
+            right_data.append(header)
             for row in reader:
                 if len(row) < len(header):
                     add = [""] * (len(header) - len(row))
                     row.extend(add)
-                remote_data.append(row)
+                right_data.append(row)
 
-    if not local_data and not remote_data:
+    if not right_data and not left_data:
         return []
 
-    local_table = PythonTableView(local_data)
-    remote_table = PythonTableView(remote_data)
-    align = Coopy.compareTables(remote_table, local_table).align()
+    right_table = PythonTableView(right_data)
+    left_table = PythonTableView(left_data)
+    align = Coopy.compareTables(left_table, right_table).align()
 
     data_diff = []
     table_diff = PythonTableView(data_diff)

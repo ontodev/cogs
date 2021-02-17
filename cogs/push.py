@@ -40,7 +40,8 @@ def clear_remote_sheets(spreadsheet, renamed_local):
 
 
 def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
-    """Push all tracked sheets to the spreadsheet. Return updated rows for sheet.tsv."""
+    """Push all tracked sheets to the spreadsheet. Update sheets in COGS tracked directory. Return
+    updated rows for sheet.tsv."""
     sheet_rows = []
     for sheet_title, details in tracked_sheets.items():
         sheet_path = details["Path"]
@@ -52,13 +53,17 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
         if not os.path.exists(sheet_path):
             logging.warning(f"'{sheet_title}' exists remotely but has not been pulled")
             continue
-        with open(sheet_path, "r") as f:
-            reader = csv.reader(f, delimiter=delimiter)
-            for row in reader:
-                row_len = len(row)
-                if row_len > cols:
-                    cols = row_len
-                rows.append(row)
+        with open(sheet_path, "r") as fr:
+            reader = csv.reader(fr, delimiter=delimiter)
+            tracked_sheet_title = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+            with open(f"{cogs_dir}/tracked/{tracked_sheet_title}.tsv", "w") as fw:
+                writer = csv.writer(fw, delimiter="\t", lineterminator="\n")
+                for row in reader:
+                    writer.writerow(row)
+                    row_len = len(row)
+                    if row_len > cols:
+                        cols = row_len
+                    rows.append(row)
 
         # Set sheet size
         if len(rows) < 500:
@@ -127,28 +132,40 @@ def push_data_validation(spreadsheet, data_validation, tracked_sheets):
             show_ui = False
             if condition.endswith("LIST"):
                 show_ui = True
-            requests.append({"updateCells": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": start_row - 1,
-                    "endRowIndex": end_row,
-                    "startColumnIndex": start_col - 1,
-                    "endColumnIndex": end_col,
-                },
-                "rows": [
-                    {"values":
-                         {"dataValidation":
-                              {"condition": {"type": condition, "values": value_obj},
-                               "showCustomUi": show_ui}}}],
-                "fields": "dataValidation",
-            }})
+            requests.append(
+                {
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": start_row - 1,
+                            "endRowIndex": end_row,
+                            "startColumnIndex": start_col - 1,
+                            "endColumnIndex": end_col,
+                        },
+                        "rows": [
+                            {
+                                "values": {
+                                    "dataValidation": {
+                                        "condition": {"type": condition, "values": value_obj},
+                                        "showCustomUi": show_ui,
+                                    }
+                                }
+                            }
+                        ],
+                        "fields": "dataValidation",
+                    }
+                }
+            )
     if not requests:
         return
     try:
         logging.info(f"adding {len(requests)} data validation rules to spreadsheet")
         spreadsheet.batch_update({"requests": requests})
     except gspread.exceptions.APIError as e:
-        logging.error(f"Unable to add {len(requests)} data validation rules to spreadsheet\n" + e.response.text)
+        logging.error(
+            f"Unable to add {len(requests)} data validation rules to spreadsheet\n"
+            + e.response.text
+        )
 
 
 def push_formats(spreadsheet, id_to_format, sheet_formats):
