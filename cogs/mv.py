@@ -81,7 +81,15 @@ def mv(path, new_path, force=False, verbose=False):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         writer.writeheader()
         writer.writerows(rows)

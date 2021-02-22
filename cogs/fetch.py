@@ -13,7 +13,6 @@ from cogs.helpers import (
     get_credentials,
     get_config,
     get_format_dict,
-    get_new_path,
     get_renamed_sheets,
     get_tracked_sheets,
     set_logging,
@@ -180,55 +179,51 @@ def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remot
     Return the titles of these sheets."""
     # Get all cached sheet titles
     cached_sheet_titles = get_cached_sheets(cogs_dir)
+
+    # Titles of sheets that have been renamed locally
     new_local_titles = {
         re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()): details["new"]
         for details in renamed_local.values()
     }
-    new_remote_titles = {
-        re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()): details["new"]
-        for details in renamed_remote.values()
+
+    # The key of renamed_remote is what remains in cache & needs to be updated
+    old_remote_titles = {
+        re.sub(r"[^A-Za-z0-9]+", "_", x["new"].lower()): x["new"] for x in renamed_remote.keys()
     }
+
+    # All current remote titles
     remote_titles = {re.sub(r"[^A-Za-z0-9]+", "_", x.title.lower()): x.title for x in sheets}
-    for sheet_title in cached_sheet_titles:
-        if (
-            sheet_title not in remote_titles
-            and sheet_title not in new_local_titles
-            and sheet_title not in new_remote_titles
-        ):
+
+    # Find sheets that have been renamed remotely and remove their old cached copies
+    # Make sure their old titles also get returned to be removed from sheet.tsv
+    remove_from_sheet = []
+    for sheet_path in cached_sheet_titles:
+        if sheet_path in old_remote_titles:
+            if os.path.exists(f"{cogs_dir}/tracked/{sheet_path}.tsv"):
+                os.remove(f"{cogs_dir}/tracked/{sheet_path}.tsv")
+            old_title = old_remote_titles[sheet_path]
+            remove_from_sheet.append(old_title)
+        elif sheet_path not in remote_titles and sheet_path not in new_local_titles:
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
+            # If it was newly added, it will be in tracked sheets not yet have an ID
             if (
-                sheet_title in tracked_sheets and str(tracked_sheets[sheet_title]["ID"]).strip != ""
-            ) or (sheet_title not in tracked_sheets):
+                sheet_path in tracked_sheets and str(tracked_sheets[sheet_path]["ID"]).strip != ""
+            ) or (sheet_path not in tracked_sheets):
                 # The sheet is in tracked sheets and has an ID (not newly added)
                 # or the sheet is not in tracked sheets
-                logging.info(f"Removing untracked '{sheet_title}'")
-                if os.path.exists(f"{cogs_dir}/tracked/{sheet_title}.tsv"):
-                    os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
-    return list(renamed_remote.keys())
+                logging.info(f"Removing untracked '{sheet_path}'")
+                if os.path.exists(f"{cogs_dir}/tracked/{sheet_path}.tsv"):
+                    os.remove(f"{cogs_dir}/tracked/{sheet_path}.tsv")
 
+    # Find tracked sheets that have been removed remotely (check by ID)
+    remote_ids = [x.id for x in sheets]
+    for sheet_title, details in tracked_sheets.items():
+        if details["ID"] not in remote_ids:
+            logging.info(f"Removing tracked sheet '{sheet_title}' (deleted remotely)")
+            remove_from_sheet.append(sheet_title)
 
-def get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets):
-    """Get the sheet details formatted for sheet.tsv."""
-
-    if sheet_title in sheet_frozen:
-        frozen = sheet_frozen[sheet_title]
-        frozen_row = frozen["row"]
-        frozen_col = frozen["col"]
-    else:
-        frozen_row = 0
-        frozen_col = 0
-    sheet_path = get_new_path(tracked_sheets, sheet_title)
-    logging.info(f"new sheet '{sheet_title}' added to project with local path {sheet_path}")
-    details = {
-        "ID": sid,
-        "Title": sheet_title,
-        "Path": sheet_path,
-        "Description": "",
-        "Frozen Rows": frozen_row,
-        "Frozen Columns": frozen_col,
-    }
-    return details
+    return remove_from_sheet
 
 
 def fetch(verbose=False):
@@ -274,16 +269,19 @@ def fetch(verbose=False):
     sheet_dv_rules = {}
     sheet_frozen = {}
 
+    # Lines to add to sheet.tsv of sheets to ignore
+    new_ignore = []
+
     for sheet in sheets:
         remote_title = sheet.title
-        if tracked_sheets[remote_title].get("Ignore", "False") == "True":
+        if remote_title in tracked_sheets and tracked_sheets[remote_title].get("Ignore") == "True":
             logging.info(f"Skipping ignored sheet '{remote_title}'...")
             continue
 
         # Download the sheet as the renamed sheet if necessary
         if remote_title in renamed_local:
             st = renamed_local[remote_title]["new"]
-            logging.info(f"Downloading remote sheet '{remote_title}' as {st} (renamed locally)")
+            logging.info(f"Downloading sheet '{remote_title}' as {st} (renamed locally)")
         else:
             st = remote_title
             if sheet.id in id_to_title:
@@ -302,7 +300,14 @@ def fetch(verbose=False):
                         "new": st,
                         "path": re.sub(r"[^A-Za-z0-9]+", "_", st.lower()) + ".tsv",
                     }
-            logging.info(f"Downloading remote sheet '{st}'")
+                    logging.info(f"Downloading sheet '{local_title}' as '{st}' (renamed remotely)")
+                else:
+                    logging.info(f"Downloading sheet '{st}'")
+            else:
+                # Add as an ignored sheet
+                new_ignore.append({"ID": sheet.id, "Title": st, "Ignore": True})
+                logging.info(f"Ignoring new remote sheet '{st}'")
+                continue
 
         # Get frozen rows & columns
         sheet_frozen[st] = {
@@ -423,7 +428,6 @@ def fetch(verbose=False):
     # Update local sheets details in sheet.tsv with new IDs & details for current tracked sheets
     all_sheets = get_updated_sheet_details(tracked_sheets, remote_sheets, sheet_frozen)
 
-    # If a cached sheet title is not in sheet.tsv & not in remote sheets - remove it
     removed_titles = remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remote)
 
     # Add renamed-remote
@@ -441,16 +445,6 @@ def fetch(verbose=False):
         f.write("Sheet\tRange\tCondition\tValue\n")
     update_data_validation(cogs_dir, sheet_dv_rules, removed_titles)
 
-    # Get just the remote sheets that are not in local sheets
-    new_sheets = {
-        sheet_title: sid
-        for sheet_title, sid in remote_sheets.items()
-        if sheet_title not in tracked_sheets
-    }
-    for sheet_title, sid in new_sheets.items():
-        if sheet_title not in renamed_local:
-            details = get_sheet_details(sheet_title, sid, sheet_frozen, tracked_sheets)
-            all_sheets.append(details)
-
     # Then update sheet.tsv
+    all_sheets.extend(new_ignore)
     update_sheet(cogs_dir, all_sheets, removed_titles)

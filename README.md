@@ -121,6 +121,16 @@ cogs add [path] -t "[title]"
 
 This does not immediately change the Google Sheet -- use `cogs push` to push all tracked local tables to the project spreadsheet.
 
+#### Adding an Ignored Sheet
+
+By default, COGS ignores any untracked remote sheets. If you wish to start tracking a new remote sheet, you can do this by passing the sheet title to `add`:
+
+```
+cogs add [title]
+```
+
+The default path for pulling changes from this newly-added sheet will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
+
 ### `apply`
 
 Running `apply` applies the details of one or more [message tables](#message-tables) or [data validation tables](#data-validation-tables) to the spreadsheet as cell formatting and notes.
@@ -336,7 +346,7 @@ This will download all sheets in the spreadsheet to that directory as `{sheet-ti
 
 `.cogs/format.tsv` and `.cogs/note.tsv` are also updated for any cell formatting or notes on cells, respectively. Each unique format is given a numerical ID and is stored as [CellFormat JSON](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#cellformat).
 
-If a new sheet has been added to the Google spreadsheet, this sheet will be downloaded and added to `.cogs/sheet.tsv`. The default path for pulling changes will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
+If a new sheet has been added to the Google spreadsheet, this sheet will be added to `.cogs/sheet.tsv` as an "ignored" sheet. While it appears in the sheets, it will not be downloaded and has no local path. If you wish to add an ignored sheet to tracking, use [`cogs add`](#adding-an-ignored-sheet).
 
 To sync the local version of sheets with the data in `.cogs/`, run [`cogs pull`](#pull).
 
