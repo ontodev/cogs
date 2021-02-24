@@ -9,7 +9,7 @@ from cogs.fetch import fetch
 from cogs.init import init
 from cogs.ls import ls
 from cogs.mv import mv
-from cogs.pull import pull
+from cogs.merge import merge
 from cogs.push import push
 from cogs.rm import rm
 from cogs.share import share

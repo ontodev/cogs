@@ -108,10 +108,12 @@ def get_changes(cogs_dir, tracked_sheets, renamed):
             local_mod = os.path.getmtime(local_path)
             remote_mod = os.path.getmtime(remote_path)
             if remote_mod > local_mod:
-                diff = get_diff(remote_path, local_path)
+                # Remote is newer
+                diff = get_diff(local_path, remote_path)
                 new_version = "remote"
             else:
-                diff = get_diff(local_path, remote_path)
+                # Local is newer
+                diff = get_diff(remote_path, local_path)
                 new_version = "local"
 
             if len(diff) > 1:

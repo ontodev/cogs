@@ -8,6 +8,7 @@ import gspread.utils
 import gspread_formatting as gf
 
 from cogs.helpers import (
+    get_cached_path,
     get_cached_sheets,
     get_client_from_config,
     get_credentials,
@@ -415,8 +416,8 @@ def fetch(verbose=False):
             sheet_notes[st] = cell_to_note
 
         # Write values to .cogs/tracked/{sheet title}.tsv
-        sheet_path = re.sub(r"[^A-Za-z0-9]+", "_", st.lower()).strip("_")
-        with open(f"{cogs_dir}/tracked/{sheet_path}.tsv", "w") as f:
+        cached_path = get_cached_path(cogs_dir, st)
+        with open(cached_path, "w") as f:
             lines = sheet.get_all_values()
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(lines)

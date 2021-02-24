@@ -5,6 +5,7 @@ import re
 import shutil
 
 from cogs.helpers import (
+    get_cached_path,
     get_cached_sheets,
     get_renamed_sheets,
     get_tracked_sheets,
@@ -21,7 +22,7 @@ def copy_to_csv(cached_sheet, local_sheet):
             writer.writerows(csv.reader(fr, delimiter="\t"))
 
 
-def pull(verbose=False):
+def merge(verbose=False):
     """Copy cached sheets to their local paths."""
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
@@ -37,15 +38,14 @@ def pull(verbose=False):
     for sheet_title, details in tracked_sheets.items():
         if sheet_title in ignore:
             continue
-        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        cached_sheet = f"{cogs_dir}/tracked/{path_name}.tsv"
+        cached_path = get_cached_path(cogs_dir, sheet_title)
         local_sheet = details["Path"]
-        if os.path.exists(cached_sheet):
+        if os.path.exists(cached_path):
             logging.info(f"Writing '{sheet_title}' to {local_sheet}")
             if local_sheet.endswith(".csv"):
-                copy_to_csv(cached_sheet, local_sheet)
+                copy_to_csv(cached_path, local_sheet)
             else:
-                shutil.copyfile(cached_sheet, local_sheet)
+                shutil.copyfile(cached_path, local_sheet)
     for sheet_title in remove_sheets:
         logging.info(f"Removing '{sheet_title}' from cached sheets")
         os.remove(f"{cogs_dir}/tracked/{sheet_title}.tsv")
