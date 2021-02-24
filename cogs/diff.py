@@ -4,7 +4,13 @@ import re
 import tabulate
 
 from cogs.exceptions import DiffError
-from cogs.helpers import get_diff, get_tracked_sheets, set_logging, validate_cogs_project
+from cogs.helpers import (
+    get_cached_path,
+    get_diff,
+    get_tracked_sheets,
+    set_logging,
+    validate_cogs_project,
+)
 
 
 def close_screen(stdscr):
@@ -216,11 +222,11 @@ def diff(paths=None, use_screen=True, verbose=False):
 
     diffs = {}
     for sheet_title, details in sheets.items():
-        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        remote = f"{cogs_dir}/tracked/{path_name}.tsv"
+        cached = get_cached_path(cogs_dir, sheet_title)
         local = details["Path"]
-        if os.path.exists(local) and os.path.exists(remote):
-            sheet_diff = get_diff(local, remote)
+        if os.path.exists(local) and os.path.exists(cached):
+            # Consider remote (cached) the old version to diff off of
+            sheet_diff = get_diff(cached, local)
             diffs[sheet_title] = sheet_diff
 
     if not diffs:
