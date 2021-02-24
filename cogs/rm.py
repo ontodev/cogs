@@ -1,7 +1,9 @@
 import csv
+import os
 
 from cogs.exceptions import RmError
 from cogs.helpers import (
+    get_cached_path,
     get_tracked_sheets,
     set_logging,
     validate_cogs_project,
@@ -36,11 +38,11 @@ def rm(paths, verbose=False):
             "the spreadsheet must have at least one sheet."
         )
 
-    # Make sure the titles are valid
+    # Remove the cached copies
     for sheet_title in sheets_to_remove.keys():
-        if "." in sheet_title or "/" in sheet_title:
-            # We should probably use a proper way to make sure the file name is in .cogs
-            raise RmError("Invalid title for sheet, cannot contain . or /")
+        cached_path = get_cached_path(cogs_dir, sheet_title)
+        if os.path.exists(cached_path):
+            os.remove(cached_path)
 
     # Update sheet.tsv
     with open(f"{cogs_dir}/sheet.tsv", "w") as f:
