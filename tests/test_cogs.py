@@ -16,7 +16,7 @@ def test_modules():
         "init",
         "ls",
         "mv",
-        "pull",
+        "merge",
         "push",
         "rm",
         "share",
