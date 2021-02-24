@@ -26,6 +26,12 @@ required_keys = ["Spreadsheet ID", "Title"]
 credential_keys = []
 
 
+def get_cached_path(cogs_dir, sheet_title):
+    """Return the path to the cached version of a sheet based on its title."""
+    filename = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
+    return f"{cogs_dir}/tracked/{filename}.tsv"
+
+
 def get_cached_sheets(cogs_dir):
     """Return a list of names of cached sheets from .cogs/tracked. These are any sheets that have
     been downloaded from the remote spreadsheet into the .cogs directory as TSVs. They may or may

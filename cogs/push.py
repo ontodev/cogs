@@ -10,6 +10,7 @@ from cogs.helpers import (
     get_tracked_sheets,
     set_logging,
     validate_cogs_project,
+    get_cached_path,
     get_config,
     get_client_from_config,
     get_renamed_sheets,
@@ -55,8 +56,8 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
             continue
         with open(sheet_path, "r") as fr:
             reader = csv.reader(fr, delimiter=delimiter)
-            tracked_sheet_title = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-            with open(f"{cogs_dir}/tracked/{tracked_sheet_title}.tsv", "w") as fw:
+            tracked_sheet = get_cached_path(cogs_dir, sheet_title)
+            with open(tracked_sheet, "w") as fw:
                 writer = csv.writer(fw, delimiter="\t", lineterminator="\n")
                 for row in reader:
                     writer.writerow(row)
@@ -98,8 +99,8 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
         sheet.freeze(frozen_row, frozen_col)
 
         # Copy this table into COGS data
-        path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
-        with open(f"{cogs_dir}/tracked/{path_name}.tsv", "w") as f:
+        cached_name = get_cached_path(cogs_dir, sheet_title)
+        with open(cached_name, "w") as f:
             writer = csv.writer(f, delimiter="\t", lineterminator="\n")
             writer.writerows(rows)
     return sheet_rows
