@@ -31,9 +31,10 @@ def rm(paths, verbose=False):
     untracked = []
     ignored = []
     for p in paths:
-        if p not in path_to_sheet:
+        abspath = os.path.abspath(p)
+        if abspath not in path_to_sheet:
             untracked.append(p)
-        elif path_to_sheet[p] in ignore:
+        elif path_to_sheet[abspath] in ignore:
             ignored.append(p)
     if untracked:
         raise RmError(f"unable to remove untracked file(s): {', '.join(untracked)}.")
