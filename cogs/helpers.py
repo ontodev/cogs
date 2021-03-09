@@ -440,6 +440,7 @@ def validate_cogs_project():
     while cur_dir != "/":
         if ".cogs" in os.listdir(cur_dir):
             cogs_dir = os.path.join(cur_dir, ".cogs")
+            break
         cur_dir = os.path.abspath(os.path.join(cur_dir, ".."))
 
     if not cogs_dir:
