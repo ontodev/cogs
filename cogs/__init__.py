@@ -1,5 +1,6 @@
 # __init__.py
 from cogs.add import add
+from cogs.add import add_all
 from cogs.apply import apply
 from cogs.clear import clear
 from cogs.connect import connect

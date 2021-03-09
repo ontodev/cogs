@@ -131,6 +131,12 @@ cogs add [title]
 
 The default path for pulling changes from this newly-added sheet will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
 
+You can also add *all* ignored sheets using the `-a`/`--all` flag:
+
+```
+cogs add --all
+```
+
 ### `apply`
 
 Running `apply` applies the details of one or more [message tables](#message-tables) or [data validation tables](#data-validation-tables) to the spreadsheet as cell formatting and notes.
