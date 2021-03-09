@@ -1,9 +1,12 @@
 import csv
 import logging
 import ntpath
+import os
+import re
 
-from cogs.helpers import get_tracked_sheets, set_logging, validate_cogs_project
+from cogs.helpers import get_tracked_sheets, set_logging, update_sheet, validate_cogs_project
 from cogs.exceptions import AddError
+from datetime import datetime
 
 
 def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbose=False):
@@ -11,13 +14,10 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
 
-    # Open the provided file and make sure we can parse it as TSV or CSV
-    if path.endswith(".csv"):
-        delimiter = ","
-        fmt = "CSV"
-    else:
-        delimiter = "\t"
-        fmt = "TSV"
+    if not os.path.exists(path):
+        # Not a path, assume this is a title of an ignored sheet
+        add_ignored(cogs_dir, path, description=description)
+        return
 
     if not title:
         # Create the sheet title from file basename
@@ -44,7 +44,15 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns"],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         # ID gets filled in when we add it to the Sheet
         writer.writerow(
@@ -55,7 +63,37 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
                 "Description": description,
                 "Frozen Rows": freeze_row,
                 "Frozen Columns": freeze_column,
+                "Ignore": False,
             }
         )
 
     logging.info(f"{title} successfully added to project")
+
+
+def add_ignored(cogs_dir, title, description=None):
+    """Add a table currently tracked in sheet.tsv where Ignore=True."""
+    sheets = get_tracked_sheets(cogs_dir)
+    if title not in sheets:
+        raise AddError(f"'{title}' is neither an existing path nor an ignored sheet")
+
+    details = sheets[title]
+    if not details.get("Ignore"):
+        raise AddError(f"'{title}' is already a tracked sheet title")
+
+    del details["Ignore"]
+    if description:
+        details["Description"] = description
+    path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + ".tsv"
+    if os.path.exists(path):
+        now = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + f"_{now}.tsv"
+    details["Path"] = path
+
+    sheets[title] = details
+    sheet_lines = []
+    for s, details in sheets.items():
+        details["Title"] = s
+        sheet_lines.append(details)
+
+    logging.info(f"Adding '{title}' to tracked sheets with path {path}")
+    update_sheet(cogs_dir, sheet_lines, [])

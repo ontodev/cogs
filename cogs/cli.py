@@ -33,6 +33,7 @@ connect_msg = "Initialize a new COGS project by connecting an existing Google Sh
 delete_msg = "Delete the Google spreadsheet and COGS configuration"
 diff_msg = "Show detailed changes between local & remote sheets"
 fetch_msg = "Fetch remote versions of sheets"
+ignore_msg = "Ignore a sheet"
 init_msg = "Init a new COGS project"
 ls_msg = "Show all tracked sheets"
 merge_msg = "Copy fetched sheets to their local paths"
@@ -56,6 +57,7 @@ commands:
   diff      {diff_msg}
   fetch     {fetch_msg}
   help      Print this message
+  ignore    {ignore_msg}
   init      {init_msg}
   ls        {ls_msg}
   merge     {merge_msg}

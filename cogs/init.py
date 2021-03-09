@@ -150,7 +150,15 @@ def write_data(sheet, title, credentials=None):
             f,
             delimiter="\t",
             lineterminator="\n",
-            fieldnames=["ID", "Title", "Path", "Description", "Frozen Rows", "Frozen Columns",],
+            fieldnames=[
+                "ID",
+                "Title",
+                "Path",
+                "Description",
+                "Frozen Rows",
+                "Frozen Columns",
+                "Ignore",
+            ],
         )
         writer.writeheader()
 
