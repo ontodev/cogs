@@ -23,6 +23,7 @@ import cogs.share as share
 import cogs.status as status
 
 from argparse import ArgumentParser
+from .add import add_all
 from .exceptions import CogsError
 
 
@@ -89,7 +90,8 @@ def main():
         description=add_msg,
         usage="cogs add PATH [-t TITLE -d DESCRIPTION -r FREEZE_ROW -c FREEZE_COLUMN]",
     )
-    sp.add_argument("path", help="Path to TSV or CSV to add to COGS project")
+    sp.add_argument("path", help="Path to TSV or CSV to add to COGS project", nargs="?")
+    sp.add_argument("-a", "--all", help="Add all ignored sheets from remote", action="store_true")
     sp.add_argument("-t", "--title", help="Title of the sheet")
     sp.add_argument("-d", "--description", help="Description of sheet to add to spreadsheet")
     sp.add_argument("-r", "--freeze-row", help="Row number to freeze up to", default="0")
@@ -250,14 +252,17 @@ def main():
 def run_add(args):
     """Wrapper for add function."""
     try:
-        add(
-            args.path,
-            title=args.title,
-            description=args.description,
-            freeze_row=args.freeze_row,
-            freeze_column=args.freeze_column,
-            verbose=args.verbose,
-        )
+        if args.all:
+            add_all(verbose=args.verbose)
+        else:
+            add(
+                args.path,
+                title=args.title,
+                description=args.description,
+                freeze_row=args.freeze_row,
+                freeze_column=args.freeze_column,
+                verbose=args.verbose,
+            )
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

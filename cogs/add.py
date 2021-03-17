@@ -70,6 +70,31 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
     logging.info(f"{title} successfully added to project")
 
 
+def add_all(verbose=False):
+    set_logging(verbose)
+    cogs_dir = validate_cogs_project()
+
+    sheets = get_tracked_sheets(cogs_dir)
+    sheet_lines = []
+    for sheet_title, details in sheets.items():
+        ignored = details.get("Ignore")
+        if ignored:
+            path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()) + ".tsv"
+            if os.path.exists(path):
+                now = datetime.now().strftime("%Y%m%d_%H%M%S")
+                path = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower()) + f"_{now}.tsv"
+            details["Path"] = path
+            logging.info(
+                f"Adding ignored sheet '{sheet_title}' to tracked sheets with path '{path}'"
+            )
+        del details["Ignore"]
+
+        details["Title"] = sheet_title
+        sheet_lines.append(details)
+
+    update_sheet(cogs_dir, sheet_lines, [])
+
+
 def add_ignored(cogs_dir, title, description=None):
     """Add a table currently tracked in sheet.tsv where Ignore=True."""
     sheets = get_tracked_sheets(cogs_dir)
