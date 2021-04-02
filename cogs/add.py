@@ -48,7 +48,7 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
     if not description:
         description = ""
 
-    # Finally, add this TSV to sheet.tsv & to tracked folder
+    # Finally, add this TSV to sheet.tsv
     with open(f"{cogs_dir}/sheet.tsv", "a") as f:
         writer = csv.DictWriter(
             f,
