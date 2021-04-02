@@ -188,6 +188,9 @@ def main():
     sp.add_argument("path", help="Path of local sheet to move")
     sp.add_argument("new_path", help="New path for local sheet")
     sp.add_argument(
+        "-t", "--title", help="New title (if not specified, sheet title will remain the same)"
+    )
+    sp.add_argument(
         "-f",
         "--force",
         help="Overwrite existing files at the new-path location without confirming",
@@ -218,6 +221,9 @@ def main():
         "rm", parents=[global_parser], description=rm_msg, usage="cogs rm PATH [PATH ...]",
     )
     sp.add_argument("paths", help="Path(s) to TSV or CSV to remove from COGS project", nargs="+")
+    sp.add_argument(
+        "-k", "--keep", help="If included, keep local copies of sheets", action="store_true"
+    )
     sp.set_defaults(func=run_rm)
 
     # ------------------------------- share -------------------------------
@@ -295,6 +301,8 @@ def run_connect(args):
         if not success:
             # Exit with error status without deleting COGS directory
             sys.exit(1)
+        # Always fetch after connecting
+        fetch(verbose=args.verbose)
     except CogsError as e:
         # Exit with error status AND delete directory
         logging.critical(str(e))
@@ -387,7 +395,7 @@ def run_merge(args):
 def run_mv(args):
     """Wrapper for mv function."""
     try:
-        mv(args.path, args.new_path, force=args.force, verbose=args.verbose)
+        mv(args.path, args.new_path, new_title=args.title, force=args.force, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
@@ -424,7 +432,7 @@ def run_push(args):
 def run_rm(args):
     """Wrapper for rm function."""
     try:
-        rm(args.paths, verbose=args.verbose)
+        rm(args.paths, keep=args.keep, verbose=args.verbose)
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)

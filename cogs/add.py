@@ -13,11 +13,21 @@ def add(path, title=None, description=None, freeze_row=0, freeze_column=0, verbo
     """Add a table (TSV or CSV) to the COGS project. This updates sheet.tsv."""
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
+    sheets = get_tracked_sheets(cogs_dir)
+
+    if path in sheets and sheets[path]["Ignore"]:
+        # The provided path is just the title of an ignored sheet
+        add_ignored(cogs_dir, sheets, path, None, description=description)
+        return
+    if title in sheets and sheets[title]["Ignore"]:
+        # A path to write the ignored sheet was provided
+        add_ignored(cogs_dir, sheets, title, path, description=description)
+        return
 
     if not os.path.exists(path):
-        # Not a path, assume this is a title of an ignored sheet
-        add_ignored(cogs_dir, path, description=description)
-        return
+        # Create an empty file if the file doesn't exist
+        f = open(path, "w")
+        f.close()
 
     if not title:
         # Create the sheet title from file basename
@@ -95,23 +105,19 @@ def add_all(verbose=False):
     update_sheet(cogs_dir, sheet_lines, [])
 
 
-def add_ignored(cogs_dir, title, description=None):
+def add_ignored(cogs_dir, sheets, title, path, description=None):
     """Add a table currently tracked in sheet.tsv where Ignore=True."""
-    sheets = get_tracked_sheets(cogs_dir)
-    if title not in sheets:
-        raise AddError(f"'{title}' is neither an existing path nor an ignored sheet")
-
     details = sheets[title]
-    if not details.get("Ignore"):
-        raise AddError(f"'{title}' is already a tracked sheet title")
 
     del details["Ignore"]
     if description:
         details["Description"] = description
-    path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + ".tsv"
-    if os.path.exists(path):
-        now = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + f"_{now}.tsv"
+    if not path:
+        # No path provided, create a new one
+        path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + ".tsv"
+        if os.path.exists(path):
+            now = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = re.sub(r"[^A-Za-z0-9]+", "_", title.lower()) + f"_{now}.tsv"
     details["Path"] = path
 
     sheets[title] = details
