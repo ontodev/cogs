@@ -1,11 +1,10 @@
-import ntpath
 import shutil
 
 from cogs.exceptions import MvError
 from cogs.helpers import *
 
 
-def mv(path, new_path, force=False, verbose=False):
+def mv(path, new_path, new_title=None, force=False, verbose=False):
     """Move a local sheet to a new local path. If the file basename changes, the sheet title will
     also change."""
     set_logging(verbose)
@@ -13,6 +12,10 @@ def mv(path, new_path, force=False, verbose=False):
 
     if not os.path.exists(path):
         raise MvError(f"{path} does not exist")
+
+    if os.path.isdir(new_path):
+        # Move the old file into the given directory
+        new_path = os.path.join(new_path, os.path.basename(path))
 
     if os.path.exists(path) and os.path.exists(new_path) and not force:
         # Make sure the user knows they are overwriting another file
@@ -49,21 +52,24 @@ def mv(path, new_path, force=False, verbose=False):
     # See if the basename (sheet title) changed
     # If so, we need to rename the cached copy
     selected_sheet = path_to_sheet[cur_path]
-    new_sheet_title = ntpath.basename(new_path).split(".")[0]
-    if selected_sheet != new_sheet_title:
-        if os.path.exists(f"{cogs_dir}/tracked/{new_sheet_title}.tsv"):
+    if new_title:
+        new_cached_path = get_cached_path(cogs_dir, new_title)
+        if os.path.exists(new_cached_path):
             # A cached sheet with this name already exists
-            existing_path = tracked_sheets[new_sheet_title]["Path"]
+            existing_path = tracked_sheets[new_title]["Path"]
             raise MvError(
-                f"Unable to rename '{selected_sheet}' to '{new_sheet_title}' - "
+                f"Unable to rename '{selected_sheet}' to '{new_title}' - "
                 f"a tracked sheet with this title already exists ({existing_path})"
             )
-        logging.info(f"Renaming '{selected_sheet}' to '{new_sheet_title}'")
-        shutil.copyfile(
-            f"{cogs_dir}/tracked/{selected_sheet}.tsv", f"{cogs_dir}/tracked/{new_sheet_title}.tsv",
-        )
-        with open(f"{cogs_dir}/renamed.tsv", "a") as f:
-            f.write(f"{selected_sheet}\t{new_sheet_title}\t{new_path}\tlocal\n")
+
+        logging.info(f"Renaming '{selected_sheet}' to '{new_title}'")
+
+        # Check if cached path exists - may not if it has not been pushed or pulled yet
+        old_cached_path = get_cached_path(cogs_dir, new_title)
+        if os.path.exists(old_cached_path):
+            shutil.copyfile(old_cached_path, new_cached_path)
+            with open(f"{cogs_dir}/renamed.tsv", "a") as f:
+                f.write(f"{selected_sheet}\t{new_title}\t{new_path}\tlocal\n")
 
     # Get new rows of sheet.tsv to write
     rows = []
@@ -71,7 +77,7 @@ def mv(path, new_path, force=False, verbose=False):
         if sheet_title == selected_sheet:
             # Update path and title
             details["Path"] = new_path
-            sheet_title = new_sheet_title
+            sheet_title = new_title or sheet_title
         details["Title"] = sheet_title
         rows.append(details)
 

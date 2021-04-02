@@ -14,7 +14,7 @@ from cogs.helpers import (
 )
 
 
-def rm(paths, verbose=False):
+def rm(paths, keep=False, verbose=False):
     """Remove a table (TSV or CSV) from the COGS project. 
     This updates sheet.tsv and deletes the corresponding cached file."""
     set_logging(verbose)
@@ -49,6 +49,12 @@ def rm(paths, verbose=False):
             f"unable to remove {len(sheets_to_remove)} tracked sheet(s) - "
             "the spreadsheet must have at least one sheet."
         )
+
+    # Maybe remove local copies
+    if not keep:
+        for p in paths:
+            if os.path.exists(p):
+                os.remove(p)
 
     # Remove the cached copies
     for sheet_title in sheets_to_remove.keys():

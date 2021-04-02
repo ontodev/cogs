@@ -121,6 +121,8 @@ cogs add [path] -t "[title]"
 
 This does not immediately change the Google Sheet -- use `cogs push` to push all tracked local tables to the project spreadsheet.
 
+If an added path does not exist, COGS will create an empty file at that location.
+
 #### Adding an Ignored Sheet
 
 By default, COGS ignores any untracked remote sheets. If you wish to start tracking a new remote sheet, you can do this by passing the sheet title to `add`:
@@ -129,13 +131,21 @@ By default, COGS ignores any untracked remote sheets. If you wish to start track
 cogs add [title]
 ```
 
-The default path for pulling changes from this newly-added sheet will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv).
+The default path for pulling changes from this newly-added sheet will be the current working directory (the same directory as `.cogs/` is in) and will be a lowercase, space-replaced version of the title (e.g. `My Sheet` becomes `my_sheet.tsv`). If you already have a tracked sheet at this location, the date & time will be appended to the path (e.g., `my_sheet_20200922_103045.tsv` for a sheet fetched at 10:30:45 on 2020/09/22). This path can be updated with [`cogs mv`](#mv). Alternatively, if you want to specify a path immediately, you can:
+
+```
+cogs add [path] -t [title]
+```
+
+... where the "title" is the sheet title of the existing ignored sheet.
 
 You can also add *all* ignored sheets using the `-a`/`--all` flag:
 
 ```
 cogs add --all
 ```
+
+We recommend running `cogs fetch` or `cogs pull` immediately after adding ignored sheets to sync your `.cogs` directory.
 
 ### `apply`
 
@@ -291,6 +301,8 @@ To transfer ownership, click "Share" again and click the drop-down next to the s
 
 Please be aware that if you do not transfer ownership to the service account, `cogs delete` will not work. All other commands will work with just "Editor" access. If you do transfer ownership, you can always transfer ownership back to yourself using the [`share`](#share) command.
 
+`connect` will automatically fetch the existing sheets from the remote Google Spreadsheet. To get the local copies, just run `cogs merge`.
+
 ### `delete`
 
 Running `delete` reads the configuration data in `.cogs/config.tsv` to retrieve the spreadsheet ID. This spreadsheet is deleted in Google Sheets and the `.cogs` directory containing all project data is also removed. Any local TSV/CSV tables specified as sheets in the spreadsheet are left untouched.
@@ -442,15 +454,19 @@ Running `mv` will update the path of a local sheet.
 cogs mv [old_path] [new_path]
 ```
 
-The old path must exist as a local file. It will be renamed to the new path during this process. If the basename of the new path (e.g., `tables/foo.tsv` -> `foo`) is already a tracked sheet, this command will fail as you cannot have two sheets with the same name.
+This will only change the local path, not the sheet title. If you also wish to rename the sheet, you can do this with the `-t`/`--title` option:
+
+```
+cogs mv [old_path] [new_path] -t [new_title]
+```
 
 We recommend running `cogs push` after `cogs mv` to keep the remote spreadsheet in sync.
 
 ### `rm`
 
-Running `rm` will stop tracking one or more local sheets. This does not delete any local copies of sheets specified by their paths.
+Running `rm` will stop tracking one or more local sheets. This will delete all local copies of the included paths, unless you include the optional `-k`/`--keep` flag.
 ```
-cogs rm [paths]
+cogs rm path [path...] [-k]
 ```
 
 This does not delete the sheet(s) from the spreadsheet - use `cogs push` to push all local changes to the remote spreadsheet and remove cached data about the sheet.
