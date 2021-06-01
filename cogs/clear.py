@@ -48,7 +48,10 @@ def clear_formats(cogs_dir, sheet_title):
             fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(f"{cogs_dir}/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
@@ -67,7 +70,10 @@ def clear_notes(cogs_dir, sheet_title):
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(f"{cogs_dir}/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)
