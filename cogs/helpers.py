@@ -341,10 +341,12 @@ def set_logging(verbose):
         logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
-def update_format(cogs_dir, sheet_formats, removed_titles):
+def update_format(cogs_dir, sheet_formats, removed_titles, overwrite=False):
     """Update format.tsv with current remote formatting.
     Remove any lines with a Sheet ID in removed_ids."""
-    current_sheet_formats = get_sheet_formats(cogs_dir)
+    current_sheet_formats = {}
+    if not overwrite:
+        current_sheet_formats = get_sheet_formats(cogs_dir)
     fmt_rows = []
     for sheet_title, formats in sheet_formats.items():
         current_sheet_formats[sheet_title] = formats
@@ -355,16 +357,21 @@ def update_format(cogs_dir, sheet_formats, removed_titles):
             fmt_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Format ID": fmt})
     with open(f"{cogs_dir}/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
         writer.writerows(fmt_rows)
 
 
-def update_note(cogs_dir, sheet_notes, removed_titles):
+def update_note(cogs_dir, sheet_notes, removed_titles, overwrite=False):
     """Update note.tsv with current remote notes.
     Remove any lines with a Sheet ID in removed_ids."""
-    current_sheet_notes = get_sheet_notes(cogs_dir)
+    current_sheet_notes = {}
+    if not overwrite:
+        current_sheet_notes = get_sheet_notes(cogs_dir)
     note_rows = []
     for sheet_title, notes in sheet_notes.items():
         current_sheet_notes[sheet_title] = notes
@@ -375,16 +382,21 @@ def update_note(cogs_dir, sheet_notes, removed_titles):
             note_rows.append({"Sheet Title": sheet_title, "Cell": cell, "Note": note})
     with open(f"{cogs_dir}/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
+            f,
+            delimiter="\t",
+            lineterminator="\n",
+            fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
         writer.writerows(note_rows)
 
 
-def update_data_validation(cogs_dir, sheet_dv_rules, removed_titles):
-    """"""
+def update_data_validation(cogs_dir, sheet_dv_rules, removed_titles, overwrite=False):
+    """ """
     # TODO - can we be smarter and error on overlap?
-    current_sheet_dv_rules = get_data_validation(cogs_dir)
+    current_sheet_dv_rules = {}
+    if not overwrite:
+        current_sheet_dv_rules = get_data_validation(cogs_dir)
     dv_rows = []
     for sheet_title, dv_rules in sheet_dv_rules.items():
         if sheet_title in current_sheet_dv_rules:
@@ -411,7 +423,7 @@ def update_data_validation(cogs_dir, sheet_dv_rules, removed_titles):
 
 
 def update_sheet(cogs_dir, sheet_details, removed_titles):
-    """"""
+    """ """
     rows = [details for details in sheet_details if details["Title"] not in removed_titles]
     with open(f"{cogs_dir}/sheet.tsv", "w") as f:
         writer = csv.DictWriter(

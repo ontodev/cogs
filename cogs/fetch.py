@@ -108,7 +108,9 @@ def get_cell_data(cogs_dir, sheet):
     # Build service to send request & execute
     service = discovery.build("sheets", "v4", credentials=credentials, cache=MemoryCache())
     request = service.spreadsheets().get(
-        spreadsheetId=spreadsheet_id, ranges=f"'{sheet_name}'", fields="sheets(data(rowData(values(*))))",
+        spreadsheetId=spreadsheet_id,
+        ranges=f"'{sheet_name}'",
+        fields="sheets(data(rowData(values(*))))",
     )
     resp = request.execute()
 
@@ -188,9 +190,7 @@ def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remot
     }
 
     # The key of renamed_remote is what remains in cache & needs to be updated
-    old_remote_titles = {
-        re.sub(r"[^A-Za-z0-9]+", "_", x["new"].lower()): x["new"] for x in renamed_remote.keys()
-    }
+    old_remote_titles = {re.sub(r"[^A-Za-z0-9]+", "_", x.lower()): x for x in renamed_remote.keys()}
 
     # All current remote titles
     remote_titles = {re.sub(r"[^A-Za-z0-9]+", "_", x.title.lower()): x.title for x in sheets}
@@ -200,10 +200,7 @@ def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remot
     remove_from_sheet = []
     for sheet_path in cached_sheet_titles:
         if sheet_path in old_remote_titles:
-            if os.path.exists(f"{cogs_dir}/tracked/{sheet_path}.tsv"):
-                os.remove(f"{cogs_dir}/tracked/{sheet_path}.tsv")
-            old_title = old_remote_titles[sheet_path]
-            remove_from_sheet.append(old_title)
+            continue
         elif sheet_path not in remote_titles and sheet_path not in new_local_titles:
             # This sheet has a cached copy but does not exist in the remote version
             # It has either been removed from remote or was newly added to cache
@@ -220,7 +217,7 @@ def remove_sheets(cogs_dir, sheets, tracked_sheets, renamed_local, renamed_remot
     # Find tracked sheets that have been removed remotely (check by ID)
     remote_ids = [x.id for x in sheets]
     for sheet_title, details in tracked_sheets.items():
-        if details["ID"] not in remote_ids:
+        if details["ID"] not in remote_ids and sheet_title not in renamed_remote.keys():
             logging.info(f"Removing tracked sheet '{sheet_title}' (deleted remotely)")
             remove_from_sheet.append(sheet_title)
 

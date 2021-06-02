@@ -100,10 +100,16 @@ def main():
 
     # ------------------------------- apply -------------------------------
     sp = subparsers.add_parser(
-        "apply", parents=[global_parser], description=apply_msg, usage="cogs apply [PATH ...]",
+        "apply",
+        parents=[global_parser],
+        description=apply_msg,
+        usage="cogs apply [PATH ...]",
     )
     sp.add_argument(
-        "paths", nargs="*", default=None, help="Path(s) to table(s) to apply",
+        "paths",
+        nargs="*",
+        default=None,
+        help="Path(s) to table(s) to apply",
     )
     sp.set_defaults(func=run_apply)
 
@@ -137,14 +143,20 @@ def main():
 
     # ------------------------------- delete -------------------------------
     sp = subparsers.add_parser(
-        "delete", parents=[global_parser], description=delete_msg, usage="cogs delete [-f]",
+        "delete",
+        parents=[global_parser],
+        description=delete_msg,
+        usage="cogs delete [-f]",
     )
     sp.set_defaults(func=run_delete)
     sp.add_argument("-f", "--force", action="store_true", help="Delete without confirming")
 
     # ------------------------------- diff -------------------------------
     sp = subparsers.add_parser(
-        "diff", parents=[global_parser], description=diff_msg, usage="cogs diff [PATH ...]",
+        "diff",
+        parents=[global_parser],
+        description=diff_msg,
+        usage="cogs diff [PATH ...]",
     )
     sp.set_defaults(func=run_diff)
     sp.add_argument("paths", nargs="*", help="Paths to local sheets to diff")
@@ -166,7 +178,10 @@ def main():
     sp.add_argument("-t", "--title", required=True, help="Title of the project")
     sp.add_argument("-u", "--user", help="Email (user) to share spreadsheet with")
     sp.add_argument(
-        "-r", "--role", default="writer", help="Role for specified user (default: owner)",
+        "-r",
+        "--role",
+        default="writer",
+        help="Role for specified user (default: owner)",
     )
     sp.add_argument("-U", "--users", help="TSV containing user emails and their roles")
     sp.set_defaults(func=run_init)
@@ -183,7 +198,10 @@ def main():
 
     # ------------------------------- mv -------------------------------
     sp = subparsers.add_parser(
-        "mv", parents=[global_parser], description=mv_msg, usage="cogs mv PATH NEW_PATH",
+        "mv",
+        parents=[global_parser],
+        description=mv_msg,
+        usage="cogs mv PATH NEW_PATH",
     )
     sp.add_argument("path", help="Path of local sheet to move")
     sp.add_argument("new_path", help="New path for local sheet")
@@ -200,7 +218,10 @@ def main():
 
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser(
-        "open", parents=[global_parser], description=open_msg, usage="cogs open",
+        "open",
+        parents=[global_parser],
+        description=open_msg,
+        usage="cogs open",
     )
     sp.set_defaults(func=run_open)
 
@@ -218,7 +239,10 @@ def main():
 
     # -------------------------------- rm --------------------------------
     sp = subparsers.add_parser(
-        "rm", parents=[global_parser], description=rm_msg, usage="cogs rm PATH [PATH ...]",
+        "rm",
+        parents=[global_parser],
+        description=rm_msg,
+        usage="cogs rm PATH [PATH ...]",
     )
     sp.add_argument("paths", help="Path(s) to TSV or CSV to remove from COGS project", nargs="+")
     sp.add_argument(
@@ -243,7 +267,10 @@ def main():
 
     # -------------------------------- status --------------------------------
     sp = subparsers.add_parser(
-        "status", parents=[global_parser], description=status_msg, usage="cogs status",
+        "status",
+        parents=[global_parser],
+        description=status_msg,
+        usage="cogs status",
     )
     sp.set_defaults(func=run_status)
 

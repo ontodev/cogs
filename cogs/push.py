@@ -99,7 +99,9 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
 
         # Add new values to ws from local
         spreadsheet.values_update(
-            f"{sheet_title}!A1", params={"valueInputOption": "RAW"}, body={"values": rows},
+            f"{sheet_title}!A1",
+            params={"valueInputOption": "RAW"},
+            body={"values": rows},
         )
 
         # Add frozen rows & cols
@@ -185,7 +187,13 @@ def push_formats(spreadsheet, id_to_format, sheet_formats):
         requests = []
         for cell, fmt_id in cell_to_format.items():
             fmt = id_to_format[int(fmt_id)]
-            cell_format = gf.CellFormat.from_props(fmt)
+            try:
+                cell_format = gf.CellFormat.from_props(fmt)
+            except:
+                print(fmt)
+                import sys
+
+                sys.exit(1)
             requests.append((cell, cell_format))
         logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
         gf.format_cell_ranges(worksheet, requests)

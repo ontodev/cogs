@@ -39,10 +39,11 @@ def get_changes(cogs_dir, tracked_sheets, renamed):
     # And tracked titles that have been pushed to remote (given ID)
     pushed_local_sheet_titles = []
 
-    renamed_remote = {
-        old: details for old, details in renamed.items() if details["where"] == "remote"
-    }
-    new_remote = [details["new"] for details in renamed_remote.values()]
+    # Get the cached renamed remote to compare to the untracked cached sheets
+    renamed_remote_cached = []
+    for old_title, details in renamed.items():
+        renamed_remote_cached.append(re.sub(r"[^A-Za-z0-9]+", "_", old_title.lower()))
+        renamed_remote_cached.append(re.sub(r"[^A-Za-z0-9]+", "_", details["new"].lower()))
 
     for sheet_title, details in tracked_sheets.items():
         local_sheet = details["Path"]
@@ -86,16 +87,14 @@ def get_changes(cogs_dir, tracked_sheets, renamed):
         elif tracked and local and not local_pushed and not cached:
             # Added locally and not yet pushed
             added_local.append(sheet_title)
-        elif not tracked and not local and cached and sheet_title not in renamed:
-            # Removed locally and not yet pushed
+        elif not tracked and not local and cached and sheet_title not in renamed_remote_cached:
+            # Removed locally and not yet pushed (not renamed)
             removed_local.append(sheet_title)
-        elif tracked and not local and cached and sheet_title not in new_remote:
-            # Added remotely and not yet pulled
+        elif tracked and not local and cached and sheet_title not in renamed_remote_cached:
+            # Added remotely and not yet pulled (not renamed)
             added_remote.append(sheet_title)
-        else:
+        elif sheet_title not in renamed_remote_cached:
             # Exists in both - run diff
-            if sheet_title in renamed:
-                sheet_title = renamed[sheet_title]["new"]
             local_path = tracked_sheets[sheet_title]["Path"]
             path_name = re.sub(r"[^A-Za-z0-9]+", "_", sheet_title.lower())
             remote_path = f"{cogs_dir}/tracked/{path_name}.tsv"

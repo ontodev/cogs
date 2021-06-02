@@ -65,11 +65,37 @@ def mv(path, new_path, new_title=None, force=False, verbose=False):
         logging.info(f"Renaming '{selected_sheet}' to '{new_title}'")
 
         # Check if cached path exists - may not if it has not been pushed or pulled yet
-        old_cached_path = get_cached_path(cogs_dir, new_title)
+        old_cached_path = get_cached_path(cogs_dir, selected_sheet)
         if os.path.exists(old_cached_path):
             shutil.copyfile(old_cached_path, new_cached_path)
-            with open(f"{cogs_dir}/renamed.tsv", "a") as f:
-                f.write(f"{selected_sheet}\t{new_title}\t{new_path}\tlocal\n")
+
+        # Add to renamed.tsv
+        with open(f"{cogs_dir}/renamed.tsv", "a") as f:
+            f.write(f"{selected_sheet}\t{new_title}\t{new_path}\tlocal\n")
+
+        # Maybe update format.tsv
+        sheet_formats = get_sheet_formats(cogs_dir)
+        this_formats = sheet_formats.get(selected_sheet)
+        if this_formats:
+            del sheet_formats[selected_sheet]
+            sheet_formats[new_title] = this_formats
+            update_format(cogs_dir, sheet_formats, [], overwrite=True)
+
+        # Maybe update notes.tsv
+        sheet_notes = get_sheet_notes(cogs_dir)
+        this_notes = sheet_notes.get(selected_sheet)
+        if this_notes:
+            del sheet_notes[selected_sheet]
+            sheet_notes[new_title] = this_notes
+            update_note(cogs_dir, sheet_notes, [])
+
+        # Maybe update validation.tsv
+        data_validation = get_data_validation(cogs_dir)
+        this_dv = data_validation.get(selected_sheet)
+        if this_dv:
+            del data_validation[selected_sheet]
+            data_validation[new_title] = this_dv
+            update_data_validation(cogs_dir, data_validation, [])
 
     # Get new rows of sheet.tsv to write
     rows = []
