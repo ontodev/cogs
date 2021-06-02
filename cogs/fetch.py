@@ -108,7 +108,7 @@ def get_cell_data(cogs_dir, sheet):
     # Build service to send request & execute
     service = discovery.build("sheets", "v4", credentials=credentials, cache=MemoryCache())
     request = service.spreadsheets().get(
-        spreadsheetId=spreadsheet_id, ranges=sheet_name, fields="sheets(data(rowData(values(*))))",
+        spreadsheetId=spreadsheet_id, ranges=f"'{sheet_name}'", fields="sheets(data(rowData(values(*))))",
     )
     resp = request.execute()
 
