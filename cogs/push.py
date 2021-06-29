@@ -190,10 +190,8 @@ def push_formats(spreadsheet, id_to_format, sheet_formats):
             try:
                 cell_format = gf.CellFormat.from_props(fmt)
             except:
-                print(fmt)
-                import sys
-
-                sys.exit(1)
+                logging.error("Unable to apply format: " + str(fmt))
+                continue
             requests.append((cell, cell_format))
         logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
         gf.format_cell_ranges(worksheet, requests)
