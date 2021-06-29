@@ -193,8 +193,9 @@ def push_formats(spreadsheet, id_to_format, sheet_formats):
                 logging.error("Unable to apply format: " + str(fmt))
                 continue
             requests.append((cell, cell_format))
-        logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
-        gf.format_cell_ranges(worksheet, requests)
+        if requests:
+            logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
+            gf.format_cell_ranges(worksheet, requests)
 
 
 def push_notes(spreadsheet, sheet_notes, tracked_sheets):
