@@ -190,6 +190,7 @@ def push_formats(spreadsheet, id_to_format, sheet_formats):
             try:
                 cell_format = gf.CellFormat.from_props(fmt)
             except:
+                print("-- TEST LINE --")
                 logging.error("Unable to apply format: " + str(fmt))
                 continue
             requests.append((cell, cell_format))
