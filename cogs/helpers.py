@@ -317,7 +317,7 @@ def get_tracked_sheets(cogs_dir, include_no_id=True):
 def get_version():
     """Get the version of COGS."""
     try:
-        version = pkg_resources.require("COGS")[0].version
+        version = pkg_resources.require("ontodev-cogs")[0].version
     except pkg_resources.DistributionNotFound:
         version = "developer-version"
     return version
