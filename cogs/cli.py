@@ -3,6 +3,8 @@
 import logging
 import os
 import sys
+import webbrowser
+
 import tabulate
 
 import cogs.add as add
@@ -420,10 +422,15 @@ def run_mv(args):
 
 def run_open(args):
     """Wrapper for open function."""
+    url = helpers.get_sheet_url()
     try:
-        print(helpers.get_sheet_url())
+        webbrowser.open(url)
     except CogsError as e:
         logging.critical(str(e))
+        sys.exit(1)
+    except webbrowser.Error as e:
+        logging.critical(str(e))
+        print("You can still access this sheet at: " + url)
         sys.exit(1)
 
 
