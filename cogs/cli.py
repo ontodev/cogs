@@ -118,7 +118,9 @@ def main():
         usage="cogs clear KEYWORD [SHEET ...]",
     )
     sp.set_defaults(func=run_clear)
-    sp.add_argument("keyword", help="Specify what to clear from the sheet(s)")
+    sp.add_argument(
+        "keyword", help="Specify what to clear from the sheet(s): format, notes, validation, all"
+    )
     sp.add_argument("sheets", nargs="*", help="Titles of sheets to clear from", default=[])
 
     # ------------------------------- connect -------------------------------
