@@ -212,6 +212,7 @@ def main():
     sp = subparsers.add_parser(
         "open", parents=[global_parser], description=open_msg, usage="cogs open",
     )
+    sp.add_argument("-p", "--print", help="Print the URL instead of opening it in a browser", action="store_true")
     sp.set_defaults(func=run_open)
 
     # ------------------------------- pull -------------------------------
@@ -423,15 +424,18 @@ def run_mv(args):
 def run_open(args):
     """Wrapper for open function."""
     url = helpers.get_sheet_url()
-    try:
-        webbrowser.open(url)
-    except CogsError as e:
-        logging.critical(str(e))
-        sys.exit(1)
-    except webbrowser.Error as e:
-        logging.critical(str(e))
-        print("You can still access this sheet at: " + url)
-        sys.exit(1)
+    if not args.print:
+        try:
+            webbrowser.open(url)
+        except CogsError as e:
+            logging.critical(str(e))
+            sys.exit(1)
+        except webbrowser.Error as e:
+            logging.critical(str(e))
+            print("You can still access this sheet at: " + url)
+            sys.exit(1)
+    else:
+        print(url)
 
 
 def run_pull(args):
