@@ -330,7 +330,7 @@ def get_version():
 
 def is_email(email):
     """Check if a string matches a general email pattern (user@domain.tld)"""
-    return re.match(r"^[-.\w]+@[-\w]+\.[-\w]+$", email)
+    return re.match(r"^\S+@\S+\.\S+$", email)
 
 
 def is_valid_role(role):
