@@ -1,7 +1,12 @@
+import csv
+import gspread
+import json
+import logging
+import os
 import warnings
 
 from cogs.exceptions import InitError
-from cogs.helpers import *
+from cogs.helpers import is_email, is_valid_role, get_client, get_version, set_logging
 
 
 default_fields = [
@@ -49,90 +54,30 @@ default_formats = {
         "backgroundColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1},
         "backgroundColorStyle": {"rgbColor": {"blue": 0.7019608, "green": 0.7019608, "red": 1}},
         "borders": {
-            "bottom": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "left": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "right": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "top": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
+            "bottom": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "left": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "right": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "top": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
         },
     },
     "1": {
         "backgroundColor": {"blue": 0.5921569, "green": 1, "red": 1},
         "backgroundColorStyle": {"rgbColor": {"blue": 0.5921569, "green": 1, "red": 1}},
         "borders": {
-            "bottom": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "left": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "right": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "top": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
+            "bottom": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "left": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "right": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "top": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
         },
     },
     "2": {
         "backgroundColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902},
         "backgroundColorStyle": {"rgbColor": {"blue": 1, "green": 0.87058824, "red": 0.7254902}},
         "borders": {
-            "bottom": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "left": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "right": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
-            "top": {
-                "color": {},
-                "colorStyle": {"rgbColor": {}},
-                "style": "SOLID",
-                "width": 1,
-            },
+            "bottom": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "left": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "right": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
+            "top": {"color": {}, "colorStyle": {"rgbColor": {}}, "style": "SOLID", "width": 1,},
         },
     },
 }
@@ -225,10 +170,7 @@ def write_data(sheet, title, credentials=None):
     # format.tsv contains all cells with formats -> format IDs
     with open(".cogs/format.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Format ID"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Format ID"],
         )
         writer.writeheader()
 
@@ -238,10 +180,7 @@ def write_data(sheet, title, credentials=None):
     # note.tsv contains all cells with notes -> note
     with open(".cogs/note.tsv", "w") as f:
         writer = csv.DictWriter(
-            f,
-            delimiter="\t",
-            lineterminator="\n",
-            fieldnames=["Sheet Title", "Cell", "Note"],
+            f, delimiter="\t", lineterminator="\n", fieldnames=["Sheet Title", "Cell", "Note"],
         )
         writer.writeheader()
 
