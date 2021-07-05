@@ -12,6 +12,7 @@ from cogs.helpers import (
 
 
 def ignore(sheet_title, verbose=False):
+    """Start ignoring an existing sheet by title. This updates sheet.tsv."""
     set_logging(verbose)
     cogs_dir = validate_cogs_project()
 

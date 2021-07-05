@@ -360,6 +360,7 @@ def run_help(args):
 
 
 def run_ignore(args):
+    """Wrapper for ignore function."""
     try:
         ignore(args.sheet_title, verbose=args.verbose)
     except CogsError as e:
