@@ -310,7 +310,7 @@ def status(use_screen=True, verbose=False):
     # Get the sets of changes
     tracked_sheets = get_tracked_sheets(cogs_dir)
     # Get rid of ignored sheets
-    tracked_sheets = {x: y for x, y in tracked_sheets.items() if y.get("Ignore") != "True"}
+    tracked_sheets = {x: y for x, y in tracked_sheets.items() if not y.get("Ignore")}
     renamed = get_renamed_sheets(cogs_dir)
     changes = get_changes(cogs_dir, tracked_sheets, renamed)
 

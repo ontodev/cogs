@@ -124,7 +124,7 @@ def get_data_validation(cogs_dir):
     """Get a dict of sheet title -> data validation rules."""
     sheet_to_dv_rules = {}
     tracked_sheets = get_tracked_sheets(cogs_dir)
-    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore")]
     with open(f"{cogs_dir}/validation.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:

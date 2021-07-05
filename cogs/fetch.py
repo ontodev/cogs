@@ -124,6 +124,7 @@ def get_cell_data(cogs_dir, sheet):
     for row in data["rowData"]:
         if not row:
             # Empty row
+            idx_y += 1
             continue
         idx_x = 1
         for cell in row["values"]:
@@ -272,7 +273,7 @@ def fetch(verbose=False):
 
     for sheet in sheets:
         remote_title = sheet.title
-        if remote_title in tracked_sheets and tracked_sheets[remote_title].get("Ignore") == "True":
+        if remote_title in tracked_sheets and tracked_sheets[remote_title].get("Ignore"):
             logging.info(f"Skipping ignored sheet '{remote_title}'...")
             continue
 
@@ -404,6 +405,13 @@ def fetch(verbose=False):
                 cell_range_end = cell
             last_fmt = fmt_id
 
+        # Get the last format
+        if last_fmt:
+            if not cell_range_end or cell_range_start == cell_range_end:
+                cell_to_format_id[cell_range_start] = last_fmt
+            else:
+                cell_to_format_id[f"{cell_range_start}:{cell_range_end}"] = last_fmt
+
         if cell_to_format_id:
             sheet_formats[st] = cell_to_format_id
 
@@ -436,8 +444,8 @@ def fetch(verbose=False):
             f.write(f"{old_title}\t{new_title}\t{new_path}\tremote\n")
 
     # Rewrite format.tsv and note.tsv with current remote formats & notes
-    update_format(cogs_dir, sheet_formats, removed_titles)
-    update_note(cogs_dir, sheet_notes, removed_titles)
+    update_format(cogs_dir, sheet_formats, removed_titles, overwrite=True)
+    update_note(cogs_dir, sheet_notes, removed_titles, overwrite=True)
     # Remove old data validation rules and rewrite with new
     with open(f"{cogs_dir}/validation.tsv", "w") as f:
         f.write("Sheet\tRange\tCondition\tValue\n")

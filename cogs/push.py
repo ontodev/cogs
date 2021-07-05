@@ -26,7 +26,7 @@ def clear_remote_sheets(spreadsheet, tracked_sheets, renamed_local):
     remote_sheets = {}
     for sheet in spreadsheet.worksheets():
         sheet_title = sheet.title
-        if sheet_title in tracked_sheets and tracked_sheets[sheet_title].get("Ignore") == "True":
+        if sheet_title in tracked_sheets and tracked_sheets[sheet_title].get("Ignore"):
             remote_sheets[sheet_title] = sheet
             continue
 
@@ -49,7 +49,7 @@ def push_data(cogs_dir, spreadsheet, tracked_sheets, remote_sheets):
     updated rows for sheet.tsv."""
     sheet_rows = []
     for sheet_title, details in tracked_sheets.items():
-        if details.get("Ignore", "False") == "True":
+        if details.get("Ignore"):
             logging.info(f"Skipping ignored sheet '{sheet_title}'")
             details["Title"] = sheet_title
             sheet_rows.append(details)
