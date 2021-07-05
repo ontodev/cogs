@@ -58,6 +58,7 @@ There are some other commands that do not correspond to any `git` actions:
 - [`cogs clear`](#clear) removes formatting, notes, and/or data validation rules from one or more sheets
 - [`cogs connect`](#connect) initiates a new COGS project by connecting an existing Google Spreadsheet
 - [`cogs delete`](#delete) destroys the spreadsheet and configuration data, but leaves local files alone
+- [`cogs ignore`](#ignore) begins ignoring a tracked sheet so that the local copy is no longer updated
 - [`cogs mv foo.tsv bar.tsv`](#mv) updates the path to the local version of a spreadsheet from `foo.tsv` to `bar.tsv`
 - [`cogs open`](#open) displays the URL of the spreadsheet
 - [`cogs share`](#share) shares the spreadsheet with specified users
@@ -369,6 +370,16 @@ If a new sheet has been added to the Google spreadsheet, this sheet will be adde
 To sync the local version of sheets with the data in `.cogs/`, run [`cogs merge`](#merge).
 
 Note that if a sheet has been _renamed_ remotely, the old sheet title will be replaced with the new sheet title. Any changes made to the local file corresponding to the old title will not be synced with the remote spreadsheet. Instead, once you run `cogs merge`, a new sheet `{new-sheet-title}.tsv` will appear in the current working directory (the same as if a new sheet were created). It is the same as if you were to delete the old sheet remotely and create a new sheet remotely with the same contents. Use `cogs merge` to write the new path - the old local file will not be deleted.
+
+### `ignore`
+
+Running `ignore` on a given sheet title will start ignoring that sheet. This means that the cached copy of the sheet in the `.cogs/` directory is deleted, and the local version will no longer be updated when running `cogs pull`.
+
+```
+cogs ignore [sheet-title]
+```
+
+You may only run `ignore` on a sheet that you are already tracking. This will *not* remove either your local copy or the remote sheet.
 
 ### `init`
 
