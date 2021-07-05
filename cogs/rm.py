@@ -27,7 +27,7 @@ def rm(paths, keep=False, verbose=False):
     }
 
     # Check for either untracked or ignored sheets in provided paths
-    ignore = [x for x, y in sheets.items() if y.get("Ignore") == "True"]
+    ignore = [x for x, y in sheets.items() if y.get("Ignore")]
     untracked = []
     ignored = []
     for p in paths:

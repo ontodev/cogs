@@ -86,7 +86,7 @@ def clear(keyword, on_sheets=None, verbose=False):
 
     # Validate sheets
     tracked_sheets = get_tracked_sheets(cogs_dir)
-    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore")]
 
     if not on_sheets:
         # If no sheet was supplied, clear from all
