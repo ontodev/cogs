@@ -40,7 +40,7 @@ def mv(path, new_path, new_title=None, force=False, verbose=False):
         raise MvError(f"{path} is not a tracked sheet")
 
     # Make sure the sheet we are moving is not ignored
-    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore") == "True"]
+    ignore = [x for x, y in tracked_sheets.items() if y.get("Ignore")]
     if path_to_sheet[cur_path] in ignore:
         raise MvError(f"{path} is an ignored sheet and cannot be moved")
 
