@@ -187,16 +187,7 @@ def push_formats(spreadsheet, id_to_format, sheet_formats):
         requests = []
         for cell, fmt_id in cell_to_format.items():
             fmt = id_to_format[int(fmt_id)]
-            try:
-                cell_format = gf.CellFormat.from_props(fmt)
-            except ValueError as e:
-                if fmt.get("hyperlinkDisplayType") == "LINKED":
-                    # Known issue with "link" component
-                    logging.warning(f"Unable to apply 'link' formatting at '{sheet_title}' {cell}")
-                    continue
-                else:
-                    # Unknown error, throw it
-                    raise e
+            cell_format = gf.CellFormat.from_props(fmt)
             requests.append((cell, cell_format))
         if requests:
             logging.info(f"adding {len(requests)} formats to sheet '{sheet_title}")
