@@ -212,7 +212,12 @@ def main():
     sp = subparsers.add_parser(
         "open", parents=[global_parser], description=open_msg, usage="cogs open",
     )
-    sp.add_argument("-p", "--print", help="Print the URL instead of opening it in a browser", action="store_true")
+    sp.add_argument(
+        "-p",
+        "--print",
+        help="Print the URL instead of opening it in a browser",
+        action="store_true",
+    )
     sp.set_defaults(func=run_open)
 
     # ------------------------------- pull -------------------------------
