@@ -108,8 +108,9 @@ def add_all(verbose=False):
 def add_ignored(cogs_dir, sheets, title, path, description=None):
     """Add a table currently tracked in sheet.tsv where Ignore=True."""
     details = sheets[title]
+    path = path or details.get("Path")
 
-    del details["Ignore"]
+    details["Ignore"] = False
     if description:
         details["Description"] = description
     if not path:

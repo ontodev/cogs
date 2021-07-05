@@ -310,6 +310,11 @@ def get_tracked_sheets(cogs_dir, include_no_id=True):
             if not include_no_id and sheet_id == "":
                 continue
             del row["Title"]
+            # Update ignore to a bool
+            ignore = False
+            if row.get("Ignore", "False") == "True":
+                ignore = True
+            row["Ignore"] = ignore
             sheets[title] = row
     return sheets
 
