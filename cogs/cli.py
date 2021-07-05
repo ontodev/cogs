@@ -428,13 +428,14 @@ def run_mv(args):
 
 def run_open(args):
     """Wrapper for open function."""
-    url = helpers.get_sheet_url()
+    try:
+        url = helpers.get_sheet_url()
+    except CogsError as e:
+        logging.critical(str(e))
+        sys.exit(1)
     if not args.print:
         try:
             webbrowser.open(url)
-        except CogsError as e:
-            logging.critical(str(e))
-            sys.exit(1)
         except webbrowser.Error as e:
             logging.critical(str(e))
             print("You can still access this sheet at: " + url)
