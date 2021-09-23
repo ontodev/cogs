@@ -3,6 +3,8 @@
 import logging
 import os
 import sys
+import webbrowser
+
 import tabulate
 
 import cogs.add as add
@@ -40,7 +42,7 @@ init_msg = "Init a new COGS project"
 ls_msg = "Show all tracked sheets"
 merge_msg = "Copy fetched sheets to their local paths"
 mv_msg = "Move a local sheet to a new path"
-open_msg = "Display the Spreadsheet URL"
+open_msg = "Open the Google spreadsheet in your browser"
 pull_msg = "Fetch and merge tracked sheets"
 push_msg = "Push local sheets to the spreadsheet"
 rm_msg = "Remove a table (TSV or CSV) from the project"
@@ -211,6 +213,12 @@ def main():
     # ------------------------------- open -------------------------------
     sp = subparsers.add_parser(
         "open", parents=[global_parser], description=open_msg, usage="cogs open",
+    )
+    sp.add_argument(
+        "-p",
+        "--print",
+        help="Print the URL instead of opening it in a browser",
+        action="store_true",
     )
     sp.set_defaults(func=run_open)
 
@@ -423,10 +431,19 @@ def run_mv(args):
 def run_open(args):
     """Wrapper for open function."""
     try:
-        print(helpers.get_sheet_url())
+        url = helpers.get_sheet_url()
     except CogsError as e:
         logging.critical(str(e))
         sys.exit(1)
+    if not args.print:
+        try:
+            webbrowser.open(url)
+        except webbrowser.Error as e:
+            logging.critical(str(e))
+            print("You can still access this sheet at: " + url)
+            sys.exit(1)
+    else:
+        print(url)
 
 
 def run_pull(args):

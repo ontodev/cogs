@@ -421,10 +421,16 @@ cogs ls
 
 ### `open`
 
-Running `open` displays the URL of the spreadsheet.
+Running `open` will open the linked Google Spreadsheet in your browser.
 
 ```
 cogs open
+```
+
+If you just want to get the URL of the Google Spreadsheet, you can use the `-p`/`--print` option:
+
+```
+cogs open -p
 ```
 
 ### `pull`
