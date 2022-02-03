@@ -36,6 +36,44 @@ $ cogs -h
 
 ---
 
+## Authentication preliminaries
+
+COGS uses the [gspread](https://docs.gspread.org/en/latest/) Python library 
+and inherits `gspread`'s requirement for authenticating against Google service account 
+credentials. If you have a Google Cloud account, you can create the necessary 
+credentials by following these [instructions](https://support.google.com/a/answer/7378726?hl=en) 
+(even if you aren't a workspace administrator). After following those instructions, 
+a JSON credentials file will be downloaded to your computer. Keep that file somewhere safe!
+
+The credentials are required by two COGS subcommands
+- `connect`
+- `init`
+
+and can be passed to COGS in two ways
+- passing the path to the JSON credentials file with the `-c` option
+- putting the _contents_ of the JSON credentials file in a `GOOGLE_CREDENTIALS` environment variable 
+
+_You must surround the contents of the JSON credentials file with single quotes when setting the `GOOGLE_CREDENTIALS` environment variable:_
+
+```
+export GOOGLE_CREDENTIALS='{...}'
+```
+
+When you first execute a COGS command that requires authentication,
+COGS will pause and ask you to share the Spreadsheet with the service account. 
+It will provide a link to the sheet and the service email to share with. 
+You can either give the service email "Editor" permissions, or transfer ownership.
+
+To give "Editor" access:
+1. Open the Google Spreadsheet in your browser
+2. Click "Share" in the upper right corner
+3. Enter the provided service email, uncheck "Notify people", and click "Send"
+4. Return to the terminal and press ENTER to continue
+
+To transfer ownership, click "Share" again and click the drop-down next to the service email and select "Make owner"
+
+Please be aware that if you do not transfer ownership to the service account, `cogs delete` will not work. All other commands will work with just "Editor" access. If you do transfer ownership, you can always transfer ownership back to yourself using the [`share`](#share) command.
+
 ## Overview
 
 Since COGS is designed to synchronize local and remote sets of tables,
@@ -180,7 +218,7 @@ The following fields are optional:
 
 The only required fields are `table` and `cell`. If no other fields are provided, the cell will be highlighted red with a note that says "ERROR". We strongly recommend using either a `rule ID` or `rule` to identify the message, and `message` text to provide more details.
 
-#### Data Valildation Tables
+#### Data Validation Tables
 
 The data validation tables are applied to the sheets as data validation rules. These tables must have the following headers:
 * **table**: name of the table to add data validation rules to
@@ -226,7 +264,7 @@ Any value greater than one should be specified as a comma-separated list (e.g., 
 
 * *Date Conditions*
 
-Dates can be supplied in whatever format you like, but we recomment `YYYY-MM-DD`. You can also specify the exact day, a month (`MM-YYYY`), or just a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
+Dates can be supplied in whatever format you like, but we recommend `YYYY-MM-DD`. You can also specify the exact day, a month (`MM-YYYY`), or just a year (`YYYY`). Relative dates (e.g. "today") are not currently supported.
 
 | Condition           | Values |
 | ------------------- | ------ |
@@ -290,18 +328,6 @@ https://docs.google.com/spreadsheets/d/[SPREADSHEET-KEY]/edit#gid=0
 
 As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
 
-After connecting to the existing spreadsheet, COGS will pause to ask you to share the Spreadsheet with the service email. It will provide a link to the sheet and the service email to share with. You can either give the service email "Editor" permissions, or transfer ownership.
-
-To give "Editor" access:
-1. Open the Google Spreadsheet in your browser
-2. Click "Share" in the upper right corner
-3. Enter in the provided service email, uncheck "Nofity people", and click "Send"
-4. Return to the terminal and press ENTER to continue
-
-To transfer ownership, click "Share" again and click the drop-down next to the service email and select "Make owner"
-
-Please be aware that if you do not transfer ownership to the service account, `cogs delete` will not work. All other commands will work with just "Editor" access. If you do transfer ownership, you can always transfer ownership back to yourself using the [`share`](#share) command.
-
 `connect` will automatically fetch the existing sheets from the remote Google Spreadsheet. To get the local copies, just run `cogs merge`.
 
 ### `delete`
@@ -351,7 +377,7 @@ To navigate the diff:
 * `t`: go to top (first line)
 * `b`: go to bottom (last line)
 * `r`: go to rightmost characters (last column)
-* `l`: to to leftmost characters (first column)
+* `l`: go to leftmost characters (first column)
 
 ### `fetch`
 
@@ -389,11 +415,8 @@ Running `init` creates a `.cogs` directory containing configuration data. This a
 cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
 ```
 
-`gspread` needs credentials to create a service account; you can either provide these with a file (`-c [path]`) or with an environment variable (`GOOGLE_CREDENTIALS`). The environment variable should be a string containing the contents of the credentials file. You must surround the contents with single quotes when setting this variable:
+As with `init`, you may exclude the `-c` argument if you have your credentials defined in the environment variable `GOOGLE_CREDENTIALS`. Note that this variable must be the *contents* of the credentials file, not the path to the file.
 
-```
-export GOOGLE_CREDENTIALS='{...}'
-```
 
 Options:
 - `-t`/`--title`: **required**, title of the project which will be used as the title of the Google spreadsheet
@@ -500,7 +523,7 @@ There are three options:
 - `-w`/`--writer`: email of the user to give write access to
 - `-o`/`--owner`: email of the user to transfer ownership to
 
-Please be aware that transfering ownership of the Spreadsheet prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
+Please be aware that transferring ownership of the Spreadsheet prevent COGS from performing any administrative actions (e.g., `cogs delete`). If you do transfer ownership and wish to delete the project, you should simply remove the `.cogs/` directory and then go online to Google Sheets and manually delete the project.
 
 ### `status`
 
