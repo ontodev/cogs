@@ -4,7 +4,7 @@ daff
 flake8
 google
 google-api-python-client
-gspread
+gspread==3.7.0
 gspread-formatting==1.0.1
 pytest
 tabulate

@@ -94,7 +94,7 @@ Otherwise, most commands succeed silently.
 
 ### Credentials
 
-COGS utilizes [`gspread`](https://docs.gspread.org/en/latest/) as the API for Google Sheets. We recommend using a service account in order to access the API. To set up a Google service account and get the credentials:
+COGS utilizes [`gspread`](https://docs.gspread.org/en/latest/) (version 3.7.0) as the API for Google Sheets. We recommend using a service account in order to access the API. To set up a Google service account and get the credentials:
 1. Create a new [Google Cloud Platform](https://console.developers.google.com/) project (requires a Google account)
 2. In the dashboard for your new project, go to "APIs & Services > Enabled APIs & services", then select **+ ENABLE APIS & SERVICES** at the top of this page
 3. In the box labeled "Search for APIs and Services", search for "Google Drive API" and enable it.
