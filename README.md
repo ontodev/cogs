@@ -92,6 +92,26 @@ Otherwise, most commands succeed silently.
 - **Format**: the format applied to a cell in a sheet (e.g., background color, font family, etc.)
 - **Note**: a note (a.k.a. comment) on a cell that appears when hovered over in the sheet
 
+### Credentials
+
+COGS utilizes [`gspread`](https://docs.gspread.org/en/latest/) as the API for Google Sheets. We recommend using a service account in order to access the API. To set up a Google service account and get the credentials:
+1. Create a new [Google Cloud Platform](https://console.developers.google.com/) project (requires a Google account)
+2. In the dashboard for your new project, go to "APIs & Services > Enabled APIs & services", then select **+ ENABLE APIS & SERVICES** at the top of this page
+3. In the box labeled "Search for APIs and Services", search for "Google Drive API" and enable it.
+4. In the box labeled "Search for APIs and Services", search for "Google Sheets API" and enable it.
+5. Go to "APIs & Services > Credentials" and choose "Create credentials > Service account", then fill out the form
+6. Press "Manage service accounts" above Service Accounts.
+7. Press on ⋮ ("Actions") near recently created service account and select "Manage keys" and then click on "ADD KEY > Create new key".
+8. Select JSON key type and press "Create".
+
+Save this credentials file somewhere safe! You can either provide the creditials with a file to [`init`](#init) or [`connect`](#connect) (`-c [path]`) or with an environment variable (`GOOGLE_CREDENTIALS`). The environment variable should be a string containing the contents of the credentials file. You must surround the contents with single quotes when setting this variable:
+
+```
+export GOOGLE_CREDENTIALS='{...}'
+```
+
+During the `init` or `connect` setup, COGS will request that you grant access for the service account to the sheet either by making the service account an editor, or transferring ownership of the sheet to the service account. You can find the email address for the service account in the credentials file under the `client_email` field. Please be aware that if you do not transfer ownership, the [`delete`](#delete) command will not work. If you do transfer ownership, you can always transfer ownership back to yourself using the [`share`](#share) command.
+
 ---
 
 ## Commands
@@ -387,12 +407,6 @@ Running `init` creates a `.cogs` directory containing configuration data. This a
 
 ```
 cogs init -c [path-to-credentials] -t [project-title] -u [email] -r [role]
-```
-
-`gspread` needs credentials to create a service account; you can either provide these with a file (`-c [path]`) or with an environment variable (`GOOGLE_CREDENTIALS`). The environment variable should be a string containing the contents of the credentials file. You must surround the contents with single quotes when setting this variable:
-
-```
-export GOOGLE_CREDENTIALS='{...}'
 ```
 
 Options:
