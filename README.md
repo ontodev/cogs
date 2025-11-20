@@ -1,6 +1,7 @@
 # COGS Operates Google Sheets
 
-**WARNING** This project is work in progress.
+**WARNING** This project is not actively maintained. You may be interested in using [rclone](https://rclone.org/) instead, which provides robust, well-maintained support for Google Drive and many other cloud storage providers.
+
 
 COGS takes a set of TSV files on your local file system and allows you to edit them using Google Sheets.
 
